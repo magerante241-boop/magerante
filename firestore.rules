@@ -1,0 +1,405 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AMBI241 — Règles de sécurité Firestore
+// Généré le : 2026-05-19
+// ─────────────────────────────────────────────────────────────────────────
+// DÉPLOIEMENT :
+//   firebase deploy --only firestore:rules
+// ou depuis la console Firebase :
+//   Firestore Database → Règles → coller ce fichier → Publier
+// ═══════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ───────────────────────────────────────────────────────────────────
+
+    // Utilisateur connecté (Firebase Auth)
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // L'utilisateur lit/modifie son propre document
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Lecture de la liste des admins (config/admins)
+    function isAdmin() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/config/admins) &&
+        request.auth.uid in get(/databases/$(database)/documents/config/admins).data.list;
+    }
+
+    // Super-admin (config/superadmin)
+    function isSuperAdmin() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/config/superadmin) &&
+        request.auth.uid == get(/databases/$(database)/documents/config/superadmin).data.uid;
+    }
+
+    // Admin ou super-admin
+    function isAnyAdmin() {
+      return isAdmin() || isSuperAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // CONFIG (superadmin, admins, app_settings)
+    // Lecture : tout admin | Écriture : super-admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /config/{doc} {
+      allow read:  if isAnyAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // USERS — profils membres
+    // Lecture : propriétaire ou admin
+    // Création : utilisateur connecté (inscription)
+    // Mise à jour : propriétaire ou admin
+    // Suppression : super-admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read:   if isOwner(uid) || isAnyAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAnyAdmin();
+      allow delete: if isSuperAdmin();
+
+      // Sous-collections sociales (amis, demandes)
+      match /friend_requests_in/{fid} {
+        allow read, write: if isAuth();
+      }
+      match /friend_requests_out/{fid} {
+        allow read, write: if isAuth();
+      }
+      match /friends/{fid} {
+        allow read, write: if isAuth();
+      }
+      match /blocked/{fid} {
+        allow read:  if isOwner(uid);
+        allow write: if isOwner(uid);
+      }
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // PUBLIC PROFILES — cartes publiques membres/étab/chauffeurs
+    // Lecture : tout le monde (affiché publiquement)
+    // Écriture : utilisateur connecté (son propre profil) ou admin
+    // ───────────────────────────────────────────────────────────────────
+    match /public_profiles/{docId} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAuth();
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // ÉTABLISSEMENTS
+    // Lecture : tout le monde
+    // Création : admin uniquement (validation manuelle)
+    // Mise à jour : admin
+    // Suppression : super-admin
+    // ───────────────────────────────────────────────────────────────────
+    match /etablissements/{etabId} {
+      allow read:   if true;
+      allow create: if isAnyAdmin();
+      allow update: if isAnyAdmin();
+      allow delete: if isSuperAdmin();
+
+      // Commentaires d'un établissement
+      match /commentaires/{cid} {
+        allow read:   if true;
+        allow create: if isAuth();             // membre connecté
+        allow update: if isAnyAdmin();
+        allow delete: if isAnyAdmin();
+      }
+    }
+
+    // Disponibilité et calendrier établissement
+    match /etablissements_dispo/{etabId} {
+      allow read:   if true;
+      allow write:  if isAnyAdmin();
+    }
+    match /etablissements_calendar/{etabId} {
+      allow read:   if true;
+      allow write:  if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // PUBLICATIONS (posts sociaux)
+    // Lecture : tout le monde
+    // Création : utilisateur connecté
+    // Mise à jour / suppression : auteur ou admin
+    // ───────────────────────────────────────────────────────────────────
+    match /publications/{pubId} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+                      resource.data.authorUid == request.auth.uid || isAnyAdmin()
+                    );
+      allow delete: if isAuth() && (
+                      resource.data.authorUid == request.auth.uid || isAnyAdmin()
+                    );
+
+      // Commentaires de publications
+      match /comments/{cid} {
+        allow read:   if true;
+        allow create: if isAuth();
+        allow update: if isAnyAdmin();
+        allow delete: if isAuth() && (
+                        resource.data.authorUid == request.auth.uid || isAnyAdmin()
+                      );
+      }
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // PAIEMENTS — données financières sensibles
+    // Lecture : admin uniquement
+    // Écriture : admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /paiements/{docId} {
+      allow read:  if isAnyAdmin();
+      allow write: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // VOTES AMBIANCE (QR Code + communautaires)
+    // Lecture : tout le monde (classement public)
+    // Écriture : tout utilisateur connecté
+    // ───────────────────────────────────────────────────────────────────
+    match /qr_votes/{docId} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+    match /qr_vote_counts/{docId} {
+      allow read:   if true;
+      allow write:  if isAuth();
+    }
+    match /qr_ranking_scores/{docId} {
+      allow read:   if true;
+      allow write:  if isAuth();
+    }
+    match /votes_communautaires/{docId} {
+      allow read:   if true;
+      allow write:  if isAuth();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // AFFLUENCE & SIGNALEMENTS
+    // Lecture : tout le monde
+    // Écriture : utilisateur connecté
+    // ───────────────────────────────────────────────────────────────────
+    match /affluence_signalements/{docId} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+    match /presences/{docId} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAuth();
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // RÉSERVATIONS
+    // Lecture : propriétaire de la réservation ou admin
+    // Création : utilisateur connecté
+    // Mise à jour : admin (confirmation/annulation)
+    // ───────────────────────────────────────────────────────────────────
+    match /reservations/{resaId} {
+      allow read:   if isAuth() && (
+                      resource.data.userId == request.auth.uid || isAnyAdmin()
+                    );
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // SOIRÉES / SLOTS / DEPARTURES
+    // Lecture : tout le monde
+    // Écriture : admin ou utilisateur connecté (enregistrement départ)
+    // ───────────────────────────────────────────────────────────────────
+    match /soiree/{docId} {
+      allow read:  if true;
+      allow write: if isAnyAdmin();
+    }
+    match /slot/{docId} {
+      allow read:  if true;
+      allow write: if isAnyAdmin();
+    }
+    match /departures/{docId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // MESSAGERIE DIRECTE (DM)
+    // Lecture/écriture : participants de la conversation uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /dm_conversations/{convId} {
+      allow read:   if isAuth() && (
+                      convId.matches('.*' + request.auth.uid + '.*') || isAnyAdmin()
+                    );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+                      convId.matches('.*' + request.auth.uid + '.*') || isAnyAdmin()
+                    );
+      allow delete: if isAnyAdmin();
+
+      match /messages/{msgId} {
+        allow read:   if isAuth() && (
+                        convId.matches('.*' + request.auth.uid + '.*') || isAnyAdmin()
+                      );
+        allow create: if isAuth();
+        allow update: if isAnyAdmin();
+        allow delete: if isAnyAdmin();
+      }
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // NOTIFICATIONS
+    // user_notifications : chaque membre lit les siennes
+    // admin_notifications : admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /user_notifications/{docId} {
+      allow read:   if isAuth() && (
+                      resource.data.targetUid == request.auth.uid || isAnyAdmin()
+                    );
+      allow create: if isAuth();            // système et membres peuvent notifier
+      allow update: if isAuth() && (
+                      resource.data.targetUid == request.auth.uid || isAnyAdmin()
+                    );
+      allow delete: if isAnyAdmin();
+    }
+    match /user_notifications_legacy/{docId} {
+      allow read:   if isAuth();
+      allow write:  if isAnyAdmin();
+    }
+    match /admin_notifications/{docId} {
+      allow read:   if isAnyAdmin();
+      allow create: if isAuth();            // membres peuvent envoyer une notif admin
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // SUPPORT — tickets (mot de passe oublié, réclamations…)
+    // ─────────────────────────────────────────────────────────────────
+    // IMPORTANT : allow create: if true
+    //   → Un utilisateur NON connecté peut créer un ticket (ex: mot de
+    //     passe oublié via téléphone — il ne peut pas s'identifier !).
+    // Lecture/modification : admin uniquement (données sensibles)
+    // ───────────────────────────────────────────────────────────────────
+    match /support_requests/{docId} {
+      allow create: if true;                // ← public, requis pour reset MDP par tél
+      allow read:   if isAnyAdmin();
+      allow update: if isAnyAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // TAXI PRO
+    // ───────────────────────────────────────────────────────────────────
+
+    // Commandes taxi : client connecté crée, chauffeur approuvé lit/met à jour
+    match /taxi_requests/{docId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth();            // chauffeur accepte/refuse/termine
+      allow delete: if isAnyAdmin();
+    }
+
+    // Contacts chauffeurs (liste publique des taxis disponibles)
+    match /taxi_contacts/{docId} {
+      allow read:   if true;
+      allow create: if isAnyAdmin();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // Historique de courses (par chauffeur)
+    match /taxi_history/{docId} {
+      allow read:   if isAuth() && (
+                      resource.data.driverUid == request.auth.uid || isAnyAdmin()
+                    );
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // KPIs chauffeur (stats journalières)
+    match /taxi_kpi/{docId} {
+      allow read:   if isAuth();
+      allow write:  if isAuth();
+    }
+
+    // Incidents signalés
+    match /taxi_incidents/{docId} {
+      allow read:   if isAnyAdmin();
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    // Ancienne collection taxi (legacy)
+    match /taxi/{docId} {
+      allow read:   if isAuth();
+      allow write:  if isAnyAdmin();
+    }
+
+    // Chauffeurs inscrits (profils)
+    match /chauffeurs/{docId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+                      resource.data.uid == request.auth.uid || isAnyAdmin()
+                    );
+      allow delete: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // MONÉTISATION (boosts, publicités)
+    // Lecture : tout le monde (affiché dans l'app)
+    // Écriture : admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /monetisation_boosts/{docId} {
+      allow read:  if true;
+      allow write: if isAnyAdmin();
+    }
+    match /monetisation_pubs/{docId} {
+      allow read:  if true;
+      allow write: if isAnyAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // LOGS DE CONNEXION (analytique)
+    // Création : utilisateur connecté (au login)
+    // Lecture : admin uniquement
+    // ───────────────────────────────────────────────────────────────────
+    match /connection_logs/{docId} {
+      allow read:   if isAnyAdmin();
+      allow create: if isAuth();
+      allow update: if isAnyAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // RÈGLE FINALE DE SÉCURITÉ
+    // Tout document non couvert par les règles ci-dessus est refusé.
+    // ───────────────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

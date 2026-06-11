@@ -1,0 +1,175 @@
+# ============================================
+# MAGERANTE — .github/workflows/deploy.yml
+# CI/CD automatique : Tests + Déploiement
+# ============================================
+
+name: 🚀 CI/CD MAGERANTE
+
+on:
+  # Sur chaque push sur ces branches
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+
+  # Sur chaque Pull Request vers main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  # =============================================
+  # JOB 1 : TESTS ET VÉRIFICATIONS
+  # =============================================
+  tests:
+    name: ✅ Tests & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupérer le code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Installer Node.js
+      - name: 🔧 Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # 3. Installer les dépendances
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # 4. Vérification du code (ESLint)
+      - name: 🔍 Lint check
+        run: npm run lint
+        continue-on-error: false
+
+      # 5. Vérification TypeScript
+      - name: 📝 TypeScript check
+        run: npm run type-check
+
+      # 6. Tests unitaires
+      - name: 🧪 Run tests
+        run: npm run test
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_APP_ENV: test
+
+  # =============================================
+  # JOB 2 : BUILD
+  # =============================================
+  build:
+    name: 🔨 Build
+    runs-on: ubuntu-latest
+    needs: tests # Attend que les tests passent
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # Build avec les variables d'environnement
+      - name: 🏗️ Build project
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_APP_ENV: production
+          VITE_APP_NAME: MAGERANTE
+          VITE_APP_VERSION: ${{ github.ref_name }}
+
+      # Sauvegarder le build pour le job suivant
+      - name: 💾 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # =============================================
+  # JOB 3 : DÉPLOIEMENT NETLIFY (develop)
+  # =============================================
+  deploy-preview:
+    name: 🌐 Deploy Preview (develop)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📂 Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: 🚀 Deploy to Netlify (Preview)
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './dist'
+          production-deploy: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from develop branch - ${{ github.sha }}"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  # =============================================
+  # JOB 4 : DÉPLOIEMENT PRODUCTION (main)
+  # =============================================
+  deploy-production:
+    name: 🌍 Deploy Production (main)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📂 Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: 🚀 Deploy to Netlify (Production)
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './dist'
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "🚀 Production deploy v${{ github.ref_name }} - ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      # Créer un tag de version sur GitHub
+      - name: 🏷️ Create release tag
+        if: success()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag -a "v$(date +'%Y.%m.%d')-${{ github.run_number }}" -m "Auto release"
+          git push origin --tags

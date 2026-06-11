@@ -1,0 +1,75 @@
+# ============================================
+# MAGERANTE — netlify.toml
+# Configuration de déploiement Netlify
+# ============================================
+
+# --------- BUILD PRINCIPAL ---------
+[build]
+  command = "npm run build"
+  publish = "dist"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+
+# --------- VARIABLES D'ENVIRONNEMENT BUILD ---------
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+  VITE_APP_NAME = "MAGERANTE"
+  VITE_APP_VERSION = "1.0.0"
+
+# --------- REDIRECTIONS SPA (CRITIQUE !) ---------
+# Sans cette règle, les pages 404 au rechargement
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# --------- EN-TÊTES DE SÉCURITÉ ---------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Empêche l'affichage dans des iframes (clickjacking)
+    X-Frame-Options = "DENY"
+    # Active la protection XSS du navigateur
+    X-XSS-Protection = "1; mode=block"
+    # Empêche le sniffing de type MIME
+    X-Content-Type-Options = "nosniff"
+    # Force HTTPS
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # Contrôle les informations de référant
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Politique de permissions
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+
+# Cache agressif pour les assets statiques (JS, CSS, images)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Pas de cache pour le HTML
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# --------- CONTEXTES DE DÉPLOIEMENT ---------
+
+# Branche develop → prévisualisation
+[context.branch-deploy]
+  command = "npm run build"
+  [context.branch-deploy.environment]
+    VITE_APP_ENV = "development"
+
+# Branche staging → staging
+[context.staging]
+  command = "npm run build"
+  [context.staging.environment]
+    VITE_APP_ENV = "staging"
+
+# Branche main → production
+[context.production]
+  command = "npm run build"
+  [context.production.environment]
+    VITE_APP_ENV = "production"
+    VITE_ENABLE_ANALYTICS = "true"
+    VITE_ENABLE_APP_CHECK = "true"

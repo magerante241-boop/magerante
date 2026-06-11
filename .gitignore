@@ -1,0 +1,113 @@
+# ============================================
+# MAGERANTE — .gitignore
+# ============================================
+
+# --------- ENVIRONNEMENT (CRITIQUE !) ---------
+# Ne JAMAIS committer les clés secrètes
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+*.env
+
+# --------- NODE MODULES ---------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --------- BUILD OUTPUT ---------
+dist/
+dist-ssr/
+build/
+*.local
+
+# --------- FIREBASE ---------
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+functions/node_modules/
+functions/lib/
+functions/.env
+functions/.env.local
+.firebaserc
+
+# --------- VITE ---------
+vite.config.ts.timestamp*
+
+# --------- EDITEURS ---------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# --------- OS ---------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --------- LOGS ---------
+logs/
+*.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# --------- TESTS ---------
+coverage/
+.nyc_output/
+*.lcov
+
+# --------- CACHE ---------
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# --------- CERTIFICATS ---------
+*.pem
+*.key
+*.cert
+*.csr
+*.p12
+
+# --------- NETLIFY ---------
+.netlify/
+
+# --------- SAUVEGARDES ---------
+*.backup
+*.bak
+*.tmp
+*.temp
+
+# --------- DIVERS ---------
+*.zip
+*.tar.gz
+*.rar
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
