@@ -12,11 +12,24 @@ const appRoot = document.getElementById("appRoot");
 const loginView = document.getElementById("authLoginView");
 const registerView = document.getElementById("authRegisterView");
 const establishmentView = document.getElementById("authEstablishmentView");
+const homeView = document.getElementById("authHomeView");
 
 function showAuthView(view) {
-  [loginView, registerView, establishmentView].forEach((v) => (v.hidden = true));
+  [homeView, loginView, registerView, establishmentView].forEach((v) => (v.hidden = true));
   view.hidden = false;
 }
+
+// --- Page d'accueil publique : choix Connexion / Inscription ---
+document.getElementById("btnGoLogin").addEventListener("click", () => showAuthView(loginView));
+document.getElementById("btnGoRegister").addEventListener("click", () => showAuthView(registerView));
+document.getElementById("linkHomeFromLogin").addEventListener("click", (e) => {
+  e.preventDefault();
+  showAuthView(homeView);
+});
+document.getElementById("linkHomeFromRegister").addEventListener("click", (e) => {
+  e.preventDefault();
+  showAuthView(homeView);
+});
 
 // --- Navigation entre les vues login / inscription ---
 document.getElementById("linkToRegister").addEventListener("click", (e) => {
@@ -133,7 +146,7 @@ onAuthStateChanged(auth, async (user) => {
     appState.establishmentId = null;
     appRoot.hidden = true;
     authGate.hidden = false;
-    showAuthView(loginView);
+    showAuthView(homeView);
     return;
   }
 
