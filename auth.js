@@ -1,139 +1,35 @@
-// auth.js — authentification en fenêtre modale à la demande (la calculatrice reste en accès libre)
+// auth.js — plus aucun écran de connexion : une session anonyme est ouverte
+// automatiquement dès l'arrivée, invisible pour l'utilisateur. Seule une
+// fenêtre "Nom de ton établissement" apparaît, une seule fois, quand on
+// utilise Inventaire / Caisse / Ventes pour la première fois.
 import {
   auth, db, doc, getDoc, setDoc, serverTimestamp,
-  onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut
+  onAuthStateChanged, signInAnonymously
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
 const authGate = document.getElementById("authGate");
-
-const loginView = document.getElementById("authLoginView");
-const registerView = document.getElementById("authRegisterView");
 const establishmentView = document.getElementById("authEstablishmentView");
-const homeView = document.getElementById("authHomeView");
-
 const etablissementNomEl = document.getElementById("etablissementNom");
-const btnLogout = document.getElementById("btnLogout");
-const btnNotifications = document.getElementById("btnNotifications");
 
-window.AuthState = { loggedIn: false };
+window.AuthState = { ready: false, hasEstablishment: false };
 
-function showAuthView(view) {
-  [homeView, loginView, registerView, establishmentView].forEach((v) => (v.hidden = true));
-  view.hidden = false;
-}
-
-// --- Ouvrir / fermer la fenêtre de connexion (appelable depuis app.js) ---
-function openAuthModal(view) {
-  showAuthView(view || homeView);
+function openEstablishmentModal() {
+  establishmentView.hidden = false;
   authGate.hidden = false;
 }
-function closeAuthModal() {
+function closeModal() {
   authGate.hidden = true;
 }
-window.openAuthModal = openAuthModal;
+// Appelé par app.js quand Inventaire/Caisse/Ventes est ouvert sans établissement configuré
+window.openAuthModal = openEstablishmentModal;
 
-document.getElementById("btnCloseAuth").addEventListener("click", closeAuthModal);
+document.getElementById("btnCloseAuth").addEventListener("click", closeModal);
 authGate.addEventListener("click", (e) => {
-  if (e.target === authGate) closeAuthModal();
+  if (e.target === authGate) closeModal();
 });
 
-// --- Ouvrir la modale depuis le lien "Se connecter" de l'en-tête ---
-etablissementNomEl.addEventListener("click", () => {
-  if (!auth.currentUser) openAuthModal(homeView);
-});
-
-// --- Page d'accueil de la modale : choix Connexion / Inscription ---
-document.getElementById("btnGoLogin").addEventListener("click", () => showAuthView(loginView));
-document.getElementById("btnGoRegister").addEventListener("click", () => showAuthView(registerView));
-document.getElementById("linkHomeFromLogin").addEventListener("click", (e) => {
-  e.preventDefault();
-  showAuthView(homeView);
-});
-document.getElementById("linkHomeFromRegister").addEventListener("click", (e) => {
-  e.preventDefault();
-  showAuthView(homeView);
-});
-
-// --- Navigation entre les vues login / inscription ---
-document.getElementById("linkToRegister").addEventListener("click", (e) => {
-  e.preventDefault();
-  showAuthView(registerView);
-});
-document.getElementById("linkToLogin").addEventListener("click", (e) => {
-  e.preventDefault();
-  showAuthView(loginView);
-});
-
-// --- Connexion ---
-document.getElementById("btnLogin").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errorEl = document.getElementById("loginError");
-  errorEl.textContent = "";
-  if (!email || !password) {
-    errorEl.textContent = "Renseigne ton e-mail et ton mot de passe.";
-    return;
-  }
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (err) {
-    errorEl.textContent = traduireErreur(err.code);
-  }
-});
-
-// --- Inscription ---
-document.getElementById("btnRegister").addEventListener("click", async () => {
-  const email = document.getElementById("registerEmail").value.trim();
-  const password = document.getElementById("registerPassword").value;
-  const errorEl = document.getElementById("registerError");
-  errorEl.textContent = "";
-  if (!email || !password) {
-    errorEl.textContent = "Renseigne un e-mail et un mot de passe.";
-    return;
-  }
-  if (password.length < 6) {
-    errorEl.textContent = "Le mot de passe doit faire au moins 6 caractères.";
-    return;
-  }
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    // Le document "users/{uid}" sera créé une fois l'établissement validé
-    // (voir btnCreateEstablishment ci-dessous) — on passe directement à cette étape.
-    window.__pendingUid = cred.user.uid;
-    window.__pendingEmail = cred.user.email;
-    showAuthView(establishmentView);
-  } catch (err) {
-    errorEl.textContent = traduireErreur(err.code);
-  }
-});
-
-// --- Ouvrir la session (charge l'établissement, ferme la modale, met à jour l'en-tête) ---
-async function ouvrirApplication(establishmentId) {
-  appState.establishmentId = establishmentId;
-  const estSnap = await getDoc(doc(db, "establishments", establishmentId));
-  const name = estSnap.exists() ? estSnap.data().name : "Mon établissement";
-  window.AuthState.loggedIn = true;
-  setHeaderAuthState(true, name);
-  closeAuthModal();
-}
-
-function setHeaderAuthState(loggedIn, establishmentName) {
-  if (loggedIn) {
-    etablissementNomEl.textContent = establishmentName || "Mon établissement";
-    etablissementNomEl.classList.remove("header-login-link");
-    btnLogout.hidden = false;
-    btnNotifications.hidden = false;
-  } else {
-    etablissementNomEl.textContent = "Se connecter";
-    etablissementNomEl.classList.add("header-login-link");
-    btnLogout.hidden = true;
-    btnNotifications.hidden = true;
-  }
-}
-
-// --- Création du premier établissement (rôle PROPRIETAIRE) ---
+// --- Configuration du premier établissement (rôle PROPRIETAIRE) ---
 document.getElementById("btnCreateEstablishment").addEventListener("click", async () => {
   const name = document.getElementById("establishmentName").value.trim();
   const type = document.getElementById("establishmentType").value;
@@ -146,21 +42,19 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
   }
   const uid = auth.currentUser?.uid;
   if (!uid) {
-    errorEl.textContent = "Session expirée, reconnecte-toi.";
+    errorEl.textContent = "Connexion en cours, réessaie dans un instant.";
     return;
   }
   btn.disabled = true;
   btn.textContent = "Création en cours...";
   try {
-    const estRef = doc(db, "establishments", uid); // 1 établissement par propriétaire pour l'instant
-    await setDoc(estRef, {
+    await setDoc(doc(db, "establishments", uid), {
       name,
       type,
       ownerId: uid,
       createdAt: serverTimestamp()
     });
     await setDoc(doc(db, "users", uid), {
-      email: auth.currentUser.email,
       role: "PROPRIETAIRE",
       establishmentId: uid,
       createdAt: serverTimestamp()
@@ -173,40 +67,35 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
   }
 });
 
-// --- Déconnexion ---
-btnLogout.addEventListener("click", () => signOut(auth));
+async function ouvrirApplication(establishmentId) {
+  appState.establishmentId = establishmentId;
+  const estSnap = await getDoc(doc(db, "establishments", establishmentId));
+  const name = estSnap.exists() ? estSnap.data().name : "Mon établissement";
+  window.AuthState.hasEstablishment = true;
+  etablissementNomEl.textContent = name;
+  closeModal();
+}
 
-// --- État de connexion : met à jour l'en-tête, n'affiche plus jamais un écran bloquant ---
+// --- Connexion anonyme automatique, invisible pour l'utilisateur ---
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    appState.establishmentId = null;
-    window.AuthState.loggedIn = false;
-    setHeaderAuthState(false);
-    if (window.resetToCalc) window.resetToCalc();
+    try {
+      await signInAnonymously(auth);
+    } catch (err) {
+      console.warn("Connexion anonyme impossible :", err);
+    }
     return;
   }
 
-  const userSnap = await getDoc(doc(db, "users", user.uid));
+  window.AuthState.ready = true;
 
+  const userSnap = await getDoc(doc(db, "users", user.uid));
   if (!userSnap.exists()) {
-    // Compte créé mais pas encore d'établissement : on force cette étape dans la modale
-    openAuthModal(establishmentView);
+    // Pas encore d'établissement configuré : on attendra qu'un module en ait besoin
+    window.AuthState.hasEstablishment = false;
     return;
   }
 
   const userData = userSnap.data();
   await ouvrirApplication(userData.establishmentId);
 });
-
-function traduireErreur(code) {
-  const messages = {
-    "auth/invalid-email": "Adresse e-mail invalide.",
-    "auth/user-not-found": "Aucun compte avec cet e-mail.",
-    "auth/wrong-password": "Mot de passe incorrect.",
-    "auth/invalid-credential": "E-mail ou mot de passe incorrect.",
-    "auth/email-already-in-use": "Cet e-mail est déjà utilisé.",
-    "auth/weak-password": "Mot de passe trop faible (6 caractères min.).",
-    "auth/network-request-failed": "Problème de connexion internet."
-  };
-  return messages[code] || "Une erreur est survenue. Réessaie.";
-}

@@ -21,18 +21,6 @@ function updateHeaderDate() {
 updateHeaderDate();
 setInterval(updateHeaderDate, 30000);
 
-// --- Champs mot de passe : bascule afficher / masquer ---
-document.querySelectorAll(".auth-eye-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const target = document.getElementById(btn.dataset.target);
-    if (!target) return;
-    const isHidden = target.type === "password";
-    target.type = isHidden ? "text" : "password";
-    btn.textContent = isHidden ? "🙈" : "👁️";
-    btn.setAttribute("aria-label", isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe");
-  });
-});
-
 // --- Navigation bas d'écran : bascule entre calculatrice et modules ---
 function switchView(view) {
   const calcZone = document.getElementById("calcZone");
@@ -57,18 +45,11 @@ function switchView(view) {
   }
 }
 
-function goToCalcTab() {
-  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelector('.nav-btn[data-view="calc"]').classList.add("active");
-  switchView("calc");
-}
-window.resetToCalc = goToCalcTab;
-
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const view = btn.dataset.view;
-    // L'Inventaire, la Caisse et les Ventes exigent une session (les données sont enregistrées)
-    if (view !== "calc" && !(window.AuthState && window.AuthState.loggedIn)) {
+    // L'Inventaire, la Caisse et les Ventes ont besoin d'un établissement configuré
+    if (view !== "calc" && !(window.AuthState && window.AuthState.hasEstablishment)) {
       if (window.openAuthModal) window.openAuthModal();
       return;
     }
@@ -120,7 +101,7 @@ document.getElementById("numpad").addEventListener("click", (e) => {
 
 document.querySelectorAll(".calc-actions button").forEach((btn) => {
   btn.addEventListener("click", () => {
-    if (!(window.AuthState && window.AuthState.loggedIn)) {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
       if (window.openAuthModal) window.openAuthModal();
       return;
     }
