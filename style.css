@@ -77,6 +77,14 @@ body{
   background:var(--surface2); border:1px solid var(--border); color:var(--text);
   border-radius:10px; padding:13px 14px; font-size:15px; width:100%;
 }
+.auth-password-wrap{position:relative; display:flex; align-items:center;}
+.auth-password-wrap input{padding-right:42px;}
+.auth-eye-btn{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  background:none; border:none; font-size:17px; line-height:1; padding:6px;
+  cursor:pointer; opacity:0.65;
+}
+.auth-eye-btn:hover{opacity:1;}
 .auth-btn-primary{
   background:var(--primary); color:#fdfaf3; border:none; border-radius:10px;
   padding:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px;
@@ -140,6 +148,58 @@ body{
 .numpad .key-wide{grid-column:span 2;}
 .numpad .key-danger{background:rgba(163,52,43,0.12); color:var(--danger);}
 .numpad .key-equal{background:var(--primary); color:#fdfaf3; font-weight:700;}
+
+/* INVENTAIRE */
+.inv-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+.inv-title{font-size:16px; font-weight:700; color:var(--text);}
+.inv-add-btn{background:var(--primary); color:#fdfaf3; border:none; border-radius:10px; padding:10px 14px; font-weight:700; font-size:14px; cursor:pointer;}
+.inv-empty{text-align:center; padding:40px 10px; color:var(--muted); line-height:1.5;}
+.inv-list{display:flex; flex-direction:column; gap:10px;}
+.inv-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; box-shadow:var(--shadow-sm);
+  display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer;
+}
+.inv-card-info{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.inv-card-nom{font-weight:700; font-size:15px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.inv-card-meta{font-size:12px; color:var(--muted);}
+.inv-card-stock{
+  font-size:12px; font-weight:700; padding:4px 9px; border-radius:8px;
+  background:rgba(31,111,74,0.12); color:var(--primary-dark); white-space:nowrap;
+}
+.inv-card-stock.low{background:rgba(163,52,43,0.12); color:var(--danger);}
+
+/* Modal produit (ajout / édition) */
+.inv-modal-backdrop{
+  position:fixed; inset:0; z-index:60; background:rgba(43,38,32,0.45);
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.inv-modal{
+  width:100%; max-width:420px; background:var(--surface); border-radius:20px 20px 0 0;
+  padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;
+  max-height:88vh; overflow-y:auto;
+}
+.inv-modal h2{font-size:18px; color:var(--primary-dark);}
+.inv-error{color:var(--danger); font-size:13px; text-align:center; min-height:16px;}
+.inv-field label{font-size:12px; color:var(--muted); display:block; margin-bottom:4px;}
+.inv-field input{
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:10px; padding:12px 14px; font-size:15px; width:100%;
+}
+.inv-modal-actions{display:flex; gap:10px; margin-top:6px;}
+.inv-btn-primary{
+  flex:1; background:var(--primary); color:#fdfaf3; border:none; border-radius:10px;
+  padding:13px; font-weight:700; font-size:14px; cursor:pointer;
+}
+.inv-btn-primary:disabled{opacity:0.6; cursor:default;}
+.inv-btn-secondary{
+  flex:1; background:var(--surface2); color:var(--text); border:none; border-radius:10px;
+  padding:13px; font-weight:700; font-size:14px; cursor:pointer;
+}
+.inv-btn-danger{
+  background:none; border:none; color:var(--danger); font-size:13px; font-weight:700;
+  cursor:pointer; padding:8px; text-align:center;
+}
 
 /* BOTTOM NAV */
 .bottom-nav{

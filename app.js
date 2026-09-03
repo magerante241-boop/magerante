@@ -1,5 +1,5 @@
-// app.js — squelette étape 1 : horloge, navigation, calculatrice de base
-// (pas encore de Firestore ici — connexion cloud viendra à une étape dédiée)
+// app.js — squelette : horloge, navigation, calculatrice de base
+// (l'Inventaire est géré par inventaire.js, exposé sur window.InventaireModule)
 
 // --- Splash screen : affiché ~2.2s à l'ouverture, puis disparaît en fondu ---
 window.addEventListener("load", () => {
@@ -21,18 +21,47 @@ function updateHeaderDate() {
 updateHeaderDate();
 setInterval(updateHeaderDate, 30000);
 
-// --- Navigation bas d'écran (affichage seul pour l'instant) ---
+// --- Champs mot de passe : bascule afficher / masquer ---
+document.querySelectorAll(".auth-eye-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    const isHidden = target.type === "password";
+    target.type = isHidden ? "text" : "password";
+    btn.textContent = isHidden ? "🙈" : "👁️";
+    btn.setAttribute("aria-label", isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe");
+  });
+});
+
+// --- Navigation bas d'écran : bascule entre calculatrice et modules ---
+function switchView(view) {
+  const calcZone = document.getElementById("calcZone");
+  const viewContainer = document.getElementById("viewContainer");
+
+  // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
+  if (window.InventaireModule) window.InventaireModule.cleanup();
+
+  if (view === "calc") {
+    calcZone.hidden = false;
+    viewContainer.innerHTML = `<p class="placeholder-msg">Les modules (Caisse, Ventes...) arriveront aux prochaines étapes.</p>`;
+  } else if (view === "inventaire") {
+    calcZone.hidden = true;
+    if (window.InventaireModule) {
+      window.InventaireModule.render(viewContainer);
+    } else {
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
+    }
+  } else {
+    calcZone.hidden = true;
+    viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
+  }
+}
+
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    const view = btn.dataset.view;
-    const placeholder = document.querySelector(".placeholder-msg");
-    if (placeholder) {
-      placeholder.textContent = view === "calc"
-        ? "Les modules (Inventaire, Caisse, Ventes...) arriveront aux prochaines étapes."
-        : `Module "${view}" — à construire à une prochaine étape.`;
-    }
+    switchView(btn.dataset.view);
   });
 });
 

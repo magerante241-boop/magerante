@@ -24,7 +24,10 @@
       <h1>Connexion</h1>
       <p class="auth-error" id="loginError"></p>
       <input type="email" id="loginEmail" placeholder="Adresse e-mail" autocomplete="email">
-      <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password">
+      <div class="auth-password-wrap">
+        <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password">
+        <button type="button" class="auth-eye-btn" data-target="loginPassword" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
       <button class="auth-btn-primary" id="btnLogin">Se connecter</button>
       <p class="auth-switch">Pas encore de compte ? <a href="#" id="linkToRegister">Créer un compte</a></p>
     </div>
@@ -34,7 +37,10 @@
       <h1>Créer un compte</h1>
       <p class="auth-error" id="registerError"></p>
       <input type="email" id="registerEmail" placeholder="Adresse e-mail" autocomplete="email">
-      <input type="password" id="registerPassword" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password">
+      <div class="auth-password-wrap">
+        <input type="password" id="registerPassword" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password">
+        <button type="button" class="auth-eye-btn" data-target="registerPassword" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
       <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
       <p class="auth-switch">Déjà un compte ? <a href="#" id="linkToLogin">Se connecter</a></p>
     </div>
@@ -124,6 +130,7 @@
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="auth.js"></script>
+  <script type="module" src="inventaire.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
