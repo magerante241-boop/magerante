@@ -113,8 +113,27 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
 renderCalc();
 
 // --- Service Worker (mode PWA / hors-connexion) ---
+// Purge forcée, une seule fois par appareil : supprime tout ancien Service
+// Worker resté bloqué en cache-first (ex. magerante-v1) avant d'enregistrer
+// le nouveau. Nécessaire car certains téléphones ne libèrent jamais l'ancien
+// SW même après un vidage manuel du cache navigateur.
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
+  window.addEventListener("load", async () => {
+    try {
+      if (!localStorage.getItem("sw_force_cleared_v2")) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+        localStorage.setItem("sw_force_cleared_v2", "1");
+      }
+    } catch (err) {
+      console.warn("Purge de l'ancien Service Worker impossible :", err);
+    }
     navigator.serviceWorker.register("./sw.js").catch((err) => {
       console.warn("Échec enregistrement du service worker :", err);
     });
