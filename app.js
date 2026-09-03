@@ -48,11 +48,10 @@ function switchView(view) {
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const view = btn.dataset.view;
-    // L'Inventaire, la Caisse et les Ventes ont besoin d'un établissement configuré
-    if (view !== "calc" && !(window.AuthState && window.AuthState.hasEstablishment)) {
-      if (window.openAuthModal) window.openAuthModal();
-      return;
-    }
+    // Mode visiteur : l'établissement par défaut est créé en silence par auth.js,
+    // on ne bloque plus jamais la navigation avec une modale. S'il n'est pas encore
+    // prêt (connexion anonyme en cours, ~1s max), le module affiche son propre
+    // état de chargement le temps que window.AuthState.hasEstablishment passe à true.
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     switchView(view);
@@ -102,7 +101,8 @@ document.getElementById("numpad").addEventListener("click", (e) => {
 document.querySelectorAll(".calc-actions button").forEach((btn) => {
   btn.addEventListener("click", () => {
     if (!(window.AuthState && window.AuthState.hasEstablishment)) {
-      if (window.openAuthModal) window.openAuthModal();
+      // Cas très rare : connexion anonyme encore en cours (fraction de seconde).
+      alert("Initialisation en cours, réessaie dans un instant.");
       return;
     }
     // Étape suivante : brancher ces boutons sur Firestore (achats, ventes, etc.)
