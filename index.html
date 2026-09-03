@@ -16,13 +16,14 @@
     <img src="splash.png" alt="MAGERANTE" class="splash-img">
   </div>
 
-  <!-- AUTH GATE : bloque l'accès tant que non connecté -->
+  <!-- FENÊTRE DE CONNEXION : s'ouvre seulement quand une action l'exige -->
   <div id="authGate" class="auth-gate" hidden>
+    <button class="auth-close-btn" id="btnCloseAuth" aria-label="Fermer">✕</button>
 
     <div id="authHomeView" class="auth-view">
       <img src="logo.png" class="auth-logo" alt="MAGERANTE">
       <h1>MAGERANTE</h1>
-      <p class="auth-hint">Ton assistant de gestion commerciale, simple et rapide.</p>
+      <p class="auth-hint">Connecte-toi pour enregistrer tes données.</p>
       <button class="auth-btn-primary" id="btnGoLogin">Se connecter</button>
       <button class="auth-btn-secondary" id="btnGoRegister">Créer un compte</button>
     </div>
@@ -77,21 +78,21 @@
 
   </div>
 
-  <!-- RACINE DE L'APPLICATION (cachée tant que non connecté) -->
-  <div id="appRoot" hidden>
+  <!-- RACINE DE L'APPLICATION (toujours visible — la calculatrice est en accès libre) -->
+  <div id="appRoot">
 
   <!-- EN-TÊTE -->
   <header class="app-header">
     <div class="header-left">
       <img src="logo.png" alt="MAGERANTE" class="app-logo" onerror="this.style.display='none'">
       <div class="header-info">
-        <span class="etablissement-nom" id="etablissementNom">Mon établissement</span>
+        <span class="etablissement-nom header-login-link" id="etablissementNom">Se connecter</span>
         <span class="header-date" id="headerDate">--/--/----</span>
       </div>
     </div>
     <div class="header-right">
-      <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔</button>
-      <button class="icon-btn" id="btnLogout" aria-label="Déconnexion" title="Déconnexion">🚪</button>
+      <button class="icon-btn" id="btnNotifications" aria-label="Notifications" hidden>🔔</button>
+      <button class="icon-btn" id="btnLogout" aria-label="Déconnexion" title="Déconnexion" hidden>🚪</button>
       <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
     </div>
   </header>

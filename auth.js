@@ -1,4 +1,4 @@
-// auth.js — Étape 2 : authentification + création du premier établissement
+// auth.js — authentification en fenêtre modale à la demande (la calculatrice reste en accès libre)
 import {
   auth, db, doc, getDoc, setDoc, serverTimestamp,
   onAuthStateChanged, signInWithEmailAndPassword,
@@ -7,19 +7,44 @@ import {
 import { appState } from "./state.js";
 
 const authGate = document.getElementById("authGate");
-const appRoot = document.getElementById("appRoot");
 
 const loginView = document.getElementById("authLoginView");
 const registerView = document.getElementById("authRegisterView");
 const establishmentView = document.getElementById("authEstablishmentView");
 const homeView = document.getElementById("authHomeView");
 
+const etablissementNomEl = document.getElementById("etablissementNom");
+const btnLogout = document.getElementById("btnLogout");
+const btnNotifications = document.getElementById("btnNotifications");
+
+window.AuthState = { loggedIn: false };
+
 function showAuthView(view) {
   [homeView, loginView, registerView, establishmentView].forEach((v) => (v.hidden = true));
   view.hidden = false;
 }
 
-// --- Page d'accueil publique : choix Connexion / Inscription ---
+// --- Ouvrir / fermer la fenêtre de connexion (appelable depuis app.js) ---
+function openAuthModal(view) {
+  showAuthView(view || homeView);
+  authGate.hidden = false;
+}
+function closeAuthModal() {
+  authGate.hidden = true;
+}
+window.openAuthModal = openAuthModal;
+
+document.getElementById("btnCloseAuth").addEventListener("click", closeAuthModal);
+authGate.addEventListener("click", (e) => {
+  if (e.target === authGate) closeAuthModal();
+});
+
+// --- Ouvrir la modale depuis le lien "Se connecter" de l'en-tête ---
+etablissementNomEl.addEventListener("click", () => {
+  if (!auth.currentUser) openAuthModal(homeView);
+});
+
+// --- Page d'accueil de la modale : choix Connexion / Inscription ---
 document.getElementById("btnGoLogin").addEventListener("click", () => showAuthView(loginView));
 document.getElementById("btnGoRegister").addEventListener("click", () => showAuthView(registerView));
 document.getElementById("linkHomeFromLogin").addEventListener("click", (e) => {
@@ -84,14 +109,28 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   }
 });
 
-// --- Ouvrir l'application (affiche appRoot, cache authGate, charge le nom de l'établissement) ---
+// --- Ouvrir la session (charge l'établissement, ferme la modale, met à jour l'en-tête) ---
 async function ouvrirApplication(establishmentId) {
   appState.establishmentId = establishmentId;
   const estSnap = await getDoc(doc(db, "establishments", establishmentId));
-  const nomEl = document.getElementById("etablissementNom");
-  if (nomEl && estSnap.exists()) nomEl.textContent = estSnap.data().name;
-  authGate.hidden = true;
-  appRoot.hidden = false;
+  const name = estSnap.exists() ? estSnap.data().name : "Mon établissement";
+  window.AuthState.loggedIn = true;
+  setHeaderAuthState(true, name);
+  closeAuthModal();
+}
+
+function setHeaderAuthState(loggedIn, establishmentName) {
+  if (loggedIn) {
+    etablissementNomEl.textContent = establishmentName || "Mon établissement";
+    etablissementNomEl.classList.remove("header-login-link");
+    btnLogout.hidden = false;
+    btnNotifications.hidden = false;
+  } else {
+    etablissementNomEl.textContent = "Se connecter";
+    etablissementNomEl.classList.add("header-login-link");
+    btnLogout.hidden = true;
+    btnNotifications.hidden = true;
+  }
 }
 
 // --- Création du premier établissement (rôle PROPRIETAIRE) ---
@@ -135,32 +174,26 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
 });
 
 // --- Déconnexion ---
-document.addEventListener("DOMContentLoaded", () => {
-  const btnLogout = document.getElementById("btnLogout");
-  if (btnLogout) btnLogout.addEventListener("click", () => signOut(auth));
-});
+btnLogout.addEventListener("click", () => signOut(auth));
 
-// --- État de connexion : c'est ici que se joue l'ouverture/fermeture de l'app ---
+// --- État de connexion : met à jour l'en-tête, n'affiche plus jamais un écran bloquant ---
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     appState.establishmentId = null;
-    appRoot.hidden = true;
-    authGate.hidden = false;
-    showAuthView(homeView);
+    window.AuthState.loggedIn = false;
+    setHeaderAuthState(false);
+    if (window.resetToCalc) window.resetToCalc();
     return;
   }
 
   const userSnap = await getDoc(doc(db, "users", user.uid));
 
   if (!userSnap.exists()) {
-    // Compte créé mais pas encore d'établissement : on force cette étape
-    appRoot.hidden = true;
-    authGate.hidden = false;
-    showAuthView(establishmentView);
+    // Compte créé mais pas encore d'établissement : on force cette étape dans la modale
+    openAuthModal(establishmentView);
     return;
   }
 
-  // Profil complet : on ouvre l'application
   const userData = userSnap.data();
   await ouvrirApplication(userData.establishmentId);
 });
