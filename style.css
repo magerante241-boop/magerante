@@ -91,6 +91,14 @@ body{
   letter-spacing:0.2px;
 }
 .auth-btn-primary:disabled{opacity:0.6; cursor:default;}
+.auth-btn-secondary{
+  background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+  padding:14px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:0.2px;
+}
+.auth-back{
+  align-self:flex-start; color:var(--muted); text-decoration:none; font-size:13px;
+  font-weight:600; margin-bottom:-4px;
+}
 .auth-switch{text-align:center; font-size:13px; color:var(--muted);}
 .auth-switch a{color:var(--accent); text-decoration:none; font-weight:600;}
 

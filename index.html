@@ -19,7 +19,16 @@
   <!-- AUTH GATE : bloque l'accès tant que non connecté -->
   <div id="authGate" class="auth-gate" hidden>
 
-    <div id="authLoginView" class="auth-view">
+    <div id="authHomeView" class="auth-view">
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>MAGERANTE</h1>
+      <p class="auth-hint">Ton assistant de gestion commerciale, simple et rapide.</p>
+      <button class="auth-btn-primary" id="btnGoLogin">Se connecter</button>
+      <button class="auth-btn-secondary" id="btnGoRegister">Créer un compte</button>
+    </div>
+
+    <div id="authLoginView" class="auth-view" hidden>
+      <a href="#" class="auth-back" id="linkHomeFromLogin">← Retour</a>
       <img src="logo.png" class="auth-logo" alt="MAGERANTE">
       <h1>Connexion</h1>
       <p class="auth-error" id="loginError"></p>
@@ -33,6 +42,7 @@
     </div>
 
     <div id="authRegisterView" class="auth-view" hidden>
+      <a href="#" class="auth-back" id="linkHomeFromRegister">← Retour</a>
       <img src="logo.png" class="auth-logo" alt="MAGERANTE">
       <h1>Créer un compte</h1>
       <p class="auth-error" id="registerError"></p>
