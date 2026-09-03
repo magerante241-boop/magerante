@@ -102,6 +102,22 @@
 
   </div><!-- /appRoot -->
 
+  <!-- MENU LATÉRAL -->
+  <div id="sideMenu" class="side-menu" hidden>
+    <div class="side-menu-overlay" id="sideMenuOverlay"></div>
+    <nav class="side-menu-panel">
+      <div class="side-menu-header">
+        <span>Menu</span>
+        <button class="icon-btn" id="btnCloseMenu" aria-label="Fermer le menu">✕</button>
+      </div>
+      <ul class="side-menu-list">
+        <li><button class="side-menu-item" id="menuRenameEstablishment">✏️ Renommer mon établissement</button></li>
+        <li><button class="side-menu-item" disabled>📊 Rapports <span class="soon">bientôt</span></button></li>
+        <li><button class="side-menu-item" disabled>👥 Utilisateurs <span class="soon">bientôt</span></button></li>
+      </ul>
+    </nav>
+  </div>
+
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="auth.js"></script>
   <script type="module" src="inventaire.js"></script>

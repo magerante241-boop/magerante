@@ -112,6 +112,22 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
 
 renderCalc();
 
+// --- Menu latéral ---
+const sideMenu = document.getElementById("sideMenu");
+function openSideMenu() {
+  sideMenu.hidden = false;
+}
+function closeSideMenu() {
+  sideMenu.hidden = true;
+}
+document.getElementById("btnMenu").addEventListener("click", openSideMenu);
+document.getElementById("btnCloseMenu").addEventListener("click", closeSideMenu);
+document.getElementById("sideMenuOverlay").addEventListener("click", closeSideMenu);
+document.getElementById("menuRenameEstablishment").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.openAuthModal) window.openAuthModal();
+});
+
 // --- Service Worker (mode PWA / hors-connexion) ---
 // Purge forcée, une seule fois par appareil : supprime tout ancien Service
 // Worker resté bloqué en cache-first (ex. magerante-v1) avant d'enregistrer
