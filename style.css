@@ -59,6 +59,9 @@ body{
   display:flex; align-items:center; justify-content:center;
   padding:24px;
 }
+.auth-gate[hidden]{
+  display:none;
+}
 .auth-close-btn{
   position:absolute; top:16px; right:16px; background:none; border:none;
   font-size:18px; color:var(--muted); cursor:pointer; padding:8px; z-index:51;
