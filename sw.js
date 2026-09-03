@@ -3,6 +3,8 @@ const CORE_ASSETS = [
   "./index.html",
   "./style.css",
   "./app.js",
+  "./auth.js",
+  "./firebase-config.js",
   "./manifest.json",
   "./splash.png"
 ];

@@ -16,6 +16,54 @@
     <img src="splash.png" alt="MAGERANTE" class="splash-img">
   </div>
 
+  <!-- AUTH GATE : bloque l'accès tant que non connecté -->
+  <div id="authGate" class="auth-gate" hidden>
+
+    <div id="authLoginView" class="auth-view">
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Connexion</h1>
+      <p class="auth-error" id="loginError"></p>
+      <input type="email" id="loginEmail" placeholder="Adresse e-mail" autocomplete="email">
+      <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password">
+      <button class="auth-btn-primary" id="btnLogin">Se connecter</button>
+      <p class="auth-switch">Pas encore de compte ? <a href="#" id="linkToRegister">Créer un compte</a></p>
+    </div>
+
+    <div id="authRegisterView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Créer un compte</h1>
+      <p class="auth-error" id="registerError"></p>
+      <input type="email" id="registerEmail" placeholder="Adresse e-mail" autocomplete="email">
+      <input type="password" id="registerPassword" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password">
+      <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
+      <p class="auth-switch">Déjà un compte ? <a href="#" id="linkToLogin">Se connecter</a></p>
+    </div>
+
+    <div id="authEstablishmentView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Ton établissement</h1>
+      <p class="auth-hint">Dernière étape : donne un nom à ton établissement.</p>
+      <p class="auth-error" id="establishmentError"></p>
+      <input type="text" id="establishmentName" placeholder="Nom de l'établissement">
+      <select id="establishmentType">
+        <option value="boutique">Boutique</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="bar">Bar</option>
+        <option value="hotel">Hôtel / Motel</option>
+        <option value="supermarche">Supermarché</option>
+        <option value="salon">Salon</option>
+        <option value="atelier">Atelier</option>
+        <option value="service">Entreprise de services</option>
+        <option value="autre">Autre</option>
+      </select>
+      <button class="auth-btn-primary" id="btnCreateEstablishment">Valider et démarrer</button>
+    </div>
+
+  </div>
+
+  <!-- RACINE DE L'APPLICATION (cachée tant que non connecté) -->
+  <div id="appRoot" hidden>
+
   <!-- EN-TÊTE -->
   <header class="app-header">
     <div class="header-left">
@@ -27,6 +75,7 @@
     </div>
     <div class="header-right">
       <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔</button>
+      <button class="icon-btn" id="btnLogout" aria-label="Déconnexion" title="Déconnexion">🚪</button>
       <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
     </div>
   </header>
@@ -71,7 +120,10 @@
     <button class="nav-btn" data-view="plus">⚙️<span>Plus</span></button>
   </nav>
 
+  </div><!-- /appRoot -->
+
   <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
