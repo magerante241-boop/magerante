@@ -4,6 +4,7 @@ import {
   onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut
 } from "./firebase-config.js";
+import { appState } from "./state.js";
 
 const authGate = document.getElementById("authGate");
 const appRoot = document.getElementById("appRoot");
@@ -72,6 +73,7 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
 
 // --- Ouvrir l'application (affiche appRoot, cache authGate, charge le nom de l'établissement) ---
 async function ouvrirApplication(establishmentId) {
+  appState.establishmentId = establishmentId;
   const estSnap = await getDoc(doc(db, "establishments", establishmentId));
   const nomEl = document.getElementById("etablissementNom");
   if (nomEl && estSnap.exists()) nomEl.textContent = estSnap.data().name;
@@ -128,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- État de connexion : c'est ici que se joue l'ouverture/fermeture de l'app ---
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    appState.establishmentId = null;
     appRoot.hidden = true;
     authGate.hidden = false;
     showAuthView(loginView);
