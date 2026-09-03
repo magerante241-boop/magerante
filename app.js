@@ -57,11 +57,24 @@ function switchView(view) {
   }
 }
 
+function goToCalcTab() {
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector('.nav-btn[data-view="calc"]').classList.add("active");
+  switchView("calc");
+}
+window.resetToCalc = goToCalcTab;
+
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
+    const view = btn.dataset.view;
+    // L'Inventaire, la Caisse et les Ventes exigent une session (les données sont enregistrées)
+    if (view !== "calc" && !(window.AuthState && window.AuthState.loggedIn)) {
+      if (window.openAuthModal) window.openAuthModal();
+      return;
+    }
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    switchView(btn.dataset.view);
+    switchView(view);
   });
 });
 
@@ -107,6 +120,10 @@ document.getElementById("numpad").addEventListener("click", (e) => {
 
 document.querySelectorAll(".calc-actions button").forEach((btn) => {
   btn.addEventListener("click", () => {
+    if (!(window.AuthState && window.AuthState.loggedIn)) {
+      if (window.openAuthModal) window.openAuthModal();
+      return;
+    }
     // Étape suivante : brancher ces boutons sur Firestore (achats, ventes, etc.)
     alert(`Action "${btn.dataset.action}" — sera enregistrée dans Firestore à une prochaine étape.\nMontant : ${resultEl.textContent}`);
   });

@@ -59,6 +59,11 @@ body{
   display:flex; align-items:center; justify-content:center;
   padding:24px;
 }
+.auth-close-btn{
+  position:absolute; top:16px; right:16px; background:none; border:none;
+  font-size:18px; color:var(--muted); cursor:pointer; padding:8px; z-index:51;
+}
+.header-login-link{color:var(--primary); cursor:pointer; text-decoration:underline; text-underline-offset:2px;}
 .auth-view{
   width:100%; max-width:360px;
   display:flex; flex-direction:column; gap:12px;
