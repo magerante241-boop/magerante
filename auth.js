@@ -70,11 +70,21 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   }
 });
 
+// --- Ouvrir l'application (affiche appRoot, cache authGate, charge le nom de l'établissement) ---
+async function ouvrirApplication(establishmentId) {
+  const estSnap = await getDoc(doc(db, "establishments", establishmentId));
+  const nomEl = document.getElementById("etablissementNom");
+  if (nomEl && estSnap.exists()) nomEl.textContent = estSnap.data().name;
+  authGate.hidden = true;
+  appRoot.hidden = false;
+}
+
 // --- Création du premier établissement (rôle PROPRIETAIRE) ---
 document.getElementById("btnCreateEstablishment").addEventListener("click", async () => {
   const name = document.getElementById("establishmentName").value.trim();
   const type = document.getElementById("establishmentType").value;
   const errorEl = document.getElementById("establishmentError");
+  const btn = document.getElementById("btnCreateEstablishment");
   errorEl.textContent = "";
   if (!name) {
     errorEl.textContent = "Donne un nom à ton établissement.";
@@ -85,6 +95,8 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
     errorEl.textContent = "Session expirée, reconnecte-toi.";
     return;
   }
+  btn.disabled = true;
+  btn.textContent = "Création en cours...";
   try {
     const estRef = doc(db, "establishments", uid); // 1 établissement par propriétaire pour l'instant
     await setDoc(estRef, {
@@ -99,9 +111,11 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
       establishmentId: uid,
       createdAt: serverTimestamp()
     });
-    // onAuthStateChanged va maintenant détecter le profil complet et ouvrir l'app
+    await ouvrirApplication(uid);
   } catch (err) {
     errorEl.textContent = "Erreur : " + err.message;
+    btn.disabled = false;
+    btn.textContent = "Valider et démarrer";
   }
 });
 
@@ -132,12 +146,7 @@ onAuthStateChanged(auth, async (user) => {
 
   // Profil complet : on ouvre l'application
   const userData = userSnap.data();
-  const estSnap = await getDoc(doc(db, "establishments", userData.establishmentId));
-  const nomEl = document.getElementById("etablissementNom");
-  if (nomEl && estSnap.exists()) nomEl.textContent = estSnap.data().name;
-
-  authGate.hidden = true;
-  appRoot.hidden = false;
+  await ouvrirApplication(userData.establishmentId);
 });
 
 function traduireErreur(code) {
