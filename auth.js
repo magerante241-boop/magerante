@@ -1,7 +1,9 @@
-// auth.js — plus aucun écran de connexion : une session anonyme est ouverte
-// automatiquement dès l'arrivée, invisible pour l'utilisateur. Seule une
-// fenêtre "Nom de ton établissement" apparaît, une seule fois, quand on
-// utilise Inventaire / Caisse / Ventes pour la première fois.
+// auth.js — mode visiteur complet : connexion anonyme automatique ET
+// création automatique de l'établissement par défaut, 100% invisible.
+// L'utilisateur n'a plus jamais besoin de remplir de formulaire pour
+// commencer à utiliser Inventaire / Caisse / Ventes. Il pourra renommer
+// son établissement plus tard depuis le menu "Plus" (modale réutilisée
+// dans ce cas précis, à la demande de l'utilisateur uniquement).
 import {
   auth, db, doc, getDoc, setDoc, serverTimestamp,
   onAuthStateChanged, signInAnonymously
@@ -14,14 +16,19 @@ const etablissementNomEl = document.getElementById("etablissementNom");
 
 window.AuthState = { ready: false, hasEstablishment: false };
 
+const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
+
 function openEstablishmentModal() {
+  // N'est plus déclenchée automatiquement : uniquement si l'utilisateur
+  // choisit explicitement "Personnaliser mon établissement" (ex. menu Plus).
   establishmentView.hidden = false;
   authGate.hidden = false;
 }
 function closeModal() {
   authGate.hidden = true;
 }
-// Appelé par app.js quand Inventaire/Caisse/Ventes est ouvert sans établissement configuré
+// Conservée pour un usage volontaire futur (ex. renommage depuis "Plus"),
+// mais plus jamais appelée pour bloquer l'accès à un module.
 window.openAuthModal = openEstablishmentModal;
 
 document.getElementById("btnCloseAuth").addEventListener("click", closeModal);
@@ -29,7 +36,7 @@ authGate.addEventListener("click", (e) => {
   if (e.target === authGate) closeModal();
 });
 
-// --- Configuration du premier établissement (rôle PROPRIETAIRE) ---
+// --- Création (manuelle, via modale) ou mise à jour de l'établissement ---
 document.getElementById("btnCreateEstablishment").addEventListener("click", async () => {
   const name = document.getElementById("establishmentName").value.trim();
   const type = document.getElementById("establishmentType").value;
@@ -46,19 +53,19 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
     return;
   }
   btn.disabled = true;
-  btn.textContent = "Création en cours...";
+  btn.textContent = "Enregistrement...";
   try {
     await setDoc(doc(db, "establishments", uid), {
       name,
       type,
       ownerId: uid,
       createdAt: serverTimestamp()
-    });
+    }, { merge: true });
     await setDoc(doc(db, "users", uid), {
       role: "PROPRIETAIRE",
       establishmentId: uid,
       createdAt: serverTimestamp()
-    });
+    }, { merge: true });
     await ouvrirApplication(uid);
   } catch (err) {
     errorEl.textContent = "Erreur : " + err.message;
@@ -70,10 +77,25 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
 async function ouvrirApplication(establishmentId) {
   appState.establishmentId = establishmentId;
   const estSnap = await getDoc(doc(db, "establishments", establishmentId));
-  const name = estSnap.exists() ? estSnap.data().name : "Mon établissement";
+  const name = estSnap.exists() ? estSnap.data().name : DEFAULT_ESTABLISHMENT.name;
   window.AuthState.hasEstablishment = true;
   etablissementNomEl.textContent = name;
   closeModal();
+}
+
+// Crée un établissement par défaut en silence, sans aucune interaction utilisateur.
+async function creerEtablissementParDefaut(uid) {
+  await setDoc(doc(db, "establishments", uid), {
+    name: DEFAULT_ESTABLISHMENT.name,
+    type: DEFAULT_ESTABLISHMENT.type,
+    ownerId: uid,
+    createdAt: serverTimestamp()
+  });
+  await setDoc(doc(db, "users", uid), {
+    role: "PROPRIETAIRE",
+    establishmentId: uid,
+    createdAt: serverTimestamp()
+  });
 }
 
 // --- Connexion anonyme automatique, invisible pour l'utilisateur ---
@@ -91,8 +113,15 @@ onAuthStateChanged(auth, async (user) => {
 
   const userSnap = await getDoc(doc(db, "users", user.uid));
   if (!userSnap.exists()) {
-    // Pas encore d'établissement configuré : on attendra qu'un module en ait besoin
-    window.AuthState.hasEstablishment = false;
+    // Mode visiteur : on crée l'établissement par défaut tout seul,
+    // aucune modale, aucune action requise de l'utilisateur.
+    try {
+      await creerEtablissementParDefaut(user.uid);
+      await ouvrirApplication(user.uid);
+    } catch (err) {
+      console.warn("Création automatique de l'établissement impossible :", err);
+      window.AuthState.hasEstablishment = false;
+    }
     return;
   }
 
