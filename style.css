@@ -1,0 +1,116 @@
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface2:#1e2530;
+  --border:rgba(255,255,255,0.08);
+  --text:#f0f3f7;
+  --muted:#8b95a5;
+  --primary:#22c55e;      /* vert gestion / croissance */
+  --primary-dark:#16a34a;
+  --accent:#f59e0b;       /* ambre alertes/attention */
+  --danger:#ef4444;       /* rouge alerte critique */
+  --info:#3b82f6;
+  --radius:14px;
+  --font-main:'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-main);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* SPLASH SCREEN */
+.splash-screen{
+  position:fixed; inset:0; z-index:100;
+  background:#fdfdfd;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  transition:opacity 0.6s ease, visibility 0.6s ease;
+}
+.splash-screen.hidden{
+  opacity:0; visibility:hidden; pointer-events:none;
+}
+.splash-img{
+  width:min(78vw, 340px);
+  height:auto;
+  animation:splashPop 0.5s ease-out;
+}
+@keyframes splashPop{
+  from{transform:scale(0.85); opacity:0;}
+  to{transform:scale(1); opacity:1;}
+}
+
+/* HEADER */
+.app-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:10;
+}
+.header-left{display:flex; align-items:center; gap:10px;}
+.app-logo{width:34px; height:34px; border-radius:8px;}
+.header-info{display:flex; flex-direction:column; line-height:1.2;}
+.etablissement-nom{font-weight:600; font-size:15px;}
+.header-date{font-size:12px; color:var(--muted);}
+.header-right{display:flex; gap:8px;}
+.icon-btn{
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:38px; height:38px; border-radius:10px; font-size:16px; cursor:pointer;
+}
+
+/* MAIN */
+.main-content{flex:1; padding:14px; padding-bottom:210px; overflow-y:auto;}
+
+/* CALCULATRICE */
+.calc-zone{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:18px; margin-bottom:16px; text-align:right;
+}
+.calc-expression{color:var(--muted); font-size:14px; min-height:18px;}
+.calc-result{font-size:32px; font-weight:700; margin-top:4px;}
+.calc-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:flex-end;}
+.calc-actions button{
+  background:var(--primary); color:#04140a; border:none; border-radius:10px;
+  padding:8px 12px; font-weight:600; font-size:13px; cursor:pointer;
+}
+
+.view-container{color:var(--muted); font-size:14px;}
+.placeholder-msg{text-align:center; padding:30px 10px;}
+
+/* NUMPAD */
+.numpad{
+  position:fixed; bottom:64px; left:0; right:0;
+  background:var(--surface); border-top:1px solid var(--border);
+  display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+  padding:6px; z-index:9;
+}
+.numpad button{
+  background:var(--surface2); color:var(--text); border:none; border-radius:10px;
+  font-size:18px; padding:14px 0; cursor:pointer;
+}
+.numpad .key-wide{grid-column:span 2;}
+.numpad .key-danger{background:rgba(239,68,68,0.15); color:var(--danger);}
+.numpad .key-equal{background:var(--primary); color:#04140a; font-weight:700;}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:fixed; bottom:0; left:0; right:0;
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex; z-index:10;
+}
+.nav-btn{
+  flex:1; background:none; border:none; color:var(--muted);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:18px; padding:8px 0; cursor:pointer;
+}
+.nav-btn span{font-size:10px;}
+.nav-btn.active{color:var(--primary);}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d1117">
+  <title>MAGERANTE — Assistant de gestion</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon-32.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- SPLASH SCREEN (affiché à l'ouverture, disparaît automatiquement) -->
+  <div id="splashScreen" class="splash-screen">
+    <img src="splash.png" alt="MAGERANTE" class="splash-img">
+  </div>
+
+  <!-- EN-TÊTE -->
+  <header class="app-header">
+    <div class="header-left">
+      <img src="logo.png" alt="MAGERANTE" class="app-logo" onerror="this.style.display='none'">
+      <div class="header-info">
+        <span class="etablissement-nom" id="etablissementNom">Mon établissement</span>
+        <span class="header-date" id="headerDate">--/--/----</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔</button>
+      <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
+    </div>
+  </header>
+
+  <!-- ZONE CALCULATRICE DE GESTION -->
+  <main class="main-content">
+    <section class="calc-zone" id="calcZone">
+      <div class="calc-display">
+        <div class="calc-expression" id="calcExpression">&nbsp;</div>
+        <div class="calc-result" id="calcResult">0</div>
+      </div>
+      <div class="calc-actions" id="calcActions" hidden>
+        <button data-action="entree-stock">ENTRÉE STOCK</button>
+        <button data-action="achat">ACHAT</button>
+        <button data-action="vente">VENTE</button>
+        <button data-action="depense">DÉPENSE</button>
+        <button data-action="recette">RECETTE</button>
+      </div>
+    </section>
+
+    <section id="viewContainer" class="view-container">
+      <!-- Les futures vues (inventaire, caisse, ventes...) seront injectées ici -->
+      <p class="placeholder-msg">Les modules (Inventaire, Caisse, Ventes...) arriveront aux prochaines étapes.</p>
+    </section>
+  </main>
+
+  <!-- CLAVIER NUMÉRIQUE -->
+  <div class="numpad" id="numpad">
+    <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="÷">÷</button>
+    <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="×">×</button>
+    <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="-">-</button>
+    <button data-key="0">0</button><button data-key="00">00</button><button data-key=",">,</button><button data-key="+">+</button>
+    <button data-key="AC" class="key-wide key-danger">AC</button><button data-key="⌫">⌫</button><button data-key="=" class="key-equal">=</button>
+  </div>
+
+  <!-- NAVIGATION PRINCIPALE -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-btn active" data-view="calc">🧮<span>Calculer</span></button>
+    <button class="nav-btn" data-view="inventaire">📦<span>Inventaire</span></button>
+    <button class="nav-btn" data-view="caisse">💰<span>Caisse</span></button>
+    <button class="nav-btn" data-view="ventes">🛒<span>Ventes</span></button>
+    <button class="nav-btn" data-view="plus">⚙️<span>Plus</span></button>
+  </nav>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
