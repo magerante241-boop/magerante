@@ -21,6 +21,11 @@ const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
 function openEstablishmentModal() {
   // N'est plus déclenchée automatiquement : uniquement si l'utilisateur
   // choisit explicitement "Personnaliser mon établissement" (ex. menu Plus).
+  const nameInput = document.getElementById("establishmentName");
+  const currentName = etablissementNomEl.textContent.trim();
+  if (nameInput && currentName && currentName !== "MAGERANTE") {
+    nameInput.value = currentName;
+  }
   establishmentView.hidden = false;
   authGate.hidden = false;
 }
