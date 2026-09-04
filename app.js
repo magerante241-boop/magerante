@@ -1,5 +1,6 @@
 // app.js — squelette : horloge, navigation, calculatrice de base
 // (l'Inventaire est géré par inventaire.js, exposé sur window.InventaireModule)
+// (les Ventes sont gérées par ventes.js, exposé sur window.VentesModule)
 
 // --- Splash screen : affiché ~2.2s à l'ouverture, puis disparaît en fondu ---
 window.addEventListener("load", () => {
@@ -64,6 +65,7 @@ let calcExpr = "";
 const exprEl = document.getElementById("calcExpression");
 const resultEl = document.getElementById("calcResult");
 const actionsEl = document.getElementById("calcActions");
+let calcValeurNumerique = 0;
 
 function renderCalc() {
   exprEl.textContent = calcExpr || "\u00A0";
@@ -74,6 +76,7 @@ function renderCalc() {
       .replace(/,/g, ".");
     // eslint-disable-next-line no-new-func
     const value = safeExpr.trim() === "" ? 0 : Function(`"use strict"; return (${safeExpr})`)();
+    calcValeurNumerique = isFinite(value) ? value : 0;
     resultEl.textContent = isFinite(value)
       ? value.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " FCFA"
       : "Erreur";
@@ -106,7 +109,15 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
       alert("Initialisation en cours, réessaie dans un instant.");
       return;
     }
-    // Étape suivante : brancher ces boutons sur Firestore (achats, ventes, etc.)
+    if (btn.dataset.action === "vente") {
+      if (window.VentesModule) {
+        window.VentesModule.ouvrirModaleVente(calcValeurNumerique > 0 ? calcValeurNumerique : "");
+      } else {
+        alert("Module Ventes en cours de chargement, réessaie dans un instant.");
+      }
+      return;
+    }
+    // Étape suivante : brancher ACHAT / DÉPENSE / RECETTE / ENTRÉE STOCK sur Firestore.
     alert(`Action "${btn.dataset.action}" — sera enregistrée dans Firestore à une prochaine étape.\nMontant : ${resultEl.textContent}`);
   });
 });
