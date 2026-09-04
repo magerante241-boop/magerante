@@ -1,0 +1,70 @@
+headersOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/data/data/com.termux/files/home/magerante/dist"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm run build"
+ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+
+[build.environment]
+NODE_VERSION = "18"
+NPM_VERSION = "9"
+VITE_APP_NAME = "MAGERANTE"
+VITE_APP_VERSION = "1.0.0"
+VITE_APP_ENV = "production"
+VITE_ENABLE_ANALYTICS = "true"
+VITE_ENABLE_APP_CHECK = "true"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+X-Content-Type-Options = "nosniff"
+Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+
+[[headers]]
+for = "/assets/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/*.html"
+
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

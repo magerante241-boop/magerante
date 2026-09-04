@@ -7,13 +7,14 @@
 import {
   auth, db, doc, getDoc, setDoc, serverTimestamp,
   onAuthStateChanged, signInAnonymously,
-  EmailAuthProvider, linkWithCredential
+  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
 const authGate = document.getElementById("authGate");
 const establishmentView = document.getElementById("authEstablishmentView");
 const registerView = document.getElementById("authRegisterView");
+const loginView = document.getElementById("authLoginView");
 const etablissementNomEl = document.getElementById("etablissementNom");
 const accountStatusItem = document.getElementById("accountStatusItem");
 
@@ -24,6 +25,7 @@ const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
 function hideAllViews() {
   establishmentView.hidden = true;
   registerView.hidden = true;
+  loginView.hidden = true;
 }
 
 // Attend jusqu'à 5s que la connexion anonyme se termine, au lieu d'échouer
@@ -75,6 +77,16 @@ function closeModal() {
 window.openAuthModal = openEstablishmentModal;
 window.openRegisterModal = openRegisterModal;
 
+function openLoginModal() {
+  hideAllViews();
+  loginView.hidden = false;
+  authGate.hidden = false;
+}
+window.openLoginModal = openLoginModal;
+
+document.getElementById("linkGoToLogin")?.addEventListener("click", (e) => { e.preventDefault(); openLoginModal(); });
+document.getElementById("linkGoToRegister")?.addEventListener("click", (e) => { e.preventDefault(); openRegisterModal(); });
+
 document.getElementById("btnCloseAuth").addEventListener("click", closeModal);
 authGate.addEventListener("click", (e) => {
   if (e.target === authGate) closeModal();
@@ -122,6 +134,40 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
 document.getElementById("btnToggleRegPassword").addEventListener("click", () => {
   const pwdInput = document.getElementById("regPassword");
   pwdInput.type = pwdInput.type === "password" ? "text" : "password";
+});
+
+document.getElementById("btnToggleLoginPassword").addEventListener("click", () => {
+  const pwdInput = document.getElementById("loginPassword");
+  pwdInput.type = pwdInput.type === "password" ? "text" : "password";
+});
+
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errorEl = document.getElementById("loginError");
+  const btn = document.getElementById("btnLogin");
+  errorEl.textContent = "";
+  if (!email || !password) {
+    errorEl.textContent = "Merci de remplir ton e-mail et le mot de passe.";
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Connexion...";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+      errorEl.textContent = "E-mail ou mot de passe incorrect.";
+    } else if (err.code === "auth/invalid-email") {
+      errorEl.textContent = "Adresse e-mail invalide.";
+    } else if (err.code === "auth/too-many-requests") {
+      errorEl.textContent = "Trop de tentatives. Reessaie dans quelques minutes.";
+    } else {
+      errorEl.textContent = "Erreur : " + err.message;
+    }
+    btn.disabled = false;
+    btn.textContent = "Se connecter";
+  }
 });
 
 // --- Inscription propriétaire : transforme la session anonyme en compte
