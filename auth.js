@@ -7,7 +7,8 @@
 import {
   auth, db, doc, getDoc, setDoc, serverTimestamp,
   onAuthStateChanged, signInAnonymously,
-  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword
+  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -170,6 +171,37 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   }
 });
 
+document.getElementById("linkForgotPassword")?.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const errorEl = document.getElementById("loginError");
+  if (!email) {
+    errorEl.textContent = "Indique ton e-mail ci-dessus, puis clique de nouveau sur ce lien.";
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    errorEl.textContent = "E-mail envoye ! Verifie ta boite de reception.";
+  } catch (err) {
+    if (err.code === "auth/user-not-found") {
+      errorEl.textContent = "Aucun compte associe a cet e-mail.";
+    } else if (err.code === "auth/invalid-email") {
+      errorEl.textContent = "Adresse e-mail invalide.";
+    } else {
+      errorEl.textContent = "Erreur : " + err.message;
+    }
+  }
+});
+
+document.getElementById("menuLogout").addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+    location.reload();
+  } catch (err) {
+    console.warn("Deconnexion impossible :", err);
+  }
+});
+
 // --- Inscription propriétaire : transforme la session anonyme en compte
 // permanent (mêmes uid/établissement/données, rien n'est perdu ni dupliqué) ---
 document.getElementById("btnRegister").addEventListener("click", async () => {
@@ -259,6 +291,10 @@ function updateAccountStatusBadge() {
   const menuInvite = document.getElementById("menuInviteGerant");
   if (menuInvite) {
     menuInvite.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  }
+  const menuLogout = document.getElementById("menuLogout");
+  if (menuLogout) {
+    menuLogout.hidden = window.AuthState.accountType !== "enregistre";
   }
 }
 
