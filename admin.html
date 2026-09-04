@@ -18,8 +18,14 @@
     color: white;
     padding: 20px;
   }
+  .header-flex { display: flex; justify-content: space-between; align-items: center; }
   header h1 { margin: 0; font-size: 22px; }
   header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+  .icon-round-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); border: none;
+    color: white; font-size: 20px; cursor: pointer;
+  }
   .container { padding: 16px; max-width: 700px; margin: 0 auto; }
 
   #loginBox { max-width: 340px; margin: 40px auto; padding: 20px; }
@@ -64,12 +70,59 @@
     background: #2e7d32; color: white; font-weight: bold; font-size: 14px;
   }
   .empty-msg { color: #888; font-size: 14px; }
+
+  .table-wrap {
+    background: white; border-radius: 14px; padding: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow-x: auto;
+  }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th {
+    text-align: left; padding: 10px 8px; color: #1b5e20;
+    border-bottom: 2px solid #eee; font-size: 12px;
+  }
+  table.data-table td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .vente-item {
+    background: white; border-radius: 12px; padding: 12px 14px; margin: 8px 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .vente-item .v-etab { font-weight: bold; }
+  .vente-item .v-date { color: #888; font-size: 12px; }
+  .vente-item .v-montant { color: #1b5e20; font-weight: bold; }
+
+  .settings-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: flex; align-items: flex-end; z-index: 50;
+  }
+  .settings-panel {
+    background: #f4ede0; width: 100%; border-radius: 18px 18px 0 0;
+    padding: 16px; max-width: 700px; margin: 0 auto;
+  }
+  .settings-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: bold; font-size: 16px; color: #1b5e20; margin-bottom: 12px;
+  }
+  .icon-btn-plain { background: none; border: none; font-size: 18px; }
+  .settings-email { font-size: 13px; color: #666; margin: 0 0 14px; }
+  .settings-item {
+    display: block; width: 100%; text-align: left; padding: 14px;
+    border-radius: 12px; border: none; background: white; font-size: 15px;
+    margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .settings-item.danger { color: #b00020; }
 </style>
 </head>
 <body>
   <header>
-    <h1>⚙️ MAGERANTE — Administration</h1>
-    <p id="headerSub">Tableau de bord</p>
+    <div class="header-flex">
+      <div>
+        <h1>🛡️ MAGERANTE — Administration</h1>
+        <p id="headerSub">Tableau de bord</p>
+      </div>
+      <button id="btnSettings" class="icon-round-btn" hidden aria-label="Parametres">⚙️</button>
+    </div>
   </header>
 
   <div class="container">
@@ -86,12 +139,12 @@
         <div class="stat-card">
           <div class="icon">👥</div>
           <div class="value" id="statTotalComptes">—</div>
-          <div class="label">Comptes propriétaires</div>
+          <div class="label">Comptes proprietaires</div>
         </div>
         <div class="stat-card">
           <div class="icon">✅</div>
           <div class="value" id="statValides">—</div>
-          <div class="label">Comptes validés</div>
+          <div class="label">Comptes valides</div>
         </div>
         <div class="stat-card">
           <div class="icon">⏳</div>
@@ -101,17 +154,54 @@
         <div class="stat-card">
           <div class="icon">🏢</div>
           <div class="value" id="statEtablissements">—</div>
-          <div class="label">Établissements</div>
+          <div class="label">Etablissements</div>
         </div>
         <div class="stat-card wide">
           <div class="icon">💰</div>
           <div class="value" id="statCAGlobal">—</div>
-          <div class="label">Chiffre d'affaires global (tous établissements)</div>
+          <div class="label">Chiffre d'affaires global (tous etablissements)</div>
         </div>
       </div>
 
-      <h2 class="section-title">Comptes propriétaires en attente de validation</h2>
+      <h2 class="section-title">Comptes proprietaires en attente de validation</h2>
       <div id="pendingList" class="empty-msg">Chargement...</div>
+
+      <h2 class="section-title">Chiffre d'affaires par etablissement</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
+          <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title">Inventaire global</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon">📦</div>
+          <div class="value" id="statTotalProduits">—</div>
+          <div class="label">Produits references (tous etablissements)</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">💵</div>
+          <div class="value" id="statValeurStock">—</div>
+          <div class="label">Valeur totale du stock estimee</div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Dernieres ventes (toutes etablissements)</h2>
+      <div id="rapportList" class="empty-msg">Chargement...</div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="settings-overlay" hidden>
+    <div class="settings-panel">
+      <div class="settings-header">
+        <span>Parametres</span>
+        <button id="btnCloseSettings" class="icon-btn-plain">✕</button>
+      </div>
+      <p class="settings-email" id="settingsEmail"></p>
+      <button id="btnResetPassword" class="settings-item">🔑 Changer mon mot de passe</button>
+      <button id="btnLogoutAdmin" class="settings-item danger">🚪 Se deconnecter</button>
     </div>
   </div>
 
