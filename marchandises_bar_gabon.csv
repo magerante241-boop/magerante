@@ -1,0 +1,44 @@
+Nom,Prix achat,Prix vente,Stock,Catégorie
+Régab 33cl,500,700,100,Bières
+Régab 65cl,800,1200,80,Bières
+Castel Beer 33cl,500,700,100,Bières
+Castel Beer 65cl,800,1200,80,Bières
+Beaufort 33cl,500,700,60,Bières
+Guinness 33cl,700,1000,50,Bières
+Heineken 33cl,750,1100,50,Bières
+33 Export 33cl,500,700,60,Bières
+Coca-Cola 33cl,300,500,120,Sodas
+Fanta Orange 33cl,300,500,100,Sodas
+Sprite 33cl,300,500,100,Sodas
+Youki Cola 33cl,250,400,80,Sodas
+Youki Pamplemousse 33cl,250,400,80,Sodas
+Eau minérale Andza 50cl,200,400,150,Eaux
+Eau minérale Odzi 50cl,200,400,150,Eaux
+Eau minérale Andza 1,5L,400,700,80,Eaux
+Jus d'ananas 33cl,350,600,60,Jus
+Jus de mangue 33cl,350,600,60,Jus
+Whisky Johnnie Walker Red Label 70cl,8000,15000,20,Spiritueux
+Whisky Jack Daniel's 70cl,10000,18000,15,Spiritueux
+Pastis 51 70cl,6000,12000,15,Spiritueux
+Ricard 70cl,6500,12500,15,Spiritueux
+Gin Gordon's 70cl,5500,11000,15,Spiritueux
+Vodka Smirnoff 70cl,5500,11000,15,Spiritueux
+Rhum Negrita 70cl,4500,9000,15,Spiritueux
+Cognac Hennessy VS 70cl,15000,28000,10,Spiritueux
+Liqueur Baileys 70cl,9000,16000,10,Spiritueux
+Champagne Moët & Chandon 75cl,25000,45000,6,Spiritueux
+Vin rouge (bouteille) 75cl,2500,5000,30,Vins
+Vin blanc (bouteille) 75cl,2500,5000,30,Vins
+Vin rosé (bouteille) 75cl,2500,5000,20,Vins
+Vin mousseux 75cl,3000,6000,15,Vins
+Chips paquet 45g,300,500,50,Snacks
+Cacahuètes grillées sachet,200,400,50,Snacks
+Biscuits paquet,250,450,40,Snacks
+Chocolat tablette,400,700,30,Snacks
+Brochettes de bœuf (unité),500,1000,40,Snacks
+Poulet braisé (portion),1500,3000,20,Snacks
+Cigarettes Rothmans (paquet),1000,1500,40,Cigarettes
+Cigarettes Marlboro (paquet),1200,1800,40,Cigarettes
+Cigarettes Dunhill (paquet),1300,2000,30,Cigarettes
+Cigarettes London (paquet),900,1400,30,Cigarettes
+Glaçons (sachet),200,500,60,Divers
