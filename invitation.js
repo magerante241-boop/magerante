@@ -1,6 +1,7 @@
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { db, auth } from "./firebase-config.js";
+import { appState } from "./state.js";
 
 function genererToken() {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -68,3 +69,39 @@ async function traiterInvitationDepuisUrl() {
 }
 
 window.InvitationModule = { creerInvitationGerant, traiterInvitationDepuisUrl };
+
+// --- UI : bouton "Inviter un gerant" + modale de generation de lien ---
+document.addEventListener("DOMContentLoaded", () => {
+  const btnMenuInvite = document.getElementById("menuInviteGerant");
+  const inviteGate = document.getElementById("inviteGate");
+  const inputNom = document.getElementById("inviteNomGerant");
+  const btnGenerer = document.getElementById("btnGenererInvitation");
+  const linksZone = document.getElementById("inviteLinksZone");
+  const lWhatsapp = document.getElementById("inviteLienWhatsapp");
+  const lEmail = document.getElementById("inviteLienEmail");
+  const btnClose = document.getElementById("btnCloseInvite");
+  if (!btnMenuInvite || !inviteGate) return;
+
+  btnMenuInvite.addEventListener("click", () => {
+    const sideMenu = document.getElementById("sideMenu");
+    if (sideMenu) sideMenu.hidden = true;
+    linksZone.hidden = true;
+    inputNom.value = "";
+    inviteGate.hidden = false;
+  });
+  btnClose.addEventListener("click", () => { inviteGate.hidden = true; });
+  inviteGate.addEventListener("click", (e) => {
+    if (e.target === inviteGate) inviteGate.hidden = true;
+  });
+  btnGenerer.addEventListener("click", async () => {
+    const nom = inputNom.value.trim();
+    if (!nom) { alert("Indique le nom du gerant."); return; }
+    if (!appState.establishmentId) { alert("Etablissement non pret, reessaie."); return; }
+    btnGenerer.textContent = "Generation...";
+    const { lienWhatsapp, lienEmail } = await creerInvitationGerant(appState.establishmentId, nom);
+    lWhatsapp.href = lienWhatsapp;
+    lEmail.href = lienEmail;
+    linksZone.hidden = false;
+    btnGenerer.textContent = "Generer le lien";
+  });
+});
