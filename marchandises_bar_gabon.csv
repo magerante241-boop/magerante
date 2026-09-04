@@ -1,12 +1,12 @@
 Nom,Prix achat,Prix vente,Stock,Catégorie
-Régab 33cl,500,700,100,Bières
-Régab 65cl,800,1200,80,Bières
-Castel Beer 33cl,500,700,100,Bières
-Castel Beer 65cl,800,1200,80,Bières
-Beaufort 33cl,500,700,60,Bières
-Guinness 33cl,700,1000,50,Bières
+Régab 33cl,300,350,100,Bières
+Régab 65cl,433,600,80,Bières
+Castel Beer 33cl,275,450,100,Bières
+Castel Beer 65cl,550,900,80,Bières
+Beaufort 33cl,417,700,60,Bières
+Guinness 33cl,583,1000,50,Bières
 Heineken 33cl,750,1100,50,Bières
-33 Export 33cl,500,700,60,Bières
+33 Export 33cl,275,450,60,Bières
 Coca-Cola 33cl,300,500,120,Sodas
 Fanta Orange 33cl,300,500,100,Sodas
 Sprite 33cl,300,500,100,Sodas
@@ -14,7 +14,7 @@ Youki Cola 33cl,250,400,80,Sodas
 Youki Pamplemousse 33cl,250,400,80,Sodas
 Eau minérale Andza 50cl,200,400,150,Eaux
 Eau minérale Odzi 50cl,200,400,150,Eaux
-Eau minérale Andza 1,5L,400,700,80,Eaux
+Eau minérale Andza 1,5L,400,550,80,Eaux
 Jus d'ananas 33cl,350,600,60,Jus
 Jus de mangue 33cl,350,600,60,Jus
 Whisky Johnnie Walker Red Label 70cl,8000,15000,20,Spiritueux
