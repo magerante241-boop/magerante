@@ -314,12 +314,12 @@ async function creerEtablissementParDefaut(uid) {
     type: DEFAULT_ESTABLISHMENT.type,
     ownerId: uid,
     createdAt: serverTimestamp()
-  });
+  }, { merge: true });
   await setDoc(doc(db, "users", uid), {
     role: "PROPRIETAIRE",
     establishmentId: uid,
     createdAt: serverTimestamp()
-  });
+  }, { merge: true });
 }
 
 // --- Connexion anonyme automatique, invisible pour l'utilisateur ---
