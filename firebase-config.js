@@ -1,11 +1,8 @@
 // firebase-config.js
-// ⚠️ Complète bien l'apiKey ci-dessous avec la valeur exacte de ta console Firebase
-// (Paramètres du projet > Général > magerante-web > Extrait de configuration du SDK)
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, serverTimestamp,
-  collection, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where
+  getFirestore, doc, getDoc, getDocs, setDoc, serverTimestamp,
+  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInAnonymously,
@@ -24,13 +21,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 export {
-  doc, getDoc, setDoc, serverTimestamp,
-  collection, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where,
+  doc, getDoc, getDocs, setDoc, serverTimestamp,
+  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where,
   onAuthStateChanged, signInAnonymously,
   EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
   sendPasswordResetEmail, signOut
