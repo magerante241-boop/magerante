@@ -63,6 +63,21 @@
       </select>
       <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
       <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
+      <p class="auth-switch"><a href="#" id="linkGoToLogin">Déjà un compte ? Se connecter</a></p>
+    </div>
+
+    <div id="authLoginView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Se connecter</h1>
+      <p class="auth-hint">Retrouve ton compte propriétaire sur cet appareil.</p>
+      <p class="auth-error" id="loginError"></p>
+      <input type="email" id="loginEmail" placeholder="Adresse e-mail">
+      <div class="auth-password-wrap">
+        <input type="password" id="loginPassword" placeholder="Mot de passe">
+        <button type="button" class="auth-eye-btn" id="btnToggleLoginPassword">👁</button>
+      </div>
+      <button class="auth-btn-primary" id="btnLogin">Se connecter</button>
+      <p class="auth-switch"><a href="#" id="linkGoToRegister">Pas encore de compte ? En créer un</a></p>
     </div>
 
   </div>
@@ -157,6 +172,7 @@
       </div>
       <ul class="side-menu-list">
         <li><button class="side-menu-item" id="menuRenameEstablishment">✏️ Renommer mon établissement</button></li>
+        <li><button class="side-menu-item" id="menuLogin">🔑 Se connecter</button></li>
         <li><button class="side-menu-item" id="menuCreateAccount">🏢 Créer un compte propriétaire</button></li>
         <li><button class="side-menu-item" id="menuInviteGerant" hidden>📨 Inviter un gérant</button></li>
         <li id="accountStatusItem" class="side-menu-status" hidden></li>

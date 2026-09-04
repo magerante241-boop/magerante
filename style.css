@@ -353,3 +353,6 @@ body{
 }
 .side-menu-status.pending{color:var(--accent, #b8902e);}
 .side-menu-status.validated{color:var(--primary);}
+
+.auth-switch{ text-align:center; font-size:13px; margin-top:10px; }
+.auth-switch a{ color:var(--primary); text-decoration:underline; cursor:pointer; }
