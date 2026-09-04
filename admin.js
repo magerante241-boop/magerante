@@ -10,10 +10,13 @@ const adminPanel = document.getElementById("adminPanel");
 const adminError = document.getElementById("adminError");
 const pendingList = document.getElementById("pendingList");
 
+let loginAttempted = false;
+
 document.getElementById("btnAdminLogin").addEventListener("click", async () => {
   const email = document.getElementById("adminEmail").value.trim();
   const password = document.getElementById("adminPassword").value;
   adminError.textContent = "";
+  loginAttempted = true;
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (err) {
@@ -22,14 +25,15 @@ document.getElementById("btnAdminLogin").addEventListener("click", async () => {
 });
 
 onAuthStateChanged(auth, (user) => {
-  if (user && user.email === ADMIN_EMAIL) {
+  if (user && !user.isAnonymous && user.email === ADMIN_EMAIL) {
     loginBox.hidden = true;
     adminPanel.hidden = false;
+    adminError.textContent = "";
     chargerComptesEnAttente();
   } else {
     loginBox.hidden = false;
     adminPanel.hidden = true;
-    if (user && user.email !== ADMIN_EMAIL) {
+    if (loginAttempted && user && !user.isAnonymous && user.email !== ADMIN_EMAIL) {
       adminError.textContent = "Ce compte n'a pas les droits admin.";
     }
   }
