@@ -93,7 +93,7 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
   }
   const uid = await attendreUid();
   if (!uid) {
-    errorEl.textContent = "Connexion impossible, vérifie ta connexion internet et réessaie.";
+    errorEl.textContent = "Connexion impossible : " + (window.AuthState.lastAuthError || "erreur inconnue (pas de connexion anonyme détectée)");
     return;
   }
   btn.disabled = true;
@@ -149,7 +149,7 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   }
   const uid = await attendreUid();
   if (!uid) {
-    errorEl.textContent = "Connexion impossible, vérifie ta connexion internet et réessaie.";
+    errorEl.textContent = "Connexion impossible : " + (window.AuthState.lastAuthError || "erreur inconnue (pas de connexion anonyme détectée)");
     return;
   }
 
@@ -246,7 +246,7 @@ onAuthStateChanged(auth, async (user) => {
     try {
       await signInAnonymously(auth);
     } catch (err) {
-      console.warn("Connexion anonyme impossible :", err);
+      console.warn("Connexion anonyme impossible :", err); window.AuthState.lastAuthError = err && (err.code + " - " + err.message);
     }
     return;
   }
