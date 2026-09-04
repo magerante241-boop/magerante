@@ -7,6 +7,7 @@ window.addEventListener("load", () => {
   if (splash) {
     setTimeout(() => splash.classList.add("hidden"), 2200);
   }
+  if (window.InvitationModule) window.InvitationModule.traiterInvitationDepuisUrl();
 });
 
 // --- Date/heure dans l'en-tête ---
