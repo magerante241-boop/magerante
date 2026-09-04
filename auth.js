@@ -335,7 +335,18 @@ onAuthStateChanged(auth, async (user) => {
 
   window.AuthState.ready = true;
 
-  const userSnap = await getDoc(doc(db, "users", user.uid));
+  let userSnap;
+  try {
+    userSnap = await getDoc(doc(db, "users", user.uid));
+  } catch (err) {
+    if (accountStatusItem) {
+      accountStatusItem.hidden = false;
+      accountStatusItem.textContent = "Erreur lecture profil : " + (err.code || err.message);
+      accountStatusItem.className = "side-menu-status pending";
+    }
+    console.warn("Erreur getDoc users :", err);
+    return;
+  }
   if (!userSnap.exists()) {
     // Mode visiteur : on crée l'établissement par défaut tout seul,
     // aucune modale, aucune action requise de l'utilisateur.
