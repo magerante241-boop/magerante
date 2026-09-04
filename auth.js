@@ -210,6 +210,10 @@ function updateAccountStatusBadge() {
     accountStatusItem.textContent = "⏳ Compte en attente de validation";
     accountStatusItem.className = "side-menu-status pending";
   }
+  const menuInvite = document.getElementById("menuInviteGerant");
+  if (menuInvite) {
+    menuInvite.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  }
 }
 
 async function ouvrirApplication(establishmentId) {
