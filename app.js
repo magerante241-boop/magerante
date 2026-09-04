@@ -124,6 +124,52 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
 
 renderCalc();
 
+// --- Tuiles Bar / Snack / Club : liste de produits filtrée par catégorie ---
+const calcProduitsListe = document.getElementById("calcProduitsListe");
+
+function fermerListeProduits() {
+  calcProduitsListe.hidden = true;
+  calcProduitsListe.innerHTML = "";
+}
+
+document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      alert("Initialisation en cours, réessaie dans un instant.");
+      return;
+    }
+    if (!window.InventaireModule || !window.InventaireModule.getProduitsParCategorie) {
+      alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+      return;
+    }
+    const categorie = btn.dataset.cat;
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
+    calcProduitsListe.hidden = false;
+    try {
+      const produits = await window.InventaireModule.getProduitsParCategorie(categorie);
+      if (!produits.length) {
+        calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit dans "${categorie}".</p>`;
+        return;
+      }
+      calcProduitsListe.innerHTML = produits.map((p) => `
+        <button class="calc-produit-item" data-prix="${p.prixVente}">
+          <span class="calc-produit-nom">${p.nom}</span>
+          <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+        </button>
+      `).join("");
+      calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          calcExpr = item.dataset.prix;
+          renderCalc();
+          fermerListeProduits();
+        });
+      });
+    } catch (err) {
+      calcProduitsListe.innerHTML = `<p class="placeholder-msg">Erreur : ${err.message}</p>`;
+    }
+  });
+});
+
 // --- Menu latéral ---
 const sideMenu = document.getElementById("sideMenu");
 function openSideMenu() {
