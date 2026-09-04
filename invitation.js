@@ -7,7 +7,7 @@ function genererToken() {
 }
 
 // PROPRIETAIRE : génère un lien d'invitation pour un gérant
-export async function creerInvitationGerant(estId, nomGerant) {
+async function creerInvitationGerant(estId, nomGerant) {
   const token = genererToken();
   await setDoc(doc(db, "invitations", token), {
     estId,
@@ -31,7 +31,7 @@ function genererToken() {
 }
 
 // PROPRIETAIRE : génère un lien d'invitation pour un gérant
-export async function creerInvitationGerant(estId, nomGerant) {
+async function creerInvitationGerant(estId, nomGerant) {
   const token = genererToken();
   await setDoc(doc(db, "invitations", token), {
     estId,
@@ -45,7 +45,7 @@ export async function creerInvitationGerant(estId, nomGerant) {
 }
 
 // GERANT : au clic sur le lien (?invite=token), rejoint l'établissement
-export async function traiterInvitationDepuisUrl() {
+async function traiterInvitationDepuisUrl() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("invite");
   if (!token) return null;
@@ -72,3 +72,5 @@ export async function traiterInvitationDepuisUrl() {
     });
   });
 }
+
+window.InvitationModule = { creerInvitationGerant, traiterInvitationDepuisUrl };
