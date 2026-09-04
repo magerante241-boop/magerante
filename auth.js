@@ -26,6 +26,25 @@ function hideAllViews() {
   registerView.hidden = true;
 }
 
+// Attend jusqu'à 5s que la connexion anonyme se termine, au lieu d'échouer
+// immédiatement si le formulaire est rempli et validé très vite après l'ouverture.
+function attendreUid() {
+  if (auth.currentUser?.uid) return Promise.resolve(auth.currentUser.uid);
+  return new Promise((resolve) => {
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      if (auth.currentUser?.uid) {
+        clearInterval(interval);
+        resolve(auth.currentUser.uid);
+      } else if (tries > 25) {
+        clearInterval(interval);
+        resolve(null);
+      }
+    }, 200);
+  });
+}
+
 function openEstablishmentModal() {
   // N'est plus déclenchée automatiquement : uniquement si l'utilisateur
   // choisit explicitement "Personnaliser mon établissement" (ex. menu Plus).
@@ -72,9 +91,9 @@ document.getElementById("btnCreateEstablishment").addEventListener("click", asyn
     errorEl.textContent = "Donne un nom à ton établissement.";
     return;
   }
-  const uid = auth.currentUser?.uid;
+  const uid = await attendreUid();
   if (!uid) {
-    errorEl.textContent = "Connexion en cours, réessaie dans un instant.";
+    errorEl.textContent = "Connexion impossible, vérifie ta connexion internet et réessaie.";
     return;
   }
   btn.disabled = true;
@@ -128,9 +147,9 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
     errorEl.textContent = "Le mot de passe doit contenir au moins 6 caractères.";
     return;
   }
-  const uid = auth.currentUser?.uid;
+  const uid = await attendreUid();
   if (!uid) {
-    errorEl.textContent = "Connexion en cours, réessaie dans un instant.";
+    errorEl.textContent = "Connexion impossible, vérifie ta connexion internet et réessaie.";
     return;
   }
 
