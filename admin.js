@@ -45,26 +45,34 @@ function chargerComptesEnAttente() {
     where("accountType", "==", "enregistre"),
     where("validated", "==", false)
   );
-  onSnapshot(q, (snap) => {
-    if (snap.empty) {
-      pendingList.innerHTML = "<p>Aucun compte en attente.</p>";
-      return;
-    }
-    pendingList.innerHTML = "";
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      const card = document.createElement("div");
-      card.className = "compte-card";
-      card.innerHTML =
-        "<strong>" + (d.nom || "") + " " + (d.prenom || "") + "</strong><br>" +
-        "Email : " + (d.email || "") + "<br>" +
-        "Telephone : " + (d.telephone || "") + "<br>" +
-        "<button data-uid='" + docSnap.id + "'>Valider ce compte</button>";
-      card.querySelector("button").addEventListener("click", async (e) => {
-        const uid = e.target.getAttribute("data-uid");
-        await updateDoc(doc(db, "users", uid), { validated: true });
+  onSnapshot(
+    q,
+    (snap) => {
+      if (snap.empty) {
+        pendingList.innerHTML = "<p>Aucun compte en attente.</p>";
+        return;
+      }
+      pendingList.innerHTML = "";
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "compte-card";
+        card.innerHTML =
+          "<strong>" + (d.nom || "") + " " + (d.prenom || "") + "</strong><br>" +
+          "Email : " + (d.email || "") + "<br>" +
+          "Telephone : " + (d.telephone || "") + "<br>" +
+          "<button data-uid='" + docSnap.id + "'>Valider ce compte</button>";
+        card.querySelector("button").addEventListener("click", async (e) => {
+          const uid = e.target.getAttribute("data-uid");
+          await updateDoc(doc(db, "users", uid), { validated: true });
+        });
+        pendingList.appendChild(card);
       });
-      pendingList.appendChild(card);
-    });
-  });
+    },
+    (err) => {
+      pendingList.innerHTML =
+        "<p style='color:#b00020; word-break:break-all;'>Erreur de chargement : " + err.message + "</p>";
+      console.error("Erreur onSnapshot users:", err);
+    }
+  );
 }
