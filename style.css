@@ -356,3 +356,57 @@ body{
 
 .auth-switch{ text-align:center; font-size:13px; margin-top:10px; }
 .auth-switch a{ color:var(--primary); text-decoration:underline; cursor:pointer; }
+
+/* --- Tuiles catégories (Bar/Snack/Club) --- */
+.calc-categories {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 0;
+}
+.calc-cat-btn {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  border-radius: 10px;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.calc-cat-btn:active {
+  background: #3a3a3a;
+}
+
+/* --- Liste déroulante de produits --- */
+.calc-produits-liste {
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 8px 12px 0;
+  border-radius: 10px;
+  background: #1c1c1c;
+}
+.calc-produit-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid #2f2f2f;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  text-align: left;
+}
+.calc-produit-item:last-child {
+  border-bottom: none;
+}
+.calc-produit-item:active {
+  background: #2a2a2a;
+}
+.calc-produit-nom {
+  font-weight: 500;
+}
+.calc-produit-prix {
+  color: #9be89b;
+  font-weight: 600;
+}

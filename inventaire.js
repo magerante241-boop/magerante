@@ -1,7 +1,7 @@
 // inventaire.js — Module Inventaire : liste, ajout, édition, suppression des produits
 import {
   db, doc, collection, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, serverTimestamp
+  onSnapshot, query, orderBy, where, getDocs, serverTimestamp
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -48,7 +48,7 @@ export function render(container) {
       card.innerHTML = `
         <div class="inv-card-info">
           <span class="inv-card-nom">${escapeHtml(p.nom)}</span>
-          <span class="inv-card-meta">Achat ${formatFcfa(p.prixAchat)} · Vente ${formatFcfa(p.prixVente)}</span>
+          <span class="inv-card-meta">Achat ${formatFcfa(p.prixAchat)} · Vente ${formatFcfa(p.prixVente)}${p.categorie ? " · " + escapeHtml(p.categorie) : ""}</span>
         </div>
         <span class="inv-card-stock${isLow ? " low" : ""}">${p.stock} en stock</span>
       `;
@@ -70,6 +70,16 @@ export function cleanup() {
   closeModal();
 }
 
+// --- Appelé par app.js (tuiles Bar/Snack/Club) pour récupérer les produits d'une catégorie ---
+export async function getProduitsParCategorie(categorie) {
+  if (!appState.establishmentId) return [];
+  const q = query(produitsRef(), where("categorie", "==", categorie), orderBy("nom"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+const CATEGORIES = ["Bar", "Snack", "Club"];
+
 function openModal(produit) {
   produitEnEdition = produit;
   const backdrop = document.createElement("div");
@@ -82,6 +92,13 @@ function openModal(produit) {
       <div class="inv-field">
         <label>Nom du produit</label>
         <input type="text" id="invNom" value="${produit ? escapeAttr(produit.nom) : ""}" placeholder="Ex : Bière Régab 65cl">
+      </div>
+      <div class="inv-field">
+        <label>Catégorie</label>
+        <select id="invCategorie">
+          <option value="">— Choisir —</option>
+          ${CATEGORIES.map((c) => `<option value="${c}" ${produit && produit.categorie === c ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
       </div>
       <div class="inv-field">
         <label>Prix d'achat (FCFA)</label>
@@ -120,12 +137,14 @@ function closeModal() {
 async function saveProduit() {
   const errorEl = document.getElementById("invModalError");
   const nom = document.getElementById("invNom").value.trim();
+  const categorie = document.getElementById("invCategorie").value;
   const prixAchat = parseFloat(document.getElementById("invPrixAchat").value);
   const prixVente = parseFloat(document.getElementById("invPrixVente").value);
   const stock = parseInt(document.getElementById("invStock").value, 10);
   errorEl.textContent = "";
 
   if (!nom) { errorEl.textContent = "Donne un nom au produit."; return; }
+  if (!categorie) { errorEl.textContent = "Choisis une catégorie."; return; }
   if (isNaN(prixAchat) || prixAchat < 0) { errorEl.textContent = "Prix d'achat invalide."; return; }
   if (isNaN(prixVente) || prixVente < 0) { errorEl.textContent = "Prix de vente invalide."; return; }
   if (isNaN(stock) || stock < 0) { errorEl.textContent = "Stock invalide."; return; }
@@ -138,11 +157,11 @@ async function saveProduit() {
     if (produitEnEdition) {
       await updateDoc(
         doc(db, "establishments", appState.establishmentId, "produits", produitEnEdition.id),
-        { nom, prixAchat, prixVente, stock, updatedAt: serverTimestamp() }
+        { nom, categorie, prixAchat, prixVente, stock, updatedAt: serverTimestamp() }
       );
     } else {
       await addDoc(produitsRef(), {
-        nom, prixAchat, prixVente, stock,
+        nom, categorie, prixAchat, prixVente, stock,
         createdAt: serverTimestamp(), updatedAt: serverTimestamp()
       });
     }
@@ -175,4 +194,4 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 // Exposé pour que app.js (script classique, non-module) puisse l'appeler
-window.InventaireModule = { render, cleanup };
+window.InventaireModule = { render, cleanup, getProduitsParCategorie };
