@@ -94,8 +94,9 @@
 
   .settings-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-    display: flex; align-items: flex-end; z-index: 50;
+    align-items: flex-end; z-index: 50;
   }
+  .settings-overlay:not([hidden]) { display: flex; }
   .settings-panel {
     background: #f4ede0; width: 100%; border-radius: 18px 18px 0 0;
     padding: 16px; max-width: 700px; margin: 0 auto;
