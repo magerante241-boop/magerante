@@ -296,6 +296,16 @@ function updateAccountStatusBadge() {
   if (menuLogout) {
     menuLogout.hidden = window.AuthState.accountType !== "enregistre";
   }
+
+  const menuLogin = document.getElementById("menuLogin");
+  if (menuLogin) {
+    menuLogin.hidden = window.AuthState.accountType === "enregistre";
+  }
+
+  const menuCreateAccount = document.getElementById("menuCreateAccount");
+  if (menuCreateAccount) {
+    menuCreateAccount.hidden = window.AuthState.accountType === "enregistre";
+  }
 }
 
 async function ouvrirApplication(establishmentId) {
