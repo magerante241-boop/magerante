@@ -1,6 +1,6 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged,
-  collection, query, where, onSnapshot, doc, updateDoc
+  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc
 } from "./firebase-config.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
@@ -29,6 +29,7 @@ onAuthStateChanged(auth, (user) => {
     loginBox.hidden = true;
     adminPanel.hidden = false;
     adminError.textContent = "";
+    chargerDashboard();
     chargerComptesEnAttente();
   } else {
     loginBox.hidden = false;
@@ -38,6 +39,46 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 });
+
+async function chargerDashboard() {
+  try {
+    const usersSnap = await getDocs(collection(db, "users"));
+    let totalComptes = 0, valides = 0, enAttente = 0;
+    usersSnap.forEach((d) => {
+      const data = d.data();
+      if (data.accountType === "enregistre") {
+        totalComptes++;
+        if (data.validated) valides++; else enAttente++;
+      }
+    });
+    document.getElementById("statTotalComptes").textContent = totalComptes;
+    document.getElementById("statValides").textContent = valides;
+    document.getElementById("statEnAttente").textContent = enAttente;
+  } catch (err) {
+    console.error("Erreur stats comptes:", err);
+  }
+
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    document.getElementById("statEtablissements").textContent = estSnap.size;
+  } catch (err) {
+    console.error("Erreur stats etablissements:", err);
+    document.getElementById("statEtablissements").textContent = "?";
+  }
+
+  try {
+    const ventesSnap = await getDocs(collectionGroup(db, "ventes"));
+    let total = 0;
+    ventesSnap.forEach((d) => {
+      const data = d.data();
+      total += Number(data.montant || 0);
+    });
+    document.getElementById("statCAGlobal").textContent = total.toLocaleString("fr-FR") + " FCFA";
+  } catch (err) {
+    console.error("Erreur CA global (normal si module Ventes pas encore actif):", err);
+    document.getElementById("statCAGlobal").textContent = "0 FCFA";
+  }
+}
 
 function chargerComptesEnAttente() {
   const q = query(
@@ -49,7 +90,7 @@ function chargerComptesEnAttente() {
     q,
     (snap) => {
       if (snap.empty) {
-        pendingList.innerHTML = "<p>Aucun compte en attente.</p>";
+        pendingList.innerHTML = "<p class='empty-msg'>Aucun compte en attente.</p>";
         return;
       }
       pendingList.innerHTML = "";
@@ -58,9 +99,9 @@ function chargerComptesEnAttente() {
         const card = document.createElement("div");
         card.className = "compte-card";
         card.innerHTML =
-          "<strong>" + (d.nom || "") + " " + (d.prenom || "") + "</strong><br>" +
-          "Email : " + (d.email || "") + "<br>" +
-          "Telephone : " + (d.telephone || "") + "<br>" +
+          "<strong>" + (d.nom || "") + " " + (d.prenom || "") + "</strong>" +
+          "<div class='meta'>Email : " + (d.email || "") + "</div>" +
+          "<div class='meta'>Telephone : " + (d.telephone || "") + "</div>" +
           "<button data-uid='" + docSnap.id + "'>Valider ce compte</button>";
         card.querySelector("button").addEventListener("click", async (e) => {
           const uid = e.target.getAttribute("data-uid");
