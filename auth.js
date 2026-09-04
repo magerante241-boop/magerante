@@ -12,16 +12,25 @@ import {
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
+const ADMIN_EMAIL = "magerante241@gmail.com";
+
 const authGate = document.getElementById("authGate");
 const establishmentView = document.getElementById("authEstablishmentView");
 const registerView = document.getElementById("authRegisterView");
 const loginView = document.getElementById("authLoginView");
 const etablissementNomEl = document.getElementById("etablissementNom");
 const accountStatusItem = document.getElementById("accountStatusItem");
+const btnAdminAccess = document.getElementById("btnAdminAccess");
 
 window.AuthState = { ready: false, hasEstablishment: false, accountType: "anonyme", validated: false };
 
 const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
+
+if (btnAdminAccess) {
+  btnAdminAccess.addEventListener("click", () => {
+    window.location.href = "admin.html";
+  });
+}
 
 function hideAllViews() {
   establishmentView.hidden = true;
@@ -335,12 +344,17 @@ async function creerEtablissementParDefaut(uid) {
 // --- Connexion anonyme automatique, invisible pour l'utilisateur ---
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    if (btnAdminAccess) btnAdminAccess.hidden = true;
     try {
       await signInAnonymously(auth);
     } catch (err) {
       console.warn("Connexion anonyme impossible :", err); window.AuthState.lastAuthError = err && (err.code + " - " + err.message);
     }
     return;
+  }
+
+  if (btnAdminAccess) {
+    btnAdminAccess.hidden = !(!user.isAnonymous && user.email === ADMIN_EMAIL);
   }
 
   window.AuthState.ready = true;
