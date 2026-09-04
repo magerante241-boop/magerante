@@ -40,6 +40,31 @@
       <button class="auth-btn-primary" id="btnCreateEstablishment">Valider et démarrer</button>
     </div>
 
+    <div id="authRegisterView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Compte propriétaire</h1>
+      <p class="auth-hint">Crée ton compte pour inviter des gérants et suivre tes ventes à distance. Tes données actuelles sont conservées.</p>
+      <p class="auth-error" id="registerError"></p>
+      <input type="text" id="regNom" placeholder="Nom">
+      <input type="text" id="regPrenom" placeholder="Prénom">
+      <input type="tel" id="regTelephone" placeholder="Numéro de téléphone">
+      <input type="email" id="regEmail" placeholder="Adresse e-mail">
+      <div class="auth-password-wrap">
+        <input type="password" id="regPassword" placeholder="Mot de passe">
+        <button type="button" class="auth-eye-btn" id="btnToggleRegPassword">👁</button>
+      </div>
+      <input type="text" id="regEtablissementNom" placeholder="Nom de l'établissement">
+      <select id="regEtablissementType">
+        <option value="bar">Bar</option>
+        <option value="snack">Snack</option>
+        <option value="club">Club</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="autre">Autre</option>
+      </select>
+      <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
+      <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
+    </div>
+
   </div>
 
   <!-- RACINE DE L'APPLICATION (toujours visible — la calculatrice est en accès libre) -->
@@ -112,6 +137,8 @@
       </div>
       <ul class="side-menu-list">
         <li><button class="side-menu-item" id="menuRenameEstablishment">✏️ Renommer mon établissement</button></li>
+        <li><button class="side-menu-item" id="menuCreateAccount">🏢 Créer un compte propriétaire</button></li>
+        <li id="accountStatusItem" class="side-menu-status" hidden></li>
         <li><button class="side-menu-item" disabled>📊 Rapports <span class="soon">bientôt</span></button></li>
         <li><button class="side-menu-item" disabled>👥 Utilisateurs <span class="soon">bientôt</span></button></li>
       </ul>

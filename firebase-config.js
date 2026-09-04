@@ -8,7 +8,8 @@ import {
   collection, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged, signInAnonymously
+  getAuth, onAuthStateChanged, signInAnonymously,
+  EmailAuthProvider, linkWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -29,5 +30,6 @@ export const auth = getAuth(app);
 export {
   doc, getDoc, setDoc, serverTimestamp,
   collection, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
-  onAuthStateChanged, signInAnonymously
+  onAuthStateChanged, signInAnonymously,
+  EmailAuthProvider, linkWithCredential
 };

@@ -127,6 +127,10 @@ document.getElementById("menuRenameEstablishment").addEventListener("click", () 
   closeSideMenu();
   if (window.openAuthModal) window.openAuthModal();
 });
+document.getElementById("menuCreateAccount").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.openRegisterModal) window.openRegisterModal();
+});
 
 // --- Service Worker (mode PWA / hors-connexion) ---
 // Purge forcée, une seule fois par appareil : supprime tout ancien Service
