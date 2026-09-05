@@ -78,6 +78,14 @@ export async function getProduitsParCategorie(categorie) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+// --- Appelé par app.js (recherche texte via clavier alphabétique) ---
+export async function getTousLesProduits() {
+  if (!appState.establishmentId) return [];
+  const q = query(produitsRef(), orderBy("nom"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 const CATEGORIES = ["Bar", "Snack", "Club"];
 
 function openModal(produit) {
