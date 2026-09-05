@@ -520,5 +520,5 @@ body{
 /* --- Réorganisation calculatrice : catégories/produits en haut, affichage centré, actions en bas --- */
 .calc-categories { order: 1; }
 .calc-produits-liste { order: 2; }
-.calc-display { order: 3; flex: 1; min-height: 0; }
+.calc-display { order: 3; flex: 1; min-height: 160px; }
 .calc-actions { order: 4; margin-top: 8px; }
