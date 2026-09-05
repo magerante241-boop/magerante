@@ -199,6 +199,7 @@ document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
       return;
     }
     const categorie = btn.dataset.cat;
+    if (!categorie) return; // ex: bouton "Rechercher" (pas de categorie -> pas de requête Firestore)
     calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
     calcProduitsListe.hidden = false;
     try {
