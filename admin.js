@@ -295,3 +295,12 @@ document.getElementById("btnImporterCatalogue").addEventListener("click", async 
     console.error(err);
   }
 });
+
+document.getElementById("catalogueFileInput").addEventListener("change", (e) => {
+  const label = document.getElementById("catalogueFileLabel");
+  if (e.target.files.length) {
+    label.textContent = "📄 " + e.target.files[0].name;
+  } else {
+    label.textContent = "📄 Choisir un fichier CSV";
+  }
+});
