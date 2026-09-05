@@ -2,7 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, serverTimestamp,
-  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment
+  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInAnonymously,
@@ -27,6 +28,7 @@ export const auth = getAuth(app);
 export {
   doc, getDoc, getDocs, setDoc, serverTimestamp,
   collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment,
+  writeBatch,
   onAuthStateChanged, signInAnonymously,
   EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
   sendPasswordResetEmail, signOut
