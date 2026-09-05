@@ -132,7 +132,7 @@ body{
 }
 
 /* MAIN */
-.main-content{flex:1; display:flex; flex-direction:column; padding:14px; padding-bottom:280px; overflow-y:auto;}
+.main-content{flex:1; display:flex; flex-direction:column; padding:14px; overflow-y:auto; min-height:0;}
 
 /* CALCULATRICE */
 .calc-zone{
@@ -168,7 +168,7 @@ body{
 
 /* NUMPAD — touches chromées, chaque chiffre a sa teinte, effet brillant + relief */
 .numpad{
-  position:fixed; bottom:64px; left:0; right:0;
+  flex-shrink:0;
   background:var(--surface); box-shadow:0 -4px 18px rgba(43,38,32,0.06);
   display:grid; grid-template-columns:repeat(4,1fr); gap:3px;
   padding:4px; z-index:9;
@@ -288,8 +288,9 @@ body{
 }
 
 /* BOTTOM NAV */
+#appRoot{ display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; }
 .bottom-nav{
-  position:fixed; bottom:0; left:0; right:0;
+  flex-shrink:0;
   background:var(--surface); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
   display:flex; z-index:10;
 }
