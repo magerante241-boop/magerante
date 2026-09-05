@@ -1,6 +1,6 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
-  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc
+  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, serverTimestamp
 } from "./firebase-config.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
@@ -227,3 +227,71 @@ async function chargerInventaireGlobal() {
     document.getElementById("statValeurStock").textContent = "0 FCFA";
   }
 }
+
+// --- Import catalogue CSV vers tous les etablissements ---
+function parserCSV(text) {
+  const lignes = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+  const entetes = lignes[0].split(",").map((h) => h.trim());
+  return lignes.slice(1).map((ligne) => {
+    const valeurs = ligne.split(",");
+    const obj = {};
+    entetes.forEach((h, i) => { obj[h] = (valeurs[i] || "").trim(); });
+    return obj;
+  });
+}
+
+document.getElementById("btnImporterCatalogue").addEventListener("click", async () => {
+  const fileInput = document.getElementById("catalogueFileInput");
+  const statusEl = document.getElementById("importStatus");
+  const file = fileInput.files[0];
+  if (!file) {
+    statusEl.textContent = "Choisis d'abord un fichier CSV.";
+    return;
+  }
+  if (!confirm("Importer ce catalogue vers TOUS les etablissements ? Cette action ajoutera des produits a chaque etablissement existant.")) {
+    return;
+  }
+  statusEl.textContent = "Lecture du fichier...";
+  try {
+    const texte = await file.text();
+    const lignes = parserCSV(texte);
+    const produits = lignes.map((l) => ({
+      nom: l["Nom"] || "",
+      categorie: l["Catégorie"] || l["Categorie"] || "",
+      prixAchat: Number(l["Prix achat"]) || 0,
+      prixVente: Number(l["Prix vente"]) || 0,
+      stock: Number(l["Stock"]) || 0,
+    })).filter((p) => p.nom);
+
+    if (!produits.length) {
+      statusEl.textContent = "Aucun produit valide trouve dans le fichier.";
+      return;
+    }
+
+    statusEl.textContent = "Lecture des etablissements...";
+    const estSnap = await getDocs(collection(db, "establishments"));
+    const etablissementIds = estSnap.docs.map((d) => d.id);
+
+    if (!etablissementIds.length) {
+      statusEl.textContent = "Aucun etablissement trouve.";
+      return;
+    }
+
+    let total = 0;
+    for (const estId of etablissementIds) {
+      for (const p of produits) {
+        await addDoc(collection(db, "establishments", estId, "produits"), {
+          ...p,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        total++;
+      }
+      statusEl.textContent = `Import en cours... (${total} produits crees)`;
+    }
+    statusEl.textContent = `Import termine : ${produits.length} produits ajoutes a ${etablissementIds.length} etablissement(s), soit ${total} documents crees.`;
+  } catch (err) {
+    statusEl.textContent = "Erreur : " + err.message;
+    console.error(err);
+  }
+});
