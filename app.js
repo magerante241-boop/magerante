@@ -254,6 +254,10 @@ document.getElementById("menuRenameEstablishment").addEventListener("click", () 
   if (window.openAuthModal) window.openAuthModal();
 });
 document.getElementById("menuImportProduits").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
   closeSideMenu();
   if (!window.InventaireModule || !window.InventaireModule.importProduitsDemo) {
     alert("Module Inventaire en cours de chargement, réessaie dans un instant.");

@@ -13,6 +13,7 @@ import {
 import { appState } from "./state.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
+window.ADMIN_EMAIL = ADMIN_EMAIL;
 
 const authGate = document.getElementById("authGate");
 const establishmentView = document.getElementById("authEstablishmentView");
@@ -22,6 +23,7 @@ const etablissementNomEl = document.getElementById("etablissementNom");
 const accountStatusItem = document.getElementById("accountStatusItem");
 const btnAdminAccess = document.getElementById("btnAdminAccess");
 const menuDashboardBtn = document.getElementById("menuDashboard");
+const menuImportProduitsBtn = document.getElementById("menuImportProduits");
 if (menuDashboardBtn) menuDashboardBtn.addEventListener("click", () => { window.location.href = "dashboard.html"; });
 
 window.AuthState = { ready: false, hasEstablishment: false, accountType: "anonyme", validated: false };
@@ -349,6 +351,7 @@ async function creerEtablissementParDefaut(uid) {
 onAuthStateChanged(auth, async (user) => {
   const navPlusBtn = document.querySelector('.nav-btn[data-view="plus"]');
   if (navPlusBtn) navPlusBtn.hidden = user?.email !== ADMIN_EMAIL;
+  if (menuImportProduitsBtn) menuImportProduitsBtn.hidden = user?.email !== ADMIN_EMAIL;
   if (!user) {
     if (btnAdminAccess) btnAdminAccess.hidden = true;
     try {
@@ -396,6 +399,7 @@ onAuthStateChanged(auth, async (user) => {
   window.AuthState.accountType = userData.accountType || "anonyme";
   window.AuthState.validated = !!userData.validated;
   window.AuthState.role = userData.role || "PROPRIETAIRE";
+  window.AuthState.email = user.email || null;
   updateAccountStatusBadge();
   await ouvrirApplication(userData.establishmentId);
 });
