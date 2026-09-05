@@ -142,7 +142,7 @@ body{
 }
 .calc-expression{color:var(--muted); font-size:14px; min-height:18px;}
 .calc-result{font-size:32px; font-weight:700; margin-top:4px; color:var(--primary-dark);}
-.calc-actions{display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; justify-content:flex-end;}
+.calc-actions{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; justify-content:center;}
 .calc-actions[hidden]{display:flex !important;}
 .calc-actions button{
   position:relative; overflow:hidden;
