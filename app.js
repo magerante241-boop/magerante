@@ -253,6 +253,25 @@ document.getElementById("menuRenameEstablishment").addEventListener("click", () 
   closeSideMenu();
   if (window.openAuthModal) window.openAuthModal();
 });
+document.getElementById("menuImportProduits").addEventListener("click", async () => {
+  closeSideMenu();
+  if (!window.InventaireModule || !window.InventaireModule.importProduitsDemo) {
+    alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Importer 41 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
+  try {
+    const res = await window.InventaireModule.importProduitsDemo();
+    if (res.success) {
+      alert(res.count + " produits importés avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de l'import : " + err.message);
+  }
+});
+
 document.getElementById("menuLogin").addEventListener("click", () => {
   closeSideMenu();
   if (window.openLoginModal) window.openLoginModal();
