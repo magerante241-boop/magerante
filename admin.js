@@ -379,3 +379,11 @@ document.getElementById("btnViderInventaire").addEventListener("click", async ()
     console.error(err);
   }
 });
+
+// --- Tuiles stats cliquables : defilement vers la section correspondante ---
+document.querySelectorAll(".stat-card[data-target]").forEach((card) => {
+  card.addEventListener("click", () => {
+    const cible = document.getElementById(card.dataset.target);
+    if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
