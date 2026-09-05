@@ -343,6 +343,8 @@ async function creerEtablissementParDefaut(uid) {
 
 // --- Connexion anonyme automatique, invisible pour l'utilisateur ---
 onAuthStateChanged(auth, async (user) => {
+  const navPlusBtn = document.querySelector('.nav-btn[data-view="plus"]');
+  if (navPlusBtn) navPlusBtn.hidden = user?.email !== ADMIN_EMAIL;
   if (!user) {
     if (btnAdminAccess) btnAdminAccess.hidden = true;
     try {
