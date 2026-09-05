@@ -143,7 +143,6 @@ body{
 .calc-expression{color:var(--muted); font-size:14px; min-height:18px;}
 .calc-result{font-size:32px; font-weight:700; margin-top:4px; color:var(--primary-dark);}
 .calc-actions{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; justify-content:center;}
-.calc-actions[hidden]{display:flex !important;}
 .calc-actions button{
   position:relative; overflow:hidden;
   background:linear-gradient(160deg,var(--primary) 0%,var(--primary-dark) 60%,#0f3d28 100%);
@@ -381,21 +380,23 @@ body{
 
 /* --- Liste déroulante de produits --- */
 .calc-produits-liste {
-  max-height: 240px;
+  max-height: 160px;
   overflow-y: auto;
-  margin: 8px 12px 0;
+  margin: 6px 0 0;
   border-radius: 10px;
-  background: #1c1c1c;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .calc-produit-item {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border: none;
-  border-bottom: 1px solid #2f2f2f;
+  border-bottom: 1px solid var(--border);
   background: transparent;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   font-weight: 600;
   text-align: left;
@@ -404,14 +405,14 @@ body{
   border-bottom: none;
 }
 .calc-produit-item:active {
-  background: #2a2a2a;
+  background: var(--surface);
 }
 .calc-produit-nom {
   font-weight: 500;
 }
 .calc-produit-prix {
-  color: #9be89b;
-  font-weight: 600;
+  color: var(--primary-dark);
+  font-weight: 700;
 }
 
 /* --- Zone d'affichage agrandie avec 4 coins d'infos + Total central --- */
@@ -421,6 +422,7 @@ body{
   display: flex;
   flex-direction: column;
   flex: 1;
+  overflow-y: auto;
 }
 .calc-display {
   display: grid;
