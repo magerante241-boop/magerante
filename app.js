@@ -79,7 +79,7 @@ function ajusterTailleResultat() {
   const maxFontSize = parseFloat(getComputedStyle(resultValueEl).fontSize);
   let taille = maxFontSize;
   const minFontSize = 7;
-  while (resultEl.scrollWidth > resultEl.clientWidth && taille > minFontSize) {
+  while (resultValueEl.scrollWidth > resultValueEl.clientWidth && taille > minFontSize) {
     taille -= 1;
     resultValueEl.style.fontSize = taille + "px";
   }
