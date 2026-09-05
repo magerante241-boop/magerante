@@ -21,6 +21,8 @@ const loginView = document.getElementById("authLoginView");
 const etablissementNomEl = document.getElementById("etablissementNom");
 const accountStatusItem = document.getElementById("accountStatusItem");
 const btnAdminAccess = document.getElementById("btnAdminAccess");
+const menuDashboardBtn = document.getElementById("menuDashboard");
+if (menuDashboardBtn) menuDashboardBtn.addEventListener("click", () => { window.location.href = "dashboard.html"; });
 
 window.AuthState = { ready: false, hasEstablishment: false, accountType: "anonyme", validated: false };
 
@@ -300,6 +302,8 @@ function updateAccountStatusBadge() {
   const menuInvite = document.getElementById("menuInviteGerant");
   if (menuInvite) {
     menuInvite.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  const menuDashboard = document.getElementById("menuDashboard");
+  if (menuDashboard) menuDashboard.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
   }
   const menuLogout = document.getElementById("menuLogout");
   if (menuLogout) {
@@ -374,6 +378,8 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   if (!userSnap.exists()) {
+    const _inviteParams = new URLSearchParams(window.location.search);
+    if (_inviteParams.has("invite")) { return; }
     // Mode visiteur : on crée l'établissement par défaut tout seul,
     // aucune modale, aucune action requise de l'utilisateur.
     try {
@@ -389,6 +395,7 @@ onAuthStateChanged(auth, async (user) => {
   const userData = userSnap.data();
   window.AuthState.accountType = userData.accountType || "anonyme";
   window.AuthState.validated = !!userData.validated;
+  window.AuthState.role = userData.role || "PROPRIETAIRE";
   updateAccountStatusBadge();
   await ouvrirApplication(userData.establishmentId);
 });
