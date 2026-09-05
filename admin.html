@@ -146,6 +146,11 @@
     margin: 4px 0 0; text-align: right; transition: opacity 0.8s ease;
   }
   .import-progress-wrap.fade-out, .import-progress-percent.fade-out { opacity: 0; }
+
+  .danger-btn {
+    background: #b00020 !important; margin-top: 10px;
+  }
+  .danger-btn:active { background: #7f0016 !important; }
 </style>
 </head>
 <body>
@@ -233,6 +238,7 @@
         <div class="import-progress-bar" id="importProgressBar"></div>
       </div>
       <p class="import-progress-percent" id="importProgressPercent" hidden>0%</p>
+      <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
     </section>
 
       <h2 class="section-title">Dernieres ventes (toutes etablissements)</h2>
