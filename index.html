@@ -136,7 +136,7 @@
         </div>
         <div class="calc-center">
           <div class="calc-expression" id="calcExpression">&nbsp;</div>
-          <div class="calc-result" id="calcResult">0</div>
+          <div class="calc-result" id="calcResult"><span id="calcResultValue">0</span><span id="calcResultUnit">FCFA</span></div>
         </div>
         <div class="calc-corner coin-bl" id="coinStockRestant">
           <span class="coin-label">stock restant</span>
@@ -151,6 +151,7 @@
       <button class="calc-cat-btn" data-cat="Bar">🍺 Bar</button>
       <button class="calc-cat-btn" data-cat="Snack">🍔 Snack</button>
       <button class="calc-cat-btn" data-cat="Club">🎉 Club</button>
+      <button class="calc-cat-btn" id="btnToggleClavier">🔤 Rechercher</button>
     </div>
     <div class="calc-produits-liste" id="calcProduitsListe" hidden></div>
       <div class="calc-actions" id="calcActions" hidden>
@@ -175,6 +176,15 @@
     <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="-">-</button>
     <button data-key="0">0</button><button data-key="00">00</button><button data-key=",">,</button><button data-key="+">+</button>
     <button data-key="AC" class="key-wide key-danger">AC</button><button data-key="⌫">⌫</button><button data-key="=" class="key-equal">=</button>
+  </div>
+
+  <!-- CLAVIER ALPHABÉTIQUE (recherche produit) -->
+  <div class="abc-keyboard" id="abcKeyboard" hidden>
+    <button data-letter="A">A</button><button data-letter="B">B</button><button data-letter="C">C</button><button data-letter="D">D</button><button data-letter="E">E</button><button data-letter="F">F</button>
+    <button data-letter="G">G</button><button data-letter="H">H</button><button data-letter="I">I</button><button data-letter="J">J</button><button data-letter="K">K</button><button data-letter="L">L</button>
+    <button data-letter="M">M</button><button data-letter="N">N</button><button data-letter="O">O</button><button data-letter="P">P</button><button data-letter="Q">Q</button><button data-letter="R">R</button>
+    <button data-letter="S">S</button><button data-letter="T">T</button><button data-letter="U">U</button><button data-letter="V">V</button><button data-letter="W">W</button><button data-letter="X">X</button>
+    <button data-letter="Y">Y</button><button data-letter="Z">Z</button><button data-letter=" " class="abc-key-wide">ESPACE</button><button data-letter="⌫" class="abc-key-wide abc-key-danger">⌫</button>
   </div>
 
   <!-- NAVIGATION PRINCIPALE -->

@@ -71,14 +71,17 @@ const actionsEl = document.getElementById("calcActions");
 let calcValeurNumerique = 0;
 let produitSelectionne = null;
 
+const resultValueEl = document.getElementById("calcResultValue");
+const resultUnitEl = document.getElementById("calcResultUnit");
+
 function ajusterTailleResultat() {
-  resultEl.style.fontSize = "";
-  const maxFontSize = parseFloat(getComputedStyle(resultEl).fontSize);
+  resultValueEl.style.fontSize = "";
+  const maxFontSize = parseFloat(getComputedStyle(resultValueEl).fontSize);
   let taille = maxFontSize;
-  const minFontSize = 12;
+  const minFontSize = 10;
   while (resultEl.scrollWidth > resultEl.clientWidth && taille > minFontSize) {
     taille -= 1;
-    resultEl.style.fontSize = taille + "px";
+    resultValueEl.style.fontSize = taille + "px";
   }
 }
 
@@ -92,12 +95,17 @@ function renderCalc() {
     // eslint-disable-next-line no-new-func
     const value = safeExpr.trim() === "" ? 0 : Function(`"use strict"; return (${safeExpr})`)();
     calcValeurNumerique = isFinite(value) ? value : 0;
-    resultEl.textContent = isFinite(value)
-      ? value.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " FCFA"
-      : "Erreur";
+    if (isFinite(value)) {
+      resultValueEl.textContent = value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+      resultUnitEl.hidden = false;
+    } else {
+      resultValueEl.textContent = "Erreur";
+      resultUnitEl.hidden = true;
+    }
     actionsEl.hidden = !(isFinite(value) && calcExpr !== "" && /[0-9]/.test(calcExpr));
   } catch {
-    resultEl.textContent = "…";
+    resultValueEl.textContent = "…";
+    resultUnitEl.hidden = true;
     actionsEl.hidden = true;
   }
   ajusterTailleResultat();
@@ -253,6 +261,108 @@ document.getElementById("menuCreateAccount").addEventListener("click", () => {
 // Worker resté bloqué en cache-first (ex. magerante-v1) avant d'enregistrer
 // le nouveau. Nécessaire car certains téléphones ne libèrent jamais l'ancien
 // SW même après un vidage manuel du cache navigateur.
+// --- Recherche de produit par nom (clavier alphabétique) ---
+const btnToggleClavier = document.getElementById("btnToggleClavier");
+const abcKeyboard = document.getElementById("abcKeyboard");
+const numpadEl = document.getElementById("numpad");
+let modeRecherche = false;
+let rechercheTexte = "";
+let tousProduits = [];
+
+function afficherResultatsRecherche() {
+  const texte = rechercheTexte.trim().toLowerCase();
+  if (!texte) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Tape le nom d'un produit...</p>`;
+    calcProduitsListe.hidden = false;
+    return;
+  }
+  const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
+  if (!resultats.length) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit trouvé pour "${rechercheTexte}".</p>`;
+    calcProduitsListe.hidden = false;
+    return;
+  }
+  calcProduitsListe.innerHTML = resultats.map((p) => `
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
+      <span class="calc-produit-nom">${p.nom}</span>
+      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+    </button>
+  `).join("");
+  calcProduitsListe.hidden = false;
+  calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      calcExpr = item.dataset.prix;
+      produitSelectionne = {
+        nom: item.dataset.nom,
+        prixVente: Number(item.dataset.prix) || 0,
+        prixAchat: Number(item.dataset.prixAchat) || 0,
+        stock: Number(item.dataset.stock) || 0,
+      };
+      renderCalc();
+      fermerListeProduits();
+      quitterModeRecherche();
+    });
+  });
+}
+
+function quitterModeRecherche() {
+  modeRecherche = false;
+  rechercheTexte = "";
+  abcKeyboard.hidden = true;
+  numpadEl.hidden = false;
+  if (btnToggleClavier) btnToggleClavier.classList.remove("active");
+  exprEl.textContent = calcExpr || "\u00A0";
+}
+
+if (btnToggleClavier) {
+  btnToggleClavier.addEventListener("click", async () => {
+    modeRecherche = !modeRecherche;
+    if (modeRecherche) {
+      if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+        alert("Initialisation en cours, réessaie dans un instant.");
+        modeRecherche = false;
+        return;
+      }
+      if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) {
+        alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+        modeRecherche = false;
+        return;
+      }
+      btnToggleClavier.classList.add("active");
+      abcKeyboard.hidden = false;
+      numpadEl.hidden = true;
+      rechercheTexte = "";
+      exprEl.textContent = "Recherche : \u00A0";
+      calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement des produits...</p>`;
+      calcProduitsListe.hidden = false;
+      try {
+        tousProduits = await window.InventaireModule.getTousLesProduits();
+      } catch (err) {
+        tousProduits = [];
+      }
+      afficherResultatsRecherche();
+    } else {
+      quitterModeRecherche();
+      fermerListeProduits();
+    }
+  });
+}
+
+abcKeyboard.addEventListener("click", (e) => {
+  const lettre = e.target.dataset.letter;
+  if (lettre === undefined) return;
+  e.target.classList.remove("key-glow");
+  void e.target.offsetWidth;
+  e.target.classList.add("key-glow");
+  if (lettre === "⌫") {
+    rechercheTexte = rechercheTexte.slice(0, -1);
+  } else {
+    rechercheTexte += lettre;
+  }
+  exprEl.textContent = "Recherche : " + (rechercheTexte || "\u00A0");
+  afficherResultatsRecherche();
+});
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
