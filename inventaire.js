@@ -1,7 +1,7 @@
 // inventaire.js — Module Inventaire : liste, ajout, édition, suppression des produits
 import {
   db, doc, collection, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, where, getDocs, serverTimestamp
+  onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -202,4 +202,68 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 // Exposé pour que app.js (script classique, non-module) puisse l'appeler
-window.InventaireModule = { render, cleanup, getProduitsParCategorie };
+export async function getTousLesProduits() {
+  if (!appState.establishmentId) return [];
+  const snap = await getDocs(produitsRef());
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+const PRODUITS_DEMO = [
+  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 350, stock: 100 },
+  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 600, stock: 80 },
+  { nom: "Castel Beer 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 100 },
+  { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 80 },
+  { nom: "Beaufort 33cl", categorie: "Bar", prixAchat: 417, prixVente: 700, stock: 60 },
+  { nom: "Guinness 33cl", categorie: "Bar", prixAchat: 583, prixVente: 1000, stock: 50 },
+  { nom: "33 Export 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 60 },
+  { nom: "Heineken 33cl", categorie: "Bar", prixAchat: 750, prixVente: 1100, stock: 50 },
+  { nom: "Coca-Cola 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 120 },
+  { nom: "Fanta Orange 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Sprite 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Eau minérale Andza 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
+  { nom: "Eau minérale Andza 1.5L", categorie: "Bar", prixAchat: 400, prixVente: 550, stock: 80 },
+  { nom: "Eau minérale Odzi 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
+  { nom: "Jus d'ananas 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
+  { nom: "Jus de mangue 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
+  { nom: "Vin rouge (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
+  { nom: "Vin blanc (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
+  { nom: "Vin rosé (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 20 },
+  { nom: "Whisky Johnnie Walker Red Label 70cl", categorie: "Club", prixAchat: 8000, prixVente: 15000, stock: 20 },
+  { nom: "Whisky Jack Daniel's 70cl", categorie: "Club", prixAchat: 10000, prixVente: 18000, stock: 15 },
+  { nom: "Pastis 51 70cl", categorie: "Club", prixAchat: 6000, prixVente: 12000, stock: 15 },
+  { nom: "Ricard 70cl", categorie: "Club", prixAchat: 6500, prixVente: 12500, stock: 15 },
+  { nom: "Gin Gordon's 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
+  { nom: "Vodka Smirnoff 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
+  { nom: "Rhum Negrita 70cl", categorie: "Club", prixAchat: 4500, prixVente: 9000, stock: 15 },
+  { nom: "Cognac Hennessy VS 70cl", categorie: "Club", prixAchat: 15000, prixVente: 28000, stock: 10 },
+  { nom: "Liqueur Baileys 70cl", categorie: "Club", prixAchat: 9000, prixVente: 16000, stock: 10 },
+  { nom: "Champagne Moët & Chandon 75cl", categorie: "Club", prixAchat: 25000, prixVente: 45000, stock: 6 },
+  { nom: "Vin mousseux 75cl", categorie: "Club", prixAchat: 3000, prixVente: 6000, stock: 15 },
+  { nom: "Chips paquet 45g", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
+  { nom: "Cacahuètes grillées sachet", categorie: "Snack", prixAchat: 200, prixVente: 400, stock: 50 },
+  { nom: "Biscuits paquet", categorie: "Snack", prixAchat: 250, prixVente: 450, stock: 40 },
+  { nom: "Chocolat tablette", categorie: "Snack", prixAchat: 400, prixVente: 700, stock: 30 },
+  { nom: "Brochettes de bœuf (unité)", categorie: "Snack", prixAchat: 500, prixVente: 1000, stock: 40 },
+  { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 3000, stock: 20 },
+  { nom: "Cigarettes Rothmans (paquet)", categorie: "Snack", prixAchat: 1000, prixVente: 1500, stock: 40 },
+  { nom: "Cigarettes Marlboro (paquet)", categorie: "Snack", prixAchat: 1200, prixVente: 1800, stock: 40 },
+  { nom: "Cigarettes Dunhill (paquet)", categorie: "Snack", prixAchat: 1300, prixVente: 2000, stock: 30 },
+  { nom: "Cigarettes London (paquet)", categorie: "Snack", prixAchat: 900, prixVente: 1400, stock: 30 },
+  { nom: "Glaçons (sachet)", categorie: "Snack", prixAchat: 200, prixVente: 500, stock: 60 },
+];
+
+export async function importProduitsDemo() {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Établissement non initialisé." };
+  }
+  const batch = writeBatch(db);
+  const ref = produitsRef();
+  PRODUITS_DEMO.forEach((p) => {
+    const newDocRef = doc(ref);
+    batch.set(newDocRef, { ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  });
+  await batch.commit();
+  return { success: true, count: PRODUITS_DEMO.length };
+}
+
+window.InventaireModule = { render, cleanup, getProduitsParCategorie, getTousLesProduits, importProduitsDemo };
