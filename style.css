@@ -132,7 +132,7 @@ body{
 }
 
 /* MAIN */
-.main-content{flex:1; padding:14px; padding-bottom:210px; overflow-y:auto;}
+.main-content{flex:1; padding:14px; padding-bottom:150px; overflow-y:auto;}
 
 /* CALCULATRICE */
 .calc-zone{
@@ -170,14 +170,14 @@ body{
 .numpad{
   position:fixed; bottom:64px; left:0; right:0;
   background:var(--surface); box-shadow:0 -4px 18px rgba(43,38,32,0.06);
-  display:grid; grid-template-columns:repeat(4,1fr); gap:7px;
-  padding:9px; z-index:9;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:5px;
+  padding:6px; z-index:9;
 }
 .numpad button{
   position:relative; overflow:hidden;
   background:linear-gradient(160deg,#e9e0cd 0%,#c2b191 55%,#8f7a52 100%);
   color:var(--text); border:none; border-radius:12px;
-  font-size:19px; font-weight:600; padding:15px 0; cursor:pointer;
+  font-size:17px; font-weight:600; padding:11px 0; cursor:pointer;
   box-shadow:
     0 3px 0 rgba(20,17,12,0.28),
     0 6px 14px rgba(20,17,12,0.22),
@@ -365,7 +365,7 @@ body{
 }
 .calc-cat-btn {
   flex: 1;
-  padding: 10px 6px;
+  padding: 12px 6px;
   border: none;
   border-radius: 10px;
   background: #2a2a2a;
@@ -395,6 +395,7 @@ body{
   background: transparent;
   color: #fff;
   font-size: 14px;
+  font-weight: 600;
   text-align: left;
 }
 .calc-produit-item:last-child {
