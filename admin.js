@@ -345,3 +345,37 @@ document.getElementById("catalogueFileInput").addEventListener("change", (e) => 
     label.textContent = "📄 Choisir un fichier CSV";
   }
 });
+
+// --- Vider l'inventaire de tous les etablissements ---
+document.getElementById("btnViderInventaire").addEventListener("click", async () => {
+  const statusEl = document.getElementById("importStatus");
+  const confirmation1 = confirm("Ceci va SUPPRIMER tous les produits de TOUS les etablissements. Cette action est irreversible. Continuer ?");
+  if (!confirmation1) return;
+  const confirmation2 = confirm("Es-tu vraiment sur ? Tape OK une derniere fois pour confirmer la suppression definitive.");
+  if (!confirmation2) return;
+
+  statusEl.textContent = "Lecture des etablissements...";
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    const etablissementIds = estSnap.docs.map((d) => d.id);
+    let totalSupprime = 0;
+
+    for (const estId of etablissementIds) {
+      const produitsSnap = await getDocs(collection(db, "establishments", estId, "produits"));
+      const docs = produitsSnap.docs;
+      const TAILLE_LOT = 450;
+      for (let i = 0; i < docs.length; i += TAILLE_LOT) {
+        const lot = docs.slice(i, i + TAILLE_LOT);
+        const batch = writeBatch(db);
+        lot.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+        totalSupprime += lot.length;
+        statusEl.textContent = `Suppression en cours... (${totalSupprime} produits supprimes)`;
+      }
+    }
+    statusEl.textContent = `Nettoyage termine : ${totalSupprime} produits supprimes sur ${etablissementIds.length} etablissement(s).`;
+  } catch (err) {
+    statusEl.textContent = "Erreur : " + err.message;
+    console.error(err);
+  }
+});
