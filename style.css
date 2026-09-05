@@ -170,14 +170,14 @@ body{
 .numpad{
   flex-shrink:0;
   background:var(--surface); box-shadow:0 -4px 18px rgba(43,38,32,0.06);
-  display:grid; grid-template-columns:repeat(4,1fr); gap:3px;
-  padding:3px; z-index:9;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:2px;
+  padding:2px; z-index:9;
 }
 .numpad button{
   position:relative; overflow:hidden;
   background:linear-gradient(160deg,#e9e0cd 0%,#c2b191 55%,#8f7a52 100%);
   color:var(--text); border:none; border-radius:12px;
-  font-size:15px; font-weight:600; padding:6px 0; min-height:40px; cursor:pointer;
+  font-size:14px; font-weight:600; padding:5px 0; min-height:38px; cursor:pointer;
   box-shadow:
     0 3px 0 rgba(20,17,12,0.28),
     0 6px 14px rgba(20,17,12,0.22),
@@ -415,8 +415,8 @@ body{
 
 /* --- Zone d'affichage agrandie avec 4 coins d'infos + Total central --- */
 .calc-zone {
-  padding: 8px 12px 4px;
-  min-height: 160px;
+  padding: 10px 12px 6px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
   flex: 1;
