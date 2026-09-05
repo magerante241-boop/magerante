@@ -132,7 +132,7 @@ body{
 }
 
 /* MAIN */
-.main-content{flex:1; padding:14px; padding-bottom:150px; overflow-y:auto;}
+.main-content{flex:1; display:flex; flex-direction:column; padding:14px; padding-bottom:150px; overflow-y:auto;}
 
 /* CALCULATRICE */
 .calc-zone{
@@ -414,8 +414,11 @@ body{
 
 /* --- Zone d'affichage agrandie avec 4 coins d'infos + Total central --- */
 .calc-zone {
-  padding: 28px 20px;
+  padding: 20px 16px 12px;
   min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 .calc-display {
   display: grid;
@@ -459,3 +462,9 @@ body{
 .numpad button.key-glow {
   animation: keyGlowFlash 0.45s ease-out;
 }
+
+/* --- Réorganisation calculatrice : catégories/produits en haut, affichage centré, actions en bas --- */
+.calc-categories { order: 1; }
+.calc-produits-liste { order: 2; }
+.calc-display { order: 3; flex: 1; }
+.calc-actions { order: 4; margin-top: 8px; }
