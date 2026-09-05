@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid == "x5LPz8ouBsYq3wZnXI7wIpYhuxw2";
+    }
+
+    function estGerantDe(estId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/establishments/$(estId)/gerants/$(request.auth.uid));
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if false;
+    }
+
+    match /establishments/{estId} {
+      allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == estId;
+      allow update: if isSignedIn() && request.auth.uid == estId;
+      allow delete: if false;
+
+      match /produits/{prodId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+      }
+
+      match /gerants/{gerantUid} {
+        allow read, delete: if isSignedIn() && request.auth.uid == estId;
+        allow create: if isSignedIn() && (request.auth.uid == estId || request.auth.uid == gerantUid);
+        allow read, update: if isSignedIn() && request.auth.uid == gerantUid;
+      }
+
+      match /ventes/{venteId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow create: if isSignedIn() &&
+          (request.auth.uid == estId || estGerantDe(estId));
+      }
+    }
+
+    match /invitations/{token} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.estId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
