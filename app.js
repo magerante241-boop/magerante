@@ -78,7 +78,7 @@ function ajusterTailleResultat() {
   resultValueEl.style.fontSize = "";
   const maxFontSize = parseFloat(getComputedStyle(resultValueEl).fontSize);
   let taille = maxFontSize;
-  const minFontSize = 10;
+  const minFontSize = 7;
   while (resultEl.scrollWidth > resultEl.clientWidth && taille > minFontSize) {
     taille -= 1;
     resultValueEl.style.fontSize = taille + "px";
@@ -153,7 +153,12 @@ document.getElementById("numpad").addEventListener("click", (e) => {
   } else if (key === "=") {
     // Le calcul est déjà recalculé en direct dans renderCalc()
   } else {
-    calcExpr += key;
+    const chiffresActuels = (calcExpr.match(/[0-9]/g) || []).length;
+    if (/[0-9]/.test(key) && chiffresActuels >= 10) {
+      // Limite atteinte : on ignore les chiffres supplémentaires
+    } else {
+      calcExpr += key;
+    }
   }
   renderCalc();
 });
