@@ -201,12 +201,6 @@ function escapeHtml(str) {
 }
 function escapeAttr(str) { return escapeHtml(str); }
 
-// Exposé pour que app.js (script classique, non-module) puisse l'appeler
-export async function getTousLesProduits() {
-  if (!appState.establishmentId) return [];
-  const snap = await getDocs(produitsRef());
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
 
 const PRODUITS_DEMO = [
   { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 350, stock: 100 },
