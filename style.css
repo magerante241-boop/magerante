@@ -416,7 +416,7 @@ body{
 /* --- Zone d'affichage agrandie avec 4 coins d'infos + Total central --- */
 .calc-zone {
   padding: 10px 12px 6px;
-  min-height: 220px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -470,5 +470,5 @@ body{
 /* --- Réorganisation calculatrice : catégories/produits en haut, affichage centré, actions en bas --- */
 .calc-categories { order: 1; }
 .calc-produits-liste { order: 2; }
-.calc-display { order: 3; flex: 1; }
+.calc-display { order: 3; flex: 1; min-height: 0; }
 .calc-actions { order: 4; margin-top: 8px; }
