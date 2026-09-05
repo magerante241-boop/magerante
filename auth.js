@@ -396,7 +396,13 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   const userData = userSnap.data();
-  window.AuthState.accountType = userData.accountType || "anonyme";
+  const accountTypeReel = user.isAnonymous ? "anonyme" : "enregistre";
+  window.AuthState.accountType = accountTypeReel;
+  if (userData.accountType !== accountTypeReel) {
+    setDoc(doc(db, "users", user.uid), { accountType: accountTypeReel }, { merge: true }).catch((err) => {
+      console.warn("Correction accountType impossible :", err);
+    });
+  }
   window.AuthState.validated = !!userData.validated;
   window.AuthState.role = userData.role || "PROPRIETAIRE";
   window.AuthState.email = user.email || null;
