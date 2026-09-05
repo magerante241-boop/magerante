@@ -1,7 +1,7 @@
 // ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
 // (deduit automatiquement le stock quand une vente est liee a un produit).
 import {
-  db, doc, collection, addDoc, updateDoc, getDocs, query, orderBy, serverTimestamp, increment
+  auth, db, doc, collection, addDoc, updateDoc, getDocs, query, orderBy, serverTimestamp, increment
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -123,7 +123,7 @@ export function ouvrirModaleVente(montantInitial) {
       if (isNaN(montant) || montant <= 0) { errorEl.textContent = "Montant invalide."; return; }
       saveBtn.disabled = true; saveBtn.textContent = "Enregistrement...";
       try {
-        await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp() });
+        await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId: auth.currentUser ? auth.currentUser.uid : null });
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -141,7 +141,7 @@ export function ouvrirModaleVente(montantInitial) {
       try {
         await addDoc(ventesRef(), {
           montant, type: "produit", produitId: produit.id, produitNom: produit.nom,
-          quantite: qte, date: serverTimestamp()
+          quantite: qte, date: serverTimestamp(), auteurId: auth.currentUser ? auth.currentUser.uid : null
         });
         await updateDoc(doc(db, "establishments", appState.establishmentId, "produits", produit.id), {
           stock: increment(-qte)
