@@ -195,6 +195,13 @@
   </div>
 
   <div id="settingsOverlay" class="settings-overlay" hidden>
+    <section class="admin-import">
+      <h2>📥 Importer un catalogue CSV</h2>
+      <p class="import-hint">Colonnes attendues : Nom, Prix achat, Prix vente, Stock, Catégorie</p>
+      <input type="file" id="catalogueFileInput" accept=".csv">
+      <button id="btnImporterCatalogue">Importer vers tous les établissements</button>
+      <p id="importStatus"></p>
+    </section>
     <div class="settings-panel">
       <div class="settings-header">
         <span>Parametres</span>
