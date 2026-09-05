@@ -151,6 +151,18 @@
     background: #b00020 !important; margin-top: 10px;
   }
   .danger-btn:active { background: #7f0016 !important; }
+
+  .stat-card[data-target] {
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .stat-card[data-target]:active {
+    transform: scale(0.96);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  button:active {
+    filter: brightness(0.92);
+  }
 </style>
 </head>
 <body>
@@ -175,37 +187,37 @@
 
     <div id="adminPanel" hidden>
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" data-target="secComptesAttente">
           <div class="icon">👥</div>
           <div class="value" id="statTotalComptes">—</div>
           <div class="label">Comptes proprietaires</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" data-target="secComptesAttente">
           <div class="icon">✅</div>
           <div class="value" id="statValides">—</div>
           <div class="label">Comptes valides</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" data-target="secComptesAttente">
           <div class="icon">⏳</div>
           <div class="value" id="statEnAttente">—</div>
           <div class="label">En attente de validation</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" data-target="secCA">
           <div class="icon">🏢</div>
           <div class="value" id="statEtablissements">—</div>
           <div class="label">Etablissements</div>
         </div>
-        <div class="stat-card wide">
+        <div class="stat-card wide" data-target="secVentes">
           <div class="icon">💰</div>
           <div class="value" id="statCAGlobal">—</div>
           <div class="label">Chiffre d'affaires global (tous etablissements)</div>
         </div>
       </div>
 
-      <h2 class="section-title">Comptes proprietaires en attente de validation</h2>
+      <h2 class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</h2>
       <div id="pendingList" class="empty-msg">Chargement...</div>
 
-      <h2 class="section-title">Chiffre d'affaires par etablissement</h2>
+      <h2 class="section-title" id="secCA">Chiffre d'affaires par etablissement</h2>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
@@ -215,19 +227,19 @@
 
       <h2 class="section-title">Inventaire global</h2>
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" data-target="secImport">
           <div class="icon">📦</div>
           <div class="value" id="statTotalProduits">—</div>
           <div class="label">Produits references (tous etablissements)</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" data-target="secImport">
           <div class="icon">💵</div>
           <div class="value" id="statValeurStock">—</div>
           <div class="label">Valeur totale du stock estimee</div>
         </div>
       </div>
 
-      <section class="admin-import">
+      <section class="admin-import" id="secImport">
       <h2 class="section-title">📥 Importer un catalogue CSV</h2>
       <p class="import-hint">Colonnes attendues : Nom, Prix achat, Prix vente, Stock, Catégorie</p>
       <label for="catalogueFileInput" class="file-label" id="catalogueFileLabel">📄 Choisir un fichier CSV</label>
@@ -241,7 +253,7 @@
       <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
     </section>
 
-      <h2 class="section-title">Dernieres ventes (toutes etablissements)</h2>
+      <h2 class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</h2>
       <div id="rapportList" class="empty-msg">Chargement...</div>
     </div>
   </div>
