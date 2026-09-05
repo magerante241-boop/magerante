@@ -11,6 +11,25 @@ const btnRapportJour = document.getElementById("btnRapportJour");
 const btnRapportSemaine = document.getElementById("btnRapportSemaine");
 const btnRapportMois = document.getElementById("btnRapportMois");
 const rapportStatusEl = document.getElementById("rapportStatus");
+const listeRapportsEl = document.getElementById("listeRapports");
+async function chargerHistoriqueRapports(ownerUid) {
+  const rapportsSnap = await getDocs(query(collection(db, "establishments", ownerUid, "rapports"), orderBy("genereLe", "desc")));
+  listeRapportsEl.innerHTML = "";
+  if (rapportsSnap.empty) {
+    listeRapportsEl.innerHTML = "<li>Aucun rapport généré pour le moment.</li>";
+    return;
+  }
+  rapportsSnap.forEach((docSnap) => {
+    const d = docSnap.data();
+    const li = document.createElement("li");
+    const dateDebut = d.periodeDebut && d.periodeDebut.toDate ? d.periodeDebut.toDate() : null;
+    const dateStr = dateDebut ? dateDebut.toLocaleDateString("fr-FR") : "?";
+    const totalStr = (d.totalVentes || 0).toLocaleString("fr-FR");
+    const panierStr = Math.round(d.panierMoyen || 0).toLocaleString("fr-FR");
+    li.textContent = `${d.type || "?"} (${dateStr}) — ${totalStr} FCFA, ${d.nombreVentes || 0} ventes, panier moyen ${panierStr} FCFA`;
+    listeRapportsEl.appendChild(li);
+  });
+}
 async function chargerDonnees(ownerUid) {
   const ventesSnap = await getDocs(query(collection(db, "establishments", ownerUid, "ventes"), orderBy("date", "desc")));
   const ventes = ventesSnap.docs.map((d) => d.data()).filter((v) => v.date);
@@ -162,6 +181,7 @@ function brancherBoutonsRapports(ownerUid) {
       try {
         const id = await genererRapport(ownerUid, type);
         if (rapportStatusEl) rapportStatusEl.textContent = `Rapport "${id}" généré avec succès.`;
+        chargerHistoriqueRapports(ownerUid);
       } catch (e) {
         console.error(e);
         if (rapportStatusEl) rapportStatusEl.textContent = "Erreur lors de la génération du rapport.";
@@ -178,5 +198,6 @@ onAuthStateChanged(auth, (user) => {
   if (!user) { window.location.href = "index.html"; return; }
   chargerDonnees(user.uid);
   brancherBoutonsRapports(user.uid);
+  chargerHistoriqueRapports(user.uid);
   if (btnRefresh) btnRefresh.addEventListener("click", () => chargerDonnees(user.uid));
 });
