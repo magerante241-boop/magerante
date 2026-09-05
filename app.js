@@ -66,6 +66,7 @@ const exprEl = document.getElementById("calcExpression");
 const resultEl = document.getElementById("calcResult");
 const actionsEl = document.getElementById("calcActions");
 let calcValeurNumerique = 0;
+let produitSelectionne = null;
 
 function renderCalc() {
   exprEl.textContent = calcExpr || "\u00A0";
@@ -85,11 +86,43 @@ function renderCalc() {
     resultEl.textContent = "…";
     actionsEl.hidden = true;
   }
+  updateCoins();
+}
+
+function updateCoins() {
+  const elBenefice = document.getElementById("coinBeneficeUnite");
+  const elValeurStock = document.getElementById("coinValeurStock");
+  const elStockRestant = document.getElementById("coinStockRestant");
+  const elQuantite = document.getElementById("coinQuantite");
+  if (!elBenefice || !elValeurStock || !elStockRestant || !elQuantite) return;
+
+  if (!produitSelectionne) {
+    elBenefice.querySelector(".coin-value").textContent = "—";
+    elValeurStock.querySelector(".coin-value").textContent = "—";
+    elStockRestant.querySelector(".coin-value").textContent = "—";
+    elQuantite.querySelector(".coin-value").textContent = "—";
+    return;
+  }
+
+  const prixVente = produitSelectionne.prixVente;
+  const prixAchat = produitSelectionne.prixAchat;
+  const stock = produitSelectionne.stock;
+  const benefice = prixVente - prixAchat;
+  const valeurStock = stock * prixVente;
+  const quantite = prixVente > 0 && calcValeurNumerique > 0 ? calcValeurNumerique / prixVente : 0;
+
+  elBenefice.querySelector(".coin-value").textContent = benefice.toLocaleString("fr-FR") + " FCFA";
+  elValeurStock.querySelector(".coin-value").textContent = valeurStock.toLocaleString("fr-FR") + " FCFA";
+  elStockRestant.querySelector(".coin-value").textContent = stock + " u.";
+  elQuantite.querySelector(".coin-value").textContent = quantite > 0 ? quantite.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " u." : "—";
 }
 
 document.getElementById("numpad").addEventListener("click", (e) => {
   const key = e.target.dataset.key;
   if (!key) return;
+  e.target.classList.remove("key-glow");
+  void e.target.offsetWidth;
+  e.target.classList.add("key-glow");
   if (key === "AC") {
     calcExpr = "";
   } else if (key === "⌫") {
@@ -152,7 +185,7 @@ document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
         return;
       }
       calcProduitsListe.innerHTML = produits.map((p) => `
-        <button class="calc-produit-item" data-prix="${p.prixVente}">
+        <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
           <span class="calc-produit-nom">${p.nom}</span>
           <span class="calc-produit-prix">${p.prixVente} FCFA</span>
         </button>
@@ -160,6 +193,12 @@ document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
       calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
         item.addEventListener("click", () => {
           calcExpr = item.dataset.prix;
+          produitSelectionne = {
+            nom: item.dataset.nom,
+            prixVente: Number(item.dataset.prix) || 0,
+            prixAchat: Number(item.dataset.prixAchat) || 0,
+            stock: Number(item.dataset.stock) || 0,
+          };
           renderCalc();
           fermerListeProduits();
         });
