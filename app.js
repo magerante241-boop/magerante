@@ -33,9 +33,11 @@ function switchView(view) {
 
   if (view === "calc") {
     calcZone.hidden = false;
-    viewContainer.innerHTML = `<p class="placeholder-msg">Les modules (Caisse, Ventes...) arriveront aux prochaines étapes.</p>`;
+    viewContainer.hidden = true;
+    viewContainer.innerHTML = "";
   } else if (view === "inventaire") {
     calcZone.hidden = true;
+    viewContainer.hidden = false;
     if (window.InventaireModule) {
       window.InventaireModule.render(viewContainer);
     } else {
@@ -43,6 +45,7 @@ function switchView(view) {
     }
   } else {
     calcZone.hidden = true;
+    viewContainer.hidden = false;
     viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
   }
 }
