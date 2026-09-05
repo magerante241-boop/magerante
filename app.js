@@ -71,6 +71,17 @@ const actionsEl = document.getElementById("calcActions");
 let calcValeurNumerique = 0;
 let produitSelectionne = null;
 
+function ajusterTailleResultat() {
+  resultEl.style.fontSize = "";
+  const maxFontSize = parseFloat(getComputedStyle(resultEl).fontSize);
+  let taille = maxFontSize;
+  const minFontSize = 12;
+  while (resultEl.scrollWidth > resultEl.clientWidth && taille > minFontSize) {
+    taille -= 1;
+    resultEl.style.fontSize = taille + "px";
+  }
+}
+
 function renderCalc() {
   exprEl.textContent = calcExpr || "\u00A0";
   try {
@@ -89,6 +100,7 @@ function renderCalc() {
     resultEl.textContent = "…";
     actionsEl.hidden = true;
   }
+  ajusterTailleResultat();
   updateCoins();
 }
 
