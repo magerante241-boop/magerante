@@ -452,9 +452,9 @@ body{
 
 /* --- Effet lumineux au clic sur le clavier --- */
 @keyframes keyGlowFlash {
-  0% { box-shadow: 0 0 0 0 rgba(184,144,46,0.9), 0 3px 0 rgba(20,17,12,0.28); }
-  60% { box-shadow: 0 0 22px 8px rgba(184,144,46,0.55), 0 3px 0 rgba(20,17,12,0.28); }
-  100% { box-shadow: 0 0 0 0 rgba(184,144,46,0), 0 3px 0 rgba(20,17,12,0.28); }
+  0% { outline: 0px solid rgba(184,144,46,0); outline-offset: 0px; }
+  40% { outline: 5px solid rgba(184,144,46,0.85); outline-offset: 2px; }
+  100% { outline: 0px solid rgba(184,144,46,0); outline-offset: 0px; }
 }
 .numpad button.key-glow {
   animation: keyGlowFlash 0.45s ease-out;
