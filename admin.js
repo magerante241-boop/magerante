@@ -1,6 +1,6 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
-  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, serverTimestamp, writeBatch
+  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
@@ -57,6 +57,7 @@ onAuthStateChanged(auth, (user) => {
     chargerComptesEnAttente();
     chargerFinanceEtRapports();
     chargerInventaireGlobal();
+    chargerGestionProduits();
   } else {
     loginBox.hidden = false;
     adminPanel.hidden = true;
@@ -386,4 +387,88 @@ document.querySelectorAll(".stat-card[data-target]").forEach((card) => {
     const cible = document.getElementById(card.dataset.target);
     if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+});
+
+// --- Gestion des produits (tous etablissements) ---
+let _cacheProduitsGestion = [];
+let _cacheEtablissementsNoms = {};
+
+async function chargerGestionProduits() {
+  const tbody = document.getElementById("produitsGestionTableBody");
+  const select = document.getElementById("filtreEtablissementProduits");
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    _cacheEtablissementsNoms = {};
+    const valeurActuelle = select.value;
+    select.innerHTML = '<option value="tous">Tous les etablissements</option>';
+    estSnap.forEach((d) => {
+      const data = d.data();
+      const nomAffiche = (data.name || "Etablissement") + " (" + d.id.slice(0, 6) + ")";
+      _cacheEtablissementsNoms[d.id] = data.name || "Etablissement";
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = nomAffiche;
+      select.appendChild(opt);
+    });
+    if ([...select.options].some((o) => o.value === valeurActuelle)) {
+      select.value = valeurActuelle;
+    }
+
+    const prodSnap = await getDocs(collectionGroup(db, "produits"));
+    _cacheProduitsGestion = prodSnap.docs.map((d) => ({
+      ref: d.ref,
+      id: d.id,
+      estId: d.ref.parent.parent.id,
+      ...d.data(),
+    }));
+    rendreTableauGestionProduits();
+  } catch (err) {
+    console.error("Erreur chargement gestion produits:", err);
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur : ' + err.message + '</td></tr>';
+  }
+}
+
+function rendreTableauGestionProduits() {
+  const tbody = document.getElementById("produitsGestionTableBody");
+  const select = document.getElementById("filtreEtablissementProduits");
+  const filtre = select.value;
+  const lignes = filtre === "tous"
+    ? _cacheProduitsGestion
+    : _cacheProduitsGestion.filter((p) => p.estId === filtre);
+
+  if (!lignes.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Aucun produit.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lignes.map((p) => {
+    const nomEtab = _cacheEtablissementsNoms[p.estId] || p.estId.slice(0, 6);
+    return '<tr data-ref-id="' + p.id + '" data-est-id="' + p.estId + '">' +
+      '<td>' + nomEtab + '</td>' +
+      '<td>' + (p.nom || "") + '</td>' +
+      '<td>' + (p.categorie || "") + '</td>' +
+      '<td>' + (p.prixVente || 0) + ' FCFA</td>' +
+      '<td>' + (p.stock || 0) + '</td>' +
+      '<td><button class="btn-supprimer-ligne">Suppr.</button></td>' +
+      '</tr>';
+  }).join("");
+}
+
+document.getElementById("filtreEtablissementProduits").addEventListener("change", rendreTableauGestionProduits);
+
+document.getElementById("produitsGestionTableBody").addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("btn-supprimer-ligne")) return;
+  const tr = e.target.closest("tr");
+  const refId = tr.dataset.refId;
+  const estId = tr.dataset.estId;
+  const produit = _cacheProduitsGestion.find((p) => p.id === refId && p.estId === estId);
+  if (!produit) return;
+  if (!confirm('Supprimer "' + (produit.nom || "ce produit") + '" ?')) return;
+  try {
+    await deleteDoc(produit.ref);
+    _cacheProduitsGestion = _cacheProduitsGestion.filter((p) => !(p.id === refId && p.estId === estId));
+    rendreTableauGestionProduits();
+  } catch (err) {
+    alert("Erreur suppression : " + err.message);
+  }
 });

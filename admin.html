@@ -163,6 +163,16 @@
   button:active {
     filter: brightness(0.92);
   }
+
+  .filtre-select {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc;
+    font-size: 14px; margin-bottom: 10px; background: white;
+  }
+  .btn-supprimer-ligne {
+    padding: 6px 10px; border-radius: 8px; border: none;
+    background: #b00020; color: white; font-size: 12px; cursor: pointer;
+  }
+  .btn-supprimer-ligne:active { background: #7f0016; }
 </style>
 </head>
 <body>
@@ -252,6 +262,17 @@
       <p class="import-progress-percent" id="importProgressPercent" hidden>0%</p>
       <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
     </section>
+
+      <h2 class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</h2>
+      <select id="filtreEtablissementProduits" class="filtre-select">
+        <option value="tous">Tous les etablissements</option>
+      </select>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
+          <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+        </table>
+      </div>
 
       <h2 class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</h2>
       <div id="rapportList" class="empty-msg">Chargement...</div>
