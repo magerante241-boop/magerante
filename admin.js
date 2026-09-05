@@ -1,6 +1,6 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
-  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, serverTimestamp
+  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
@@ -277,22 +277,63 @@ document.getElementById("btnImporterCatalogue").addEventListener("click", async 
       return;
     }
 
+    const progressWrap = document.getElementById("importProgressWrap");
+    const progressBar = document.getElementById("importProgressBar");
+    const progressPercent = document.getElementById("importProgressPercent");
+    const totalAFaire = produits.length * etablissementIds.length;
+    progressWrap.hidden = false;
+    progressPercent.hidden = false;
+    progressWrap.classList.remove("fade-out");
+    progressPercent.classList.remove("fade-out");
+    progressBar.style.width = "0%";
+    progressPercent.textContent = "0%";
+
+    const TAILLE_LOT = 450;
     let total = 0;
     for (const estId of etablissementIds) {
+      let batch = writeBatch(db);
+      let compteurLot = 0;
       for (const p of produits) {
-        await addDoc(collection(db, "establishments", estId, "produits"), {
+        const nouveauDocRef = doc(collection(db, "establishments", estId, "produits"));
+        batch.set(nouveauDocRef, {
           ...p,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+        compteurLot++;
         total++;
+        if (compteurLot >= TAILLE_LOT) {
+          await batch.commit();
+          batch = writeBatch(db);
+          compteurLot = 0;
+        }
+        const pct = Math.round((total / totalAFaire) * 100);
+        progressBar.style.width = pct + "%";
+        progressPercent.textContent = pct + "%";
+      }
+      if (compteurLot > 0) {
+        await batch.commit();
       }
       statusEl.textContent = `Import en cours... (${total} produits crees)`;
     }
     statusEl.textContent = `Import termine : ${produits.length} produits ajoutes a ${etablissementIds.length} etablissement(s), soit ${total} documents crees.`;
+    progressBar.style.width = "100%";
+    progressPercent.textContent = "100%";
+    setTimeout(() => {
+      progressWrap.classList.add("fade-out");
+      progressPercent.classList.add("fade-out");
+      setTimeout(() => {
+        progressWrap.hidden = true;
+        progressPercent.hidden = true;
+      }, 800);
+    }, 1200);
   } catch (err) {
     statusEl.textContent = "Erreur : " + err.message;
     console.error(err);
+    const pw = document.getElementById("importProgressWrap");
+    const pp = document.getElementById("importProgressPercent");
+    if (pw) pw.hidden = true;
+    if (pp) pp.hidden = true;
   }
 });
 
