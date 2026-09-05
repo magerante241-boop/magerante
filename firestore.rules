@@ -46,6 +46,12 @@ service cloud.firestore {
         allow create: if isSignedIn() &&
           (request.auth.uid == estId || estGerantDe(estId));
       }
+
+      match /rapports/{periode} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+        allow create, update: if isSignedIn() && request.auth.uid == estId;
+        allow delete: if false;
+      }
     }
 
     match /invitations/{token} {
