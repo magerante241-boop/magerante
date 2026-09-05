@@ -2,43 +2,84 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Tableau de bord — Magerante</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<title>MAGERANTE — Tableau de bord</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body { background:#0f172a; color:#e2e8f0; font-family: system-ui, sans-serif; margin:0; padding:16px; }
-  h1 { font-size:1.3rem; } h2 { font-size:1.05rem; margin-top:24px; }
-  .stats { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0; }
-  .stat-card { background:#1e293b; border-radius:10px; padding:12px 16px; flex:1; min-width:120px; }
-  .stat-card span { display:block; font-size:0.8rem; color:#94a3b8; }
-  .stat-card strong { font-size:1.1rem; }
-  canvas { background:#1e293b; border-radius:10px; padding:8px; margin-bottom:16px; max-width:100%; }
-  ul { list-style:none; padding:0; }
-  li { background:#1e293b; padding:8px 12px; border-radius:8px; margin-bottom:6px; }
-  button { background:#22c55e; color:#0f172a; border:none; padding:8px 14px; border-radius:8px; font-weight:600; }
-  a.back { color:#94a3b8; text-decoration:none; display:inline-block; margin-bottom:10px; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, sans-serif; background:#0d1117; color:#e6edf3; }
+  .tabs { display:flex; border-bottom:1px solid #30363d; position:sticky; top:0; background:#0d1117; z-index:10; }
+  .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:#8b949e; border:none; cursor:pointer; font-size:13px; }
+  .tab-btn.active { color:#fff; border-bottom:3px solid #f2c94c; font-weight:bold; }
+  .tab-content { display:none; padding:16px; }
+  .tab-content.active { display:block; }
+  .card { background:#161b22; border-radius:10px; padding:16px; margin-bottom:16px; }
+  .stock-alert { background:#3b1f1f; border-left:4px solid #e5484d; padding:10px 14px; border-radius:6px; margin-bottom:16px; }
 </style>
 </head>
 <body>
-  <a href="index.html" class="back">&larr; Retour</a>
-  <h1>📊 Tableau de bord</h1>
-  <div class="stats">
-    <div class="stat-card"><span>Aujourd'hui</span><strong id="totalJour">—</strong></div>
-    <div class="stat-card"><span>7 derniers jours</span><strong id="totalSemaine">—</strong></div>
-    <div class="stat-card"><span>30 derniers jours</span><strong id="totalMois">—</strong></div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="ventes">Ventes</button>
+  <button class="tab-btn" data-tab="gerants">Gérants</button>
+  <button class="tab-btn" data-tab="rapports">Rapports</button>
+  <button class="tab-btn" data-tab="parametres">Paramètres</button>
+</div>
+
+<div id="tab-ventes" class="tab-content active">
+  <div id="stockAlertBanner"></div>
+
+  <div class="card" id="totauxCard">
+    <div id="totalJour"></div>
+    <div id="totalSemaine"></div>
+    <div id="totalMois"></div>
   </div>
-  <canvas id="chartVentes" height="180"></canvas>
-  <button id="btnRefreshDashboard">🔄 Actualiser</button>
-  <h2>Rapports archivés</h2>
-  <div id="rapportsActions">
-    <button id="btnRapportJour">🗓️ Rapport du jour</button>
-    <button id="btnRapportSemaine">📅 Rapport de la semaine</button>
-    <button id="btnRapportMois">📆 Rapport du mois</button>
-    <p id="rapportStatus"></p>
-  <ul id="listeRapports"><li>Chargement...</li></ul>
+
+  <div class="card">
+    <canvas id="ventesChart" height="180"></canvas>
   </div>
-  <h2>Gérants</h2>
-  <ul id="listeGerants"><li>Chargement...</li></ul>
-  <script type="module" src="dashboard.js"></script>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Répartition par catégorie</h3>
+    <canvas id="categorieChart" height="180"></canvas>
+  </div>
+
+  <div class="card" id="comparaisonCard">
+    <h3 style="margin-top:0;">Période actuelle vs précédente</h3>
+    <div id="comparaisonContent"></div>
+  </div>
+
+  <div class="card" id="topProduitsCard">
+    <h3 style="margin-top:0;">Top 5 produits</h3>
+    <div id="topProduitsContent"></div>
+  </div>
+</div>
+
+<div id="tab-gerants" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Gérants actifs</h3>
+    <div id="listeGerants"></div>
+  </div>
+</div>
+
+<div id="tab-rapports" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Générer un rapport</h3>
+    <div id="rapportsBoutons"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0;">Historique des rapports</h3>
+    <div id="historiqueRapports"></div>
+  </div>
+</div>
+
+<div id="tab-parametres" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Établissement</h3>
+    <div id="infoEtablissement"></div>
+  </div>
+</div>
+
+<script src="dashboard.js"></script>
 </body>
 </html>
