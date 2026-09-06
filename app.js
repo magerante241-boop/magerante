@@ -49,7 +49,10 @@ function switchView(view) {
     if (window.FacturesModule) {
       window.FacturesModule.render(viewContainer);
     } else {
-      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module Factures...</p>`;
+      // Aucun module Factures n'existe encore (aucun fichier ne définit
+      // window.FacturesModule) : on l'affiche comme "à venir" plutôt que de
+      // laisser un message "Chargement..." qui ne se résout jamais.
+      viewContainer.innerHTML = `<p class="placeholder-msg">Module Factures — à construire à une prochaine étape.</p>`;
     }
   } else {
     calcZone.hidden = true;
@@ -57,6 +60,8 @@ function switchView(view) {
     viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
   }
 }
+
+window.switchView = switchView;
 
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -213,10 +218,15 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
 renderCalc();
 
 // --- Filtrage des tuiles Bar/Snack/Club selon le type d'etablissement ---
+// Types d'établissement pour lesquels la grille de marques (boissons) n'a pas
+// de sens et doit rester masquée. Tout type absent de cette liste (y compris
+// le "boutique" créé par défaut en mode visiteur) l'affiche.
+// ⚠️ À ajuster selon ton besoin réel si la liste ne te convient pas.
+const TYPES_SANS_GRILLE_MARQUES = ["hotel", "salon", "atelier", "service"];
 function filtrerCategoriesCalc(type) {
-  const estBar = (type || "").toLowerCase() === "bar";
+  const masquer = TYPES_SANS_GRILLE_MARQUES.includes((type || "").toLowerCase());
   const marqueGrid = document.getElementById("marqueGrid");
-  if (marqueGrid) marqueGrid.hidden = !estBar;
+  if (marqueGrid) marqueGrid.hidden = masquer;
 }
 window.filtrerCategoriesCalc = filtrerCategoriesCalc;
 
@@ -247,7 +257,12 @@ const MARQUES_TAILLES = {
 };
 
 const marqueTaillesEl = document.getElementById("marqueTailles");
-if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(marqueTaillesEl);
+// NB : on n'attache PAS les flèches de scroll ici. attachScrollArrows() déplace
+// l'élément dans un wrapper `position: relative`, ce qui change son offsetParent
+// et casse le positionnement dynamique (top/left calculés par rapport à
+// #marqueGrid dans le gestionnaire de clic ci-dessous) — c'est ce qui causait
+// le popup mal placé / les flèches qui débordaient sur la grille. Ce popup n'a
+// de toute façon jamais plus de 2 entrées (petite/grande) : pas besoin de scroll.
 
 async function chargerTousProduitsSurs() {
   if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];

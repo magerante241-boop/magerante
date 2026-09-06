@@ -332,9 +332,9 @@ function updateAccountStatusBadge() {
   const menuInvite = document.getElementById("menuInviteGerant");
   if (menuInvite) {
     menuInvite.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  }
   const menuDashboard = document.getElementById("menuDashboard");
   if (menuDashboard) menuDashboard.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
-  }
   const estConnecte = window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite";
 
   const menuRename = document.getElementById("menuRenameEstablishment");

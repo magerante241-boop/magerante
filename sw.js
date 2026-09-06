@@ -36,6 +36,10 @@ self.addEventListener("activate", (event) => {
 // puis va chercher la dernière version en fond pour la prochaine ouverture.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Ne jamais mettre en cache les requêtes hors origine (Firebase Auth,
+  // Firestore, Google APIs, gstatic...) : ce sont des échanges temps réel /
+  // authentifiés qui ne doivent jamais être servis depuis un cache local.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
