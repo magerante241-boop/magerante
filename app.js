@@ -43,6 +43,14 @@ function switchView(view) {
     } else {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
+  } else if (view === "factures") {
+    calcZone.hidden = false;
+    viewContainer.hidden = false;
+    if (window.FacturesModule) {
+      window.FacturesModule.render(viewContainer);
+    } else {
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module Factures...</p>`;
+    }
   } else {
     calcZone.hidden = true;
     viewContainer.hidden = false;
