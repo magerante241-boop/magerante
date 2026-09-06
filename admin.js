@@ -287,6 +287,30 @@ async function chargerEtablissementsParZone() {
   rendre();
   if (filtreZoneEl) filtreZoneEl.addEventListener("change", rendre);
 }
+async function ouvrirEditionEtablissement(id, etablissements) {
+  const etab = etablissements.find((e) => e.id === id);
+  if (!etab) return;
+  const nouveauNom = prompt("Nom de l'établissement :", etab.nom);
+  if (nouveauNom === null) return;
+  const nouvelleZone = prompt("Zone / quartier :", etab.zone);
+  if (nouvelleZone === null) return;
+  const nouveauWhatsapp = prompt("WhatsApp (ex: 24177123456) :", etab.whatsapp || "");
+  if (nouveauWhatsapp === null) return;
+  try {
+    await updateDoc(doc(db, "establishments", id), {
+      name: nouveauNom,
+      localisation: nouvelleZone,
+      whatsappEtablissement: nouveauWhatsapp || null,
+      updatedAt: serverTimestamp()
+    });
+    alert("Établissement mis à jour.");
+    chargerEtablissementsParZone();
+  } catch (err) {
+    console.error("Erreur mise à jour établissement:", err);
+    alert("Erreur lors de la mise à jour.");
+  }
+}
+
 async function chargerInventaireGlobal() {
   try {
     const prodSnap = await getDocs(collectionGroup(db, "produits"));
