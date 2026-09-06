@@ -207,6 +207,21 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
 
 renderCalc();
 
+// --- Filtrage des tuiles Bar/Snack/Club selon le type d'etablissement ---
+function filtrerCategoriesCalc(type) {
+  const mapping = { bar: "Bar", snack: "Snack", club: "Club" };
+  const catAutorisee = mapping[(type || "").toLowerCase()] || null;
+  document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
+    if (!catAutorisee) {
+      // type restaurant/autre/boutique : aucune correspondance directe
+      btn.hidden = true;
+    } else {
+      btn.hidden = btn.dataset.cat !== catAutorisee;
+    }
+  });
+}
+window.filtrerCategoriesCalc = filtrerCategoriesCalc;
+
 // --- Tuiles Bar / Snack / Club : liste de produits filtrée par catégorie ---
 const calcProduitsListe = document.getElementById("calcProduitsListe");
 
