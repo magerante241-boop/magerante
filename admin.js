@@ -9,6 +9,7 @@ const loginBox = document.getElementById("loginBox");
 const adminPanel = document.getElementById("adminPanel");
 const adminError = document.getElementById("adminError");
 const pendingList = document.getElementById("pendingList");
+if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(pendingList);
 const btnSettings = document.getElementById("btnSettings");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const settingsEmail = document.getElementById("settingsEmail");
@@ -151,6 +152,7 @@ function chargerComptesEnAttente() {
 async function chargerFinanceEtRapports() {
   const caTableBody = document.getElementById("caTableBody");
   const rapportList = document.getElementById("rapportList");
+  if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(rapportList);
   const etabMap = {};
 
   try {
@@ -214,6 +216,7 @@ async function chargerFinanceEtRapports() {
 
 async function chargerEtablissementsParZone() {
   const listeZonesEl = document.getElementById("listeZones");
+  if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(listeZonesEl);
   const filtreZoneEl = document.getElementById("filtreZone");
   if (!listeZonesEl) return;
   let etablissements = [];
