@@ -8,6 +8,10 @@ import { appState } from "./state.js";
 function ventesRef() {
   return collection(db, "establishments", appState.establishmentId, "ventes");
 }
+
+function journalRef() {
+  return collection(db, "establishments", appState.establishmentId, "journal");
+}
 function produitsRef() {
   return collection(db, "establishments", appState.establishmentId, "produits");
 }
@@ -123,7 +127,10 @@ export function ouvrirModaleVente(montantInitial) {
       if (isNaN(montant) || montant <= 0) { errorEl.textContent = "Montant invalide."; return; }
       saveBtn.disabled = true; saveBtn.textContent = "Enregistrement...";
       try {
-        await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId: auth.currentUser ? auth.currentUser.uid : null });
+        const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+        const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
+        await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId });
+        addDoc(journalRef(), { type: "vente", sousType: "libre", montant, date: serverTimestamp(), auteurId, auteurNom, source: "vente" }).catch(() => {});
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -139,10 +146,13 @@ export function ouvrirModaleVente(montantInitial) {
       const montant = Number(produit.prixVente || 0) * qte;
       saveBtn.disabled = true; saveBtn.textContent = "Enregistrement...";
       try {
+        const auteurId2 = auth.currentUser ? auth.currentUser.uid : null;
+        const auteurNom2 = (window.AuthState && window.AuthState.nomGerant) || null;
         await addDoc(ventesRef(), {
           montant, type: "produit", produitId: produit.id, produitNom: produit.nom,
-          quantite: qte, date: serverTimestamp(), auteurId: auth.currentUser ? auth.currentUser.uid : null
+          quantite: qte, date: serverTimestamp(), auteurId: auteurId2
         });
+        addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
         await updateDoc(doc(db, "establishments", appState.establishmentId, "produits", produit.id), {
           stock: increment(-qte)
         });
