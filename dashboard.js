@@ -18,6 +18,7 @@ const btnRapportMois = document.getElementById("btnRapportMois");
 const rapportStatusEl = document.getElementById("rapportStatus");
 const listeRapportsEl = document.getElementById("historiqueRapports");
 const comparaisonContentEl = document.getElementById("comparaisonContent");
+const soldeContentEl = document.getElementById("soldeContent");
 const topProduitsContentEl = document.getElementById("topProduitsContent");
 const stockAlertBannerEl = document.getElementById("stockAlertBanner");
 const infoEtablissementEl = document.getElementById("infoEtablissement");
@@ -222,6 +223,17 @@ function afficherComparaison(actuel, precedent) {
   `;
 }
 
+function afficherSolde(totalRecettes, totalDepenses, totalAchats) {
+  const solde = totalRecettes - totalDepenses - totalAchats;
+  const couleur = solde >= 0 ? "#22c55e" : "#e5484d";
+  soldeContentEl.innerHTML = `
+    <div>Recettes : ${totalRecettes.toLocaleString("fr-FR")} FCFA</div>
+    <div>Dépenses : ${totalDepenses.toLocaleString("fr-FR")} FCFA</div>
+    <div>Achats : ${totalAchats.toLocaleString("fr-FR")} FCFA</div>
+    <div style="color:${couleur}; font-weight:bold;">Solde net : ${solde.toLocaleString("fr-FR")} FCFA</div>
+  `;
+}
+
 function afficherTopProduits(topProduits) {
   if (!topProduits.length) {
     topProduitsContentEl.innerHTML = "<p>Aucune vente de produit sur la période.</p>";
@@ -245,14 +257,16 @@ async function chargerDonnees(ownerUid) {
   const { debut: debutMois, fin: finMois } = calculerPeriode("mois");
   const { debut: debutMoisPrec, fin: finMoisPrec } = calculerPeriode("mois", -1);
 
-  const [donneesMois, donneesMoisPrec] = await Promise.all([
+  const [donneesMois, donneesMoisPrec, donneesMouvements] = await Promise.all([
     agregerVentes(ownerUid, debutMois, finMois),
     agregerVentes(ownerUid, debutMoisPrec, finMoisPrec),
+    agregerMouvements(ownerUid, debutMois, finMois),
   ]);
 
   afficherComparaison(donneesMois.totalVentes, donneesMoisPrec.totalVentes);
   afficherTopProduits(donneesMois.topProduits);
   afficherAlerteStock(donneesMois.produitsEnRupture);
+  afficherSolde(donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
 
   const labelsCategorie = Object.keys(donneesMois.parCategorie);
   const dataCategorie = labelsCategorie.map((k) => donneesMois.parCategorie[k]);
