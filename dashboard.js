@@ -21,6 +21,7 @@ const comparaisonContentEl = document.getElementById("comparaisonContent");
 const soldeContentEl = document.getElementById("soldeContent");
 const topProduitsContentEl = document.getElementById("topProduitsContent");
 const stockAlertBannerEl = document.getElementById("stockAlertBanner");
+const deficitAlertBannerEl = document.getElementById("deficitAlertBanner");
 const infoEtablissementEl = document.getElementById("infoEtablissement");
 const listeCloturesEl = document.getElementById("listeClotures");
 
@@ -253,6 +254,19 @@ function afficherAlerteStock(produitsEnRupture) {
   stockAlertBannerEl.innerHTML = `<div class="stock-alert">⚠️ Rupture de stock : ${noms}</div>`;
 }
 
+function afficherAlerteDeficit(solde, totalRecettes, totalDepenses, totalAchats) {
+  const chargesTotales = totalDepenses + totalAchats;
+  if (solde < 0) {
+    deficitAlertBannerEl.innerHTML = `<div class="deficit-alert">🔴 Déficit : les dépenses et achats (${chargesTotales.toLocaleString("fr-FR")} FCFA) dépassent les recettes (${totalRecettes.toLocaleString("fr-FR")} FCFA). Solde net : ${solde.toLocaleString("fr-FR")} FCFA.</div>`;
+    return;
+  }
+  if (totalRecettes > 0 && chargesTotales > totalRecettes * 0.8) {
+    deficitAlertBannerEl.innerHTML = `<div class="deficit-warning">🟠 Avertissement : les dépenses et achats atteignent ${Math.round((chargesTotales / totalRecettes) * 100)}% des recettes.</div>`;
+    return;
+  }
+  deficitAlertBannerEl.innerHTML = "";
+}
+
 async function chargerDonnees(ownerUid) {
   const { debut: debutMois, fin: finMois } = calculerPeriode("mois");
   const { debut: debutMoisPrec, fin: finMoisPrec } = calculerPeriode("mois", -1);
@@ -267,6 +281,8 @@ async function chargerDonnees(ownerUid) {
   afficherTopProduits(donneesMois.topProduits);
   afficherAlerteStock(donneesMois.produitsEnRupture);
   afficherSolde(donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
+  const soldeNet = donneesMouvements.totalRecettes - donneesMouvements.totalDepenses - donneesMouvements.totalAchats;
+  afficherAlerteDeficit(soldeNet, donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
 
   const labelsCategorie = Object.keys(donneesMois.parCategorie);
   const dataCategorie = labelsCategorie.map((k) => donneesMois.parCategorie[k]);
