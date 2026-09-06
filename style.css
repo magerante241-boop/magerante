@@ -789,3 +789,17 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
   padding:6px 4px;
   min-height:36px;
 }
+
+/* Chantier 6 - correction contraste texte des tuiles de marque */
+button[data-marque="Régab"] { color: #f0e8d8; }
+button[data-marque="33 Export"] { color: #f0e8d8; }
+button[data-marque="Castel"] { color: #f0e8d8; }
+button[data-marque="Booster"] { color: #fdfaf3; }
+button[data-marque="Beaufort"] { color: #f0e8d8; }
+button[data-marque="Tembo"] { color: #f0e8d8; }
+button[data-marque="Heineken"] { color: #f0e8d8; }
+button[data-marque="Coca-Cola"] { color: #fdfaf3; }
+button[data-marque="Martini"] { color: #f0e8d8; }
+button[data-marque="Grand Versant"] { color: #f0e8d8; }
+button[data-marque="Label 5"] { color: #2b1c00; }
+button[data-marque="Ricard"] { color: #2b1c00; }
