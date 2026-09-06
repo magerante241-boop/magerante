@@ -605,3 +605,31 @@ body{
 .marque-taille-item:active .calc-produit-prix {
   color: #1a1a1a;
 }
+
+/* === Chantier 6 (suite) : ajustement dimensions grille marques + numpad === */
+#marqueGrid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+}
+
+.marque-cell {
+  padding: 8px 3px;
+  font-size: 11px;
+  border-radius: 10px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.numpad {
+  gap: 1px;
+  padding: 1px;
+}
+
+.numpad button {
+  min-height: 28px;
+  padding: 2px 0;
+  font-size: 13px;
+}
