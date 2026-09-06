@@ -686,3 +686,12 @@ button[data-marque="Martini"] { background: linear-gradient(145deg, #c41230, #7d
 button[data-marque="Grand Versant"] { background: linear-gradient(145deg, #5c1122, #2e0810); }
 button[data-marque="Label 5"] { background: linear-gradient(145deg, #b8952e, #7d621a); }
 button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7410); }
+
+/* === Chantier 6 (suite) : suppression debordement haut + gain espace bas === */
+.calc-zone {
+  overflow: hidden;
+}
+
+.calc-display {
+  min-height: 130px;
+}
