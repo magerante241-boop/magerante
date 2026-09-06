@@ -280,6 +280,11 @@ document.getElementById("menuLogin").addEventListener("click", () => {
   closeSideMenu();
   if (window.openLoginModal) window.openLoginModal();
 });
+
+document.getElementById("menuLoginGerant").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.ouvrirEcranConnexionGerant) window.ouvrirEcranConnexionGerant();
+});
 document.getElementById("menuCreateAccount").addEventListener("click", () => {
   closeSideMenu();
   if (window.openRegisterModal) window.openRegisterModal();

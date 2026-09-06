@@ -325,6 +325,10 @@ function updateAccountStatusBadge() {
   if (menuLogin) {
     menuLogin.hidden = estConnecte;
   }
+  const menuLoginGerant = document.getElementById("menuLoginGerant");
+  if (menuLoginGerant) {
+    menuLoginGerant.hidden = estConnecte;
+  }
 
   const menuCreateAccount = document.getElementById("menuCreateAccount");
   if (menuCreateAccount) {
