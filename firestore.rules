@@ -52,12 +52,24 @@ service cloud.firestore {
         allow create, update: if isSignedIn() && request.auth.uid == estId;
         allow delete: if false;
       }
+
+      match /clotures/{clotureId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+        allow create: if isSignedIn() && estGerantDe(estId) && request.resource.data.gerantUid == request.auth.uid;
+        allow update, delete: if false;
+      }
     }
 
     match /invitations/{token} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.estId == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    match /gerant_logins/{telephone} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.estId;
+      allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
     }
 
     match /{document=**} {
