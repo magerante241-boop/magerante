@@ -7,14 +7,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body { margin:0; font-family: Arial, sans-serif; background:#0d1117; color:#e6edf3; }
-  .tabs { display:flex; border-bottom:1px solid #30363d; position:sticky; top:0; background:#0d1117; z-index:10; }
-  .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:#8b949e; border:none; cursor:pointer; font-size:13px; }
-  .tab-btn.active { color:#fff; border-bottom:3px solid #f2c94c; font-weight:bold; }
+  body { margin:0; font-family: var(--font-main); background:var(--bg); color:var(--text); }
+  .tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
+  .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:var(--muted); border:none; cursor:pointer; font-size:13px; }
+  .tab-btn.active { color:var(--primary); border-bottom:3px solid var(--accent); font-weight:bold; }
   .tab-content { display:none; padding:16px; }
   .tab-content.active { display:block; }
-  .card { background:#161b22; border-radius:10px; padding:16px; margin-bottom:16px; }
-  .stock-alert { background:#3b1f1f; border-left:4px solid #e5484d; padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:16px; }
+  .stock-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
 </style>
 </head>
 <body>
