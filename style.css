@@ -633,3 +633,19 @@ body{
   padding: 2px 0;
   font-size: 13px;
 }
+
+/* === Chantier 6 (suite) : grille de marques jusqu'aux bords + suppression calc-actions === */
+.calc-zone {
+  padding: 6px 4px 4px;
+}
+
+#marqueGrid {
+  padding: 4px 2px;
+  gap: 5px;
+}
+
+.marque-cell {
+  padding: 6px 2px;
+  font-size: 10px;
+  min-height: 40px;
+}

@@ -255,6 +255,10 @@ const PRODUITS_DEMO = [
   { nom: "Tembo 65cl", categorie: "Bar", prixAchat: 500, prixVente: 700, stock: 40 },
   { nom: "Malta Guinness 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 40 },
   { nom: "Malta Guinness 50cl", categorie: "Bar", prixAchat: 600, prixVente: 1000, stock: 30 },
+  { nom: "Martini Rosso 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Martini Bianco 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Grand Versant Rouge 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
+  { nom: "Grand Versant Blanc 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
 ];
 
 export async function importProduitsDemo() {

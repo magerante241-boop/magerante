@@ -67,7 +67,6 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 let calcExpr = "";
 const exprEl = document.getElementById("calcExpression");
 const resultEl = document.getElementById("calcResult");
-const actionsEl = document.getElementById("calcActions");
 let calcValeurNumerique = 0;
 let produitSelectionne = null;
 
@@ -102,11 +101,9 @@ function renderCalc() {
       resultValueEl.textContent = "Erreur";
       resultUnitEl.hidden = true;
     }
-    actionsEl.hidden = !(isFinite(value) && calcExpr !== "" && /[0-9]/.test(calcExpr));
   } catch {
     resultValueEl.textContent = "…";
     resultUnitEl.hidden = true;
-    actionsEl.hidden = true;
   }
   ajusterTailleResultat();
   updateCoins();
@@ -346,7 +343,7 @@ document.getElementById("menuImportProduits").addEventListener("click", async ()
     alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
     return;
   }
-  if (!confirm("Importer 52 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
+  if (!confirm("Importer 56 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
   try {
     const res = await window.InventaireModule.importProduitsDemo();
     if (res.success) {
