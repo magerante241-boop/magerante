@@ -113,18 +113,18 @@ async function chargerDashboard() {
 function chargerComptesEnAttente() {
   const q = query(
     collection(db, "users"),
-    where("accountType", "==", "enregistre"),
-    where("validated", "==", false)
+    where("accountType", "==", "enregistre")
   );
   onSnapshot(
     q,
     (snap) => {
-      if (snap.empty) {
+      const enAttente = snap.docs.filter((docSnap) => docSnap.data().validated !== true);
+      if (enAttente.length === 0) {
         pendingList.innerHTML = "<p class='empty-msg'>Aucun compte en attente.</p>";
         return;
       }
       pendingList.innerHTML = "";
-      snap.forEach((docSnap) => {
+      enAttente.forEach((docSnap) => {
         const d = docSnap.data();
         const card = document.createElement("div");
         card.className = "compte-card";
