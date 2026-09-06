@@ -239,8 +239,8 @@ const MARQUES_TAILLES = {
   "Heineken": { petite: "Heineken 33cl", grande: "Heineken 65cl" },
   "Malta Guinness": { petite: "Malta Guinness 33cl", grande: "Malta Guinness 50cl" },
   "Coca-Cola": { petite: "Coca-Cola 33cl", grande: "Coca-Cola 1L" },
-  "Martini": { bianco: "Martini Bianco 1L", rosso: "Martini Rosso 1L" },
-  "Grand Versant": { blanc: "Grand Versant Blanc 75cl", rouge: "Grand Versant Rouge 75cl" },
+  "Martini": { petite: "Martini 70cl", grande: "Martini 1L" },
+  "Grand Versant": { petite: "Grand Versant 70cl", grande: "Grand Versant 1L" },
   "Label 5": { petite: "Label 5 70cl", grande: "Label 5 1L" },
   "Ricard": { petite: "Ricard 70cl", grande: "Ricard 1L" },
 };
