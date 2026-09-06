@@ -426,6 +426,16 @@ onAuthStateChanged(auth, async (user) => {
   window.AuthState.validated = !!userData.validated;
   window.AuthState.role = userData.role || "PROPRIETAIRE";
   window.AuthState.email = user.email || null;
+  window.AuthState.nomGerant = userData.nom || null;
+  const gerantNomHeaderEl = document.getElementById("gerantNomHeader");
+  if (gerantNomHeaderEl) {
+    if (window.AuthState.role === "GERANT" && window.AuthState.nomGerant) {
+      gerantNomHeaderEl.textContent = window.AuthState.nomGerant;
+      gerantNomHeaderEl.hidden = false;
+    } else {
+      gerantNomHeaderEl.hidden = true;
+    }
+  }
   updateAccountStatusBadge();
   await ouvrirApplication(userData.establishmentId);
 });
