@@ -62,6 +62,11 @@
         <option value="autre">Autre</option>
       </select>
       <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
+      <input type="text" id="regWhatsappEtablissement" placeholder="WhatsApp de l'établissement (ex: 24177123456)">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="regGpsAffichage" placeholder="Position GPS non definie" readonly style="flex:1;">
+        <button type="button" class="auth-btn" id="btnUtiliserPosition">📍 Utiliser ma position</button>
+      </div>
       <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
       <p class="auth-switch"><a href="#" id="linkGoToLogin">Déjà un compte ? Se connecter</a></p>
     </div>
