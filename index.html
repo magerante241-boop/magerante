@@ -79,6 +79,7 @@
       <button class="auth-btn-primary" id="btnLogin">Se connecter</button>
       <p class="auth-switch"><a href="#" id="linkForgotPassword">Mot de passe oublie ?</a></p>
       <p class="auth-switch"><a href="#" id="linkGoToRegister">Pas encore de compte ? En créer un</a></p>
+      <p class="auth-switch"><a href="#" id="linkOpenGerantLogin">Tu es gérant ? Connecte-toi avec ton numéro</a></p>
     </div>
 
   </div>
@@ -91,12 +92,24 @@
       <button id="gerantContinueBtn" class="auth-btn">Acceder a mon interface</button>
     </div>
   </div>
+  <div id="gerantLoginGate" class="auth-gate" hidden>
+    <div class="auth-view">
+      <h1>Connexion gerant</h1>
+      <p class="auth-hint">Saisis ton numero WhatsApp et ton code a 4 chiffres.</p>
+      <p class="auth-error" id="gerantLoginError"></p>
+      <input type="tel" id="gerantLoginTelephone" placeholder="Numero WhatsApp" class="auth-input">
+      <input type="text" id="gerantLoginCode" placeholder="Code a 4 chiffres" class="auth-input" inputmode="numeric" maxlength="4">
+      <button id="btnGerantLogin" class="auth-btn-primary">Se connecter</button>
+      <button id="btnCloseGerantLogin" class="icon-btn">Fermer</button>
+    </div>
+  </div>
   <div id="inviteGate" class="auth-gate" hidden>
     <div class="auth-view">
       <h1>Inviter un gerant</h1>
       <p class="auth-hint">Indique son nom, puis envoie-lui son lien.</p>
       <input type="text" id="inviteNomGerant" placeholder="Nom du gerant" class="auth-input">
       <input type="tel" id="inviteTelGerant" placeholder="Numero WhatsApp (ex: 24177123456)" class="auth-input">
+      <input type="text" id="inviteCodeGerant" placeholder="Code a 4 chiffres pour ce gerant" class="auth-input" inputmode="numeric" maxlength="4">
       <button id="btnGenererInvitation" class="auth-btn">Generer le lien</button>
       <div id="inviteLinksZone" hidden>
         <a id="inviteLienWhatsapp" class="auth-btn" target="_blank">Envoyer par WhatsApp</a>
