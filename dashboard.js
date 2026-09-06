@@ -22,6 +22,11 @@ const soldeContentEl = document.getElementById("soldeContent");
 const topProduitsContentEl = document.getElementById("topProduitsContent");
 const stockAlertBannerEl = document.getElementById("stockAlertBanner");
 const deficitAlertBannerEl = document.getElementById("deficitAlertBanner");
+const filtreClotureGerantEl = document.getElementById("filtreClotureGerant");
+const filtreCloturePeriodeEl = document.getElementById("filtreCloturePeriode");
+const btnExportCloturesEl = document.getElementById("btnExportClotures");
+let cloturesEnMemoire = [];
+let nomsGerantsEnMemoire = {};
 const infoEtablissementEl = document.getElementById("infoEtablissement");
 const listeCloturesEl = document.getElementById("listeClotures");
 
