@@ -568,3 +568,48 @@ document.addEventListener("click", (e) => {
     marqueTaillesEl.hidden = true;
   }
 });
+document.getElementById("menuGenererDemoComplet").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
+  closeSideMenu();
+  if (!window.DemoModule || !window.DemoModule.genererDonneesDemoCompletes) {
+    alert("Module Démo en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Générer toutes les données de démonstration (produits, ventes, comptes, établissements) ?")) return;
+  try {
+    const res = await window.DemoModule.genererDonneesDemoCompletes();
+    if (res.success) {
+      alert("Données démo générées avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de la génération : " + err.message);
+  }
+});
+
+document.getElementById("menuSupprimerDemo").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
+  closeSideMenu();
+  if (!window.DemoModule || !window.DemoModule.supprimerDonneesDemo) {
+    alert("Module Démo en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Supprimer toutes les données de démonstration ?")) return;
+  try {
+    const res = await window.DemoModule.supprimerDonneesDemo();
+    if (res.success) {
+      alert(res.count + " éléments de démo supprimés avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de la suppression : " + err.message);
+  }
+});
