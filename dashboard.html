@@ -16,6 +16,8 @@
   .tab-content.active { display:block; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:16px; }
   .stock-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .deficit-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .deficit-warning { background:var(--surface2); border-left:4px solid var(--accent); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
 </style>
 </head>
 <body>
@@ -29,6 +31,7 @@
 
 <div id="tab-ventes" class="tab-content active">
   <div id="stockAlertBanner"></div>
+  <div id="deficitAlertBanner"></div>
 
   <div class="card" id="totauxCard">
     <div id="totalJour"></div>
