@@ -303,6 +303,60 @@ function afficherClotures() {
   });
 }
 
+function brancherFiltresClotures() {
+  if (filtreClotureGerantEl) filtreClotureGerantEl.addEventListener("change", afficherClotures);
+  if (filtreCloturePeriodeEl) filtreCloturePeriodeEl.addEventListener("change", afficherClotures);
+}
+
+function cloturesFiltreesActuelles() {
+  const gerantFiltre = filtreClotureGerantEl ? filtreClotureGerantEl.value : "";
+  const periodeFiltre = filtreCloturePeriodeEl ? filtreCloturePeriodeEl.value : "tout";
+  let bornes = null;
+  if (periodeFiltre !== "tout") bornes = calculerPeriode(periodeFiltre);
+  return cloturesEnMemoire.filter((d) => {
+    if (gerantFiltre && d.gerantUid !== gerantFiltre) return false;
+    if (bornes) {
+      const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+      if (!dateObj || dateObj < bornes.debut || dateObj >= bornes.fin) return false;
+    }
+    return true;
+  });
+}
+
+function genererPdfClotures(liste, titre) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  pdf.setFontSize(16);
+  pdf.text(titre, 14, 18);
+  pdf.setFontSize(11);
+  let y = 30;
+  let totalGeneral = 0;
+  liste.forEach((d) => {
+    const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+    const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
+    const nomGerant = nomsGerantsEnMemoire[d.gerantUid] || "Gérant";
+    const montant = d.totalVentes || 0;
+    totalGeneral += montant;
+    const ligne = `${nomGerant} — ${dateStr} — ${montant.toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
+    pdf.text(ligne, 14, y);
+    y += 8;
+    if (y > 280) { pdf.addPage(); y = 20; }
+  });
+  y += 6;
+  pdf.setFontSize(13);
+  pdf.text(`Total : ${totalGeneral.toLocaleString("fr-FR")} FCFA (${liste.length} clôture(s))`, 14, y);
+  pdf.save(titre.replace(/[^a-z0-9]+/gi, "_") + ".pdf");
+}
+
+function brancherExportPDF() {
+  if (!btnExportCloturesEl) return;
+  btnExportCloturesEl.addEventListener("click", () => {
+    const liste = cloturesFiltreesActuelles();
+    if (!liste.length) { alert("Aucune clôture à exporter avec ces filtres."); return; }
+    genererPdfClotures(liste, "Export clôtures MAGERANTE");
+  });
+}
+
 async function chargerDonnees(ownerUid) {
   const { debut: debutMois, fin: finMois } = calculerPeriode("mois");
   const { debut: debutMoisPrec, fin: finMoisPrec } = calculerPeriode("mois", -1);
@@ -423,4 +477,6 @@ onAuthStateChanged(auth, async (user) => {
   brancherBoutonsRapports(user.uid);
   chargerHistoriqueRapports(user.uid);
   chargerInfoEtablissement(user.uid);
+  brancherFiltresClotures();
+  brancherExportPDF();
 });
