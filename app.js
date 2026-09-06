@@ -209,16 +209,9 @@ renderCalc();
 
 // --- Filtrage des tuiles Bar/Snack/Club selon le type d'etablissement ---
 function filtrerCategoriesCalc(type) {
-  const mapping = { bar: "Bar", snack: "Snack", club: "Club" };
-  const catAutorisee = mapping[(type || "").toLowerCase()] || null;
-  document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
-    if (!catAutorisee) {
-      // type restaurant/autre/boutique : aucune correspondance directe
-      btn.hidden = true;
-    } else {
-      btn.hidden = btn.dataset.cat !== catAutorisee;
-    }
-  });
+  const estBar = (type || "").toLowerCase() === "bar";
+  const marqueGrid = document.getElementById("marqueGrid");
+  if (marqueGrid) marqueGrid.hidden = !estBar;
 }
 window.filtrerCategoriesCalc = filtrerCategoriesCalc;
 
@@ -230,48 +223,101 @@ function fermerListeProduits() {
   calcProduitsListe.innerHTML = "";
 }
 
-document.querySelectorAll(".calc-cat-btn").forEach((btn) => {
+const MARQUES_TAILLES = {
+  "Régab": { petite: "Régab 33cl", grande: "Régab 65cl" },
+  "33 Export": { petite: "33 Export 33cl", grande: "33 Export 65cl" },
+  "Castel": { petite: "Castel Beer 33cl", grande: "Castel Beer 65cl" },
+  "Booster": { petite: "Booster 24cl", grande: "Booster 50cl" },
+  "Guinness": { petite: "Guinness 33cl", grande: "Guinness 65cl" },
+  "Beaufort": { petite: "Beaufort 33cl", grande: "Beaufort 65cl" },
+  "Tembo": { petite: "Tembo 33cl", grande: "Tembo 65cl" },
+  "Heineken": { petite: "Heineken 33cl", grande: "Heineken 65cl" },
+  "Malta Guinness": { petite: "Malta Guinness 33cl", grande: "Malta Guinness 50cl" },
+  "Coca-Cola": { petite: "Coca-Cola 33cl", grande: "Coca-Cola 1L" },
+};
+
+const marqueTaillesEl = document.getElementById("marqueTailles");
+
+async function chargerTousProduitsSurs() {
+  if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
+  try {
+    return await window.InventaireModule.getTousLesProduits();
+  } catch (err) {
+    return [];
+  }
+}
+
+document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn) => {
   btn.addEventListener("click", async () => {
     if (!(window.AuthState && window.AuthState.hasEstablishment)) {
       alert("Initialisation en cours, réessaie dans un instant.");
       return;
     }
-    if (!window.InventaireModule || !window.InventaireModule.getProduitsParCategorie) {
-      alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
-      return;
-    }
-    const categorie = btn.dataset.cat;
-    if (!categorie) return; // ex: bouton "Rechercher" (pas de categorie -> pas de requête Firestore)
-    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
-    calcProduitsListe.hidden = false;
-    try {
-      const produits = await window.InventaireModule.getProduitsParCategorie(categorie);
-      if (!produits.length) {
-        calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit dans "${categorie}".</p>`;
-        return;
-      }
-      calcProduitsListe.innerHTML = produits.map((p) => `
-        <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
-          <span class="calc-produit-nom">${p.nom}</span>
-          <span class="calc-produit-prix">${p.prixVente} FCFA</span>
-        </button>
-      `).join("");
-      calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
-        item.addEventListener("click", () => {
-          calcExpr = item.dataset.prix;
-          produitSelectionne = {
-            nom: item.dataset.nom,
-            prixVente: Number(item.dataset.prix) || 0,
-            prixAchat: Number(item.dataset.prixAchat) || 0,
-            stock: Number(item.dataset.stock) || 0,
-          };
-          renderCalc();
-          fermerListeProduits();
-        });
+    const marque = btn.dataset.marque;
+    const tailles = MARQUES_TAILLES[marque];
+    if (!tailles) return;
+    fermerListeProduits();
+    marqueTaillesEl.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
+    marqueTaillesEl.hidden = false;
+    const tousLesProduits = await chargerTousProduitsSurs();
+    marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
+      const p = tousLesProduits.find((x) => x.nom === nomProduit);
+      const label = taille === "grande" ? "grande" : "petite";
+      const suffixe = p ? ` · ${p.prixVente} FCFA` : " (non configuré)";
+      return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
+    }).join("");
+    marqueTaillesEl.querySelectorAll(".marque-taille-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
+        if (!p) {
+          alert("Ce produit n'est pas encore configuré dans l'inventaire.");
+          return;
+        }
+        calcExpr = String(p.prixVente);
+        produitSelectionne = {
+          nom: p.nom,
+          prixVente: Number(p.prixVente) || 0,
+          prixAchat: Number(p.prixAchat) || 0,
+          stock: Number(p.stock) || 0,
+        };
+        renderCalc();
+        marqueTaillesEl.hidden = true;
       });
-    } catch (err) {
-      calcProduitsListe.innerHTML = `<p class="placeholder-msg">Erreur : ${err.message}</p>`;
-    }
+    });
+  });
+});
+
+document.getElementById("btnMarqueAutres").addEventListener("click", async () => {
+  if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+    alert("Initialisation en cours, réessaie dans un instant.");
+    return;
+  }
+  marqueTaillesEl.hidden = true;
+  calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
+  calcProduitsListe.hidden = false;
+  const tousLesProduits = await chargerTousProduitsSurs();
+  if (!tousLesProduits.length) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit dans l'inventaire.</p>`;
+    return;
+  }
+  calcProduitsListe.innerHTML = tousLesProduits.map((p) => `
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
+      <span class="calc-produit-nom">${p.nom}</span>
+      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+    </button>
+  `).join("");
+  calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      calcExpr = item.dataset.prix;
+      produitSelectionne = {
+        nom: item.dataset.nom,
+        prixVente: Number(item.dataset.prix) || 0,
+        prixAchat: Number(item.dataset.prixAchat) || 0,
+        stock: Number(item.dataset.stock) || 0,
+      };
+      renderCalc();
+      fermerListeProduits();
+    });
   });
 });
 
