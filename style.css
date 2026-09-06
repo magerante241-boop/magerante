@@ -803,3 +803,23 @@ button[data-marque="Martini"] { color: #f0e8d8; }
 button[data-marque="Grand Versant"] { color: #f0e8d8; }
 button[data-marque="Label 5"] { color: #2b1c00; }
 button[data-marque="Ricard"] { color: #2b1c00; }
+
+/* Fleches de scroll haut/bas dynamiques (utilitaire generique) */
+.scroll-arrows-wrap { position: relative; }
+.scroll-arrow {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 22px; border-radius: 8px; border: none;
+  background: var(--primary); color: #fdfaf3; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 5; box-shadow: var(--shadow-sm);
+  opacity: 0.92;
+}
+.scroll-arrow-up { top: 2px; }
+.scroll-arrow-down { bottom: 2px; }
+.scroll-arrow:active { filter: brightness(0.88); }
+
+/* Chantier admin - listes scrollables avec hauteur limitée */
+#pendingList, #rapportList, #listeZones {
+  max-height: 320px;
+  overflow-y: auto;
+}

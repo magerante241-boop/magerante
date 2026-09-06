@@ -222,6 +222,7 @@ window.filtrerCategoriesCalc = filtrerCategoriesCalc;
 
 // --- Tuiles Bar / Snack / Club : liste de produits filtrée par catégorie ---
 const calcProduitsListe = document.getElementById("calcProduitsListe");
+if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(calcProduitsListe);
 
 function fermerListeProduits() {
   calcProduitsListe.hidden = true;
@@ -246,6 +247,7 @@ const MARQUES_TAILLES = {
 };
 
 const marqueTaillesEl = document.getElementById("marqueTailles");
+if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(marqueTaillesEl);
 
 async function chargerTousProduitsSurs() {
   if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
