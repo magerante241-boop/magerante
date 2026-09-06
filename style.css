@@ -792,7 +792,7 @@ button[data-marque="Ricard"] { color: #2b1c00; }
 /* Fleches de scroll haut/bas dynamiques (utilitaire generique) */
 .scroll-arrows-wrap { position: relative; }
 .scroll-arrow {
-  position: absolute; left: 50%; transform: translateX(-50%);
+  position: absolute; right: 6px; left: auto; transform: none;
   width: 30px; height: 22px; border-radius: 8px; border: none;
   background: var(--primary); color: #fdfaf3; font-size: 12px;
   display: flex; align-items: center; justify-content: center;
