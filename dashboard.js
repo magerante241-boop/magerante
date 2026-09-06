@@ -316,7 +316,7 @@ async function chargerInfoEtablissement(ownerUid) {
   }
   const d = etabSnap.data();
   infoEtablissementEl.innerHTML = `
-    <div><strong>Nom :</strong> ${d.nom || "Non renseigné"}</div>
+    <div><strong>Nom :</strong> ${d.name || "Non renseigné"}</div>
     <div><strong>Type :</strong> ${d.type || "Non renseigné"}</div>
   `;
 }
