@@ -56,6 +56,7 @@ onAuthStateChanged(auth, (user) => {
     chargerDashboard();
     chargerComptesEnAttente();
     chargerFinanceEtRapports();
+    chargerEtablissementsParZone();
     chargerInventaireGlobal();
     chargerGestionProduits();
   } else {
@@ -210,6 +211,82 @@ async function chargerFinanceEtRapports() {
   }
 }
 
+
+async function chargerEtablissementsParZone() {
+  const listeZonesEl = document.getElementById("listeZones");
+  const filtreZoneEl = document.getElementById("filtreZone");
+  if (!listeZonesEl) return;
+  let etablissements = [];
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    estSnap.forEach((d) => {
+      const data = d.data();
+      etablissements.push({
+        id: d.id,
+        nom: data.name || data.nom || ("Etablissement " + d.id.slice(0, 6)),
+        type: data.type || "?",
+        zone: data.localisation || "Zone non renseignée",
+        whatsapp: data.whatsappEtablissement || null,
+        gps: data.gps || null,
+        lienGoogleMaps: data.lienGoogleMaps || null
+      });
+    });
+  } catch (err) {
+    console.error("Erreur chargement etablissements (zones):", err);
+    listeZonesEl.innerHTML = "<p class='empty-msg'>Erreur de chargement.</p>";
+    return;
+  }
+
+  const parZone = {};
+  etablissements.forEach((e) => {
+    if (!parZone[e.zone]) parZone[e.zone] = [];
+    parZone[e.zone].push(e);
+  });
+
+  if (filtreZoneEl) {
+    const selectionActuelle = filtreZoneEl.value;
+    filtreZoneEl.innerHTML = '<option value="">Toutes les zones</option>';
+    Object.keys(parZone).sort().forEach((zone) => {
+      const opt = document.createElement("option");
+      opt.value = zone;
+      opt.textContent = `${zone} (${parZone[zone].length})`;
+      filtreZoneEl.appendChild(opt);
+    });
+    filtreZoneEl.value = selectionActuelle;
+  }
+
+  function rendre() {
+    const zoneFiltre = filtreZoneEl ? filtreZoneEl.value : "";
+    const zonesAAfficher = zoneFiltre ? [zoneFiltre] : Object.keys(parZone).sort();
+    if (!zonesAAfficher.length || !zonesAAfficher.some((z) => parZone[z])) {
+      listeZonesEl.innerHTML = "<p class='empty-msg'>Aucun établissement.</p>";
+      return;
+    }
+    listeZonesEl.innerHTML = zonesAAfficher.filter((z) => parZone[z]).map((zone) => {
+      const items = parZone[zone].map((e) => {
+        const mapsLien = e.lienGoogleMaps
+          ? `<a href="${e.lienGoogleMaps}" target="_blank">📍 Voir sur Maps</a>`
+          : "<span class='empty-msg'>GPS non renseigné</span>";
+        const whatsappLien = e.whatsapp
+          ? `<a href="https://wa.me/${e.whatsapp.replace(/\D/g, "")}" target="_blank">💬 ${e.whatsapp}</a>`
+          : "<span class='empty-msg'>WhatsApp non renseigné</span>";
+        return `<div class="zone-etab-item" data-id="${e.id}">
+          <div><strong>${e.nom}</strong> (${e.type})</div>
+          <div>${mapsLien} — ${whatsappLien}</div>
+          <button class="btn-edit-etab" data-id="${e.id}">✏️ Modifier</button>
+        </div>`;
+      }).join("");
+      return `<div class="zone-groupe"><h3>${zone}</h3>${items}</div>`;
+    }).join("");
+
+    document.querySelectorAll(".btn-edit-etab").forEach((btn) => {
+      btn.addEventListener("click", () => ouvrirEditionEtablissement(btn.dataset.id, etablissements));
+    });
+  }
+
+  rendre();
+  if (filtreZoneEl) filtreZoneEl.addEventListener("change", rendre);
+}
 async function chargerInventaireGlobal() {
   try {
     const prodSnap = await getDocs(collectionGroup(db, "produits"));
