@@ -99,6 +99,25 @@ function openLoginModal() {
 window.openLoginModal = openLoginModal;
 
 document.getElementById("linkGoToLogin")?.addEventListener("click", (e) => { e.preventDefault(); openLoginModal(); });
+
+document.getElementById("btnUtiliserPosition")?.addEventListener("click", () => {
+  const gpsAffichageEl = document.getElementById("regGpsAffichage");
+  if (!navigator.geolocation) {
+    if (gpsAffichageEl) gpsAffichageEl.value = "Géolocalisation non supportée par ce navigateur.";
+    return;
+  }
+  if (gpsAffichageEl) gpsAffichageEl.value = "Localisation en cours...";
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      window.gpsCaptureLat = position.coords.latitude;
+      window.gpsCaptureLng = position.coords.longitude;
+      if (gpsAffichageEl) gpsAffichageEl.value = `Position capturée : ${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+    },
+    (err) => {
+      if (gpsAffichageEl) gpsAffichageEl.value = "Impossible de récupérer la position : " + err.message;
+    }
+  );
+});
 document.getElementById("linkGoToRegister")?.addEventListener("click", (e) => { e.preventDefault(); openRegisterModal(); });
 
 document.getElementById("btnCloseAuth").addEventListener("click", closeModal);
@@ -227,6 +246,10 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   const etablissementNom = document.getElementById("regEtablissementNom").value.trim();
   const etablissementType = document.getElementById("regEtablissementType").value;
   const localisation = document.getElementById("regLocalisation").value.trim();
+  const whatsappEtablissement = document.getElementById("regWhatsappEtablissement").value.trim();
+  const gpsLat = window.gpsCaptureLat || null;
+  const gpsLng = window.gpsCaptureLng || null;
+  const lienGoogleMaps = (gpsLat && gpsLng) ? `https://www.google.com/maps?q=${gpsLat},${gpsLng}` : null;
   const errorEl = document.getElementById("registerError");
   const btn = document.getElementById("btnRegister");
   errorEl.textContent = "";
@@ -264,6 +287,9 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
       name: etablissementNom,
       type: etablissementType,
       localisation,
+      whatsappEtablissement: whatsappEtablissement || null,
+      gps: (gpsLat && gpsLng) ? { lat: gpsLat, lng: gpsLng } : null,
+      lienGoogleMaps,
       telephone,
       status: "en_attente",
       ownerId: uid,
