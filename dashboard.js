@@ -341,23 +341,24 @@ async function chargerDonnees(ownerUid) {
       listeGerantsEl.appendChild(li);
     });
   }
+  nomsGerantsEnMemoire = nomsGerants;
+
+  if (filtreClotureGerantEl) {
+    const selectionActuelle = filtreClotureGerantEl.value;
+    filtreClotureGerantEl.innerHTML = '<option value="">Tous les gérants</option>';
+    Object.keys(nomsGerants).forEach((uid) => {
+      const opt = document.createElement("option");
+      opt.value = uid;
+      opt.textContent = nomsGerants[uid];
+      filtreClotureGerantEl.appendChild(opt);
+    });
+    filtreClotureGerantEl.value = selectionActuelle;
+  }
 
   if (listeCloturesEl) {
     const cloturesSnap = await getDocs(query(collection(db, "establishments", ownerUid, "clotures"), orderBy("date", "desc")));
-    listeCloturesEl.innerHTML = "";
-    if (cloturesSnap.empty) {
-      listeCloturesEl.innerHTML = "<li>Aucune clôture reçue pour le moment.</li>";
-    } else {
-      cloturesSnap.forEach((c) => {
-        const d = c.data();
-        const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
-        const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
-        const nomGerant = nomsGerants[d.gerantUid] || "Gérant";
-        const li = document.createElement("li");
-        li.textContent = `${nomGerant} — ${dateStr} — ${(d.totalVentes || 0).toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
-        listeCloturesEl.appendChild(li);
-      });
-    }
+    cloturesEnMemoire = cloturesSnap.docs.map((c) => c.data());
+    afficherClotures();
   }
 }
 
