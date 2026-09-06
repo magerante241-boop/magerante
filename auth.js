@@ -208,6 +208,7 @@ document.getElementById("linkForgotPassword")?.addEventListener("click", async (
 
 document.getElementById("menuLogout").addEventListener("click", async () => {
   try {
+    localStorage.removeItem("magerante_wasGerant");
     await signOut(auth);
     location.reload();
   } catch (err) {
@@ -307,19 +308,21 @@ function updateAccountStatusBadge() {
   const menuDashboard = document.getElementById("menuDashboard");
   if (menuDashboard) menuDashboard.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
   }
+  const estConnecte = window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite";
+
   const menuLogout = document.getElementById("menuLogout");
   if (menuLogout) {
-    menuLogout.hidden = window.AuthState.accountType !== "enregistre";
+    menuLogout.hidden = !estConnecte;
   }
 
   const menuLogin = document.getElementById("menuLogin");
   if (menuLogin) {
-    menuLogin.hidden = window.AuthState.accountType === "enregistre";
+    menuLogin.hidden = estConnecte;
   }
 
   const menuCreateAccount = document.getElementById("menuCreateAccount");
   if (menuCreateAccount) {
-    menuCreateAccount.hidden = window.AuthState.accountType === "enregistre";
+    menuCreateAccount.hidden = estConnecte;
   }
 }
 
@@ -383,6 +386,13 @@ onAuthStateChanged(auth, async (user) => {
   if (!userSnap.exists()) {
     const _inviteParams = new URLSearchParams(window.location.search);
     if (_inviteParams.has("invite")) { return; }
+    if (localStorage.getItem("magerante_wasGerant") === "1") {
+      const authGateEl = document.getElementById("authGate");
+      const gerantLoginGateEl = document.getElementById("gerantLoginGate");
+      if (authGateEl) authGateEl.hidden = true;
+      if (gerantLoginGateEl) gerantLoginGateEl.hidden = false;
+      return;
+    }
     // Mode visiteur : on crée l'établissement par défaut tout seul,
     // aucune modale, aucune action requise de l'utilisateur.
     try {
