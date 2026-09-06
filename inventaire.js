@@ -282,4 +282,4 @@ export async function importProduitsDemo() {
   return { success: true, count: PRODUITS_DEMO.length };
 }
 
-window.InventaireModule = { render, cleanup, getProduitsParCategorie, getTousLesProduits, importProduitsDemo };
+window.InventaireModule = { render, cleanup, getProduitsParCategorie, getTousLesProduits, importProduitsDemo, PRODUITS_DEMO };
