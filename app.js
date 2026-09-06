@@ -170,6 +170,11 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
       alert("Initialisation en cours, réessaie dans un instant.");
       return;
     }
+    if (window.AuthState.accountType === "anonyme") {
+      alert("Veuillez vous inscrire en tant que propriétaire pour bénéficier de ce service.");
+      if (window.openRegisterModal) window.openRegisterModal();
+      return;
+    }
     if (btn.dataset.action === "vente") {
       if (window.VentesModule) {
         window.VentesModule.ouvrirModaleVente(calcValeurNumerique > 0 ? calcValeurNumerique : "");
