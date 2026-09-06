@@ -244,6 +244,17 @@ const PRODUITS_DEMO = [
   { nom: "Cigarettes Dunhill (paquet)", categorie: "Snack", prixAchat: 1300, prixVente: 2000, stock: 30 },
   { nom: "Cigarettes London (paquet)", categorie: "Snack", prixAchat: 900, prixVente: 1400, stock: 30 },
   { nom: "Glaçons (sachet)", categorie: "Snack", prixAchat: 200, prixVente: 500, stock: 60 },
+  { nom: "33 Export 65cl", categorie: "Bar", prixAchat: 500, prixVente: 800, stock: 40 },
+  { nom: "Beaufort 65cl", categorie: "Bar", prixAchat: 800, prixVente: 1300, stock: 40 },
+  { nom: "Guinness 65cl", categorie: "Bar", prixAchat: 1100, prixVente: 1900, stock: 30 },
+  { nom: "Heineken 65cl", categorie: "Bar", prixAchat: 1400, prixVente: 2100, stock: 30 },
+  { nom: "Coca-Cola 1L", categorie: "Bar", prixAchat: 500, prixVente: 900, stock: 60 },
+  { nom: "Booster 24cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 60 },
+  { nom: "Booster 50cl", categorie: "Bar", prixAchat: 700, prixVente: 1200, stock: 40 },
+  { nom: "Tembo 33cl", categorie: "Bar", prixAchat: 275, prixVente: 400, stock: 60 },
+  { nom: "Tembo 65cl", categorie: "Bar", prixAchat: 500, prixVente: 700, stock: 40 },
+  { nom: "Malta Guinness 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 40 },
+  { nom: "Malta Guinness 50cl", categorie: "Bar", prixAchat: 600, prixVente: 1000, stock: 30 },
 ];
 
 export async function importProduitsDemo() {

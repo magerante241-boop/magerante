@@ -300,7 +300,7 @@ document.getElementById("menuImportProduits").addEventListener("click", async ()
     alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
     return;
   }
-  if (!confirm("Importer 41 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
+  if (!confirm("Importer 52 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
   try {
     const res = await window.InventaireModule.importProduitsDemo();
     if (res.success) {
