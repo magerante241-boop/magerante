@@ -695,3 +695,78 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 .calc-display {
   min-height: 130px;
 }
+
+/* ===== Grille de marques (Chantier 6 — calculatrice gérant) ===== */
+#marqueGrid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
+  padding:6px;
+}
+.marque-cell{
+  position:relative; overflow:hidden;
+  background:linear-gradient(160deg,var(--surface2) 0%,#c2b191 55%,var(--primary-dark) 100%);
+  color:var(--text); border:none; border-radius:12px;
+  font-size:13px; font-weight:600; padding:10px 4px; min-height:52px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  box-shadow:
+    0 3px 0 rgba(20,17,12,0.28),
+    0 6px 14px rgba(20,17,12,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.55);
+  transition:transform .08s ease, box-shadow .08s ease, filter .08s ease;
+}
+.marque-cell::after{
+  content:"";
+  position:absolute; top:-60%; left:-25%;
+  width:55%; height:220%;
+  background:linear-gradient(120deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 65%);
+  transform:rotate(20deg);
+  pointer-events:none;
+}
+.marque-cell:active{
+  transform:translateY(2px) scale(0.97);
+  box-shadow:
+    0 0 0 rgba(20,17,12,0.28),
+    0 1px 4px rgba(20,17,12,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  filter:brightness(0.88);
+}
+.marque-cell-autres{
+  background:linear-gradient(160deg,#e0c46a 0%,var(--accent) 55%,#7a5f1f 100%);
+  color:#2b1c00;
+}
+
+/* Sélecteur de taille (grande/petite), affiché après clic sur une marque */
+.marque-tailles[hidden]{ display:none; }
+.marque-tailles{
+  display:flex; gap:8px; padding:8px 6px;
+}
+.marque-taille-item{
+  position:relative; overflow:hidden;
+  flex:1; background:linear-gradient(160deg,var(--primary) 0%,var(--primary-dark) 60%,#0f3d28 100%);
+  color:#fdfaf3; border:none; border-radius:12px;
+  font-size:13px; font-weight:600; padding:10px 6px; min-height:48px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  box-shadow:
+    0 3px 0 rgba(20,17,12,0.28),
+    0 6px 14px rgba(20,17,12,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+  transition:transform .08s ease, box-shadow .08s ease, filter .08s ease;
+}
+.marque-taille-item::after{
+  content:"";
+  position:absolute; top:-60%; left:-25%;
+  width:55%; height:220%;
+  background:linear-gradient(120deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 65%);
+  transform:rotate(20deg);
+  pointer-events:none;
+}
+.marque-taille-item:active{
+  transform:translateY(2px) scale(0.97);
+  box-shadow:
+    0 0 0 rgba(20,17,12,0.28),
+    0 1px 4px rgba(20,17,12,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  filter:brightness(0.88);
+}
+.marque-taille-item .taille-prix{
+  font-size:11px; font-weight:500; opacity:0.85;
+}
