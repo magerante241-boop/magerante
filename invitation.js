@@ -20,7 +20,15 @@ async function creerInvitationGerant(estId, nomGerant, telephone, code) {
   });
 
   await setDoc(doc(db, "gerant_logins", telClean), {
-    estId, nom: nomGerant, code: codeClean, actif: true,
+    estId, nom: nomGerant, actif: true,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  // Le code PIN vit désormais dans une collection séparée, jamais lisible
+  // depuis le client (voir firestore.rules). Il n'est vérifié que côté
+  // serveur, via get(), au moment de la tentative de connexion du gérant.
+  await setDoc(doc(db, "gerant_codes", telClean), {
+    estId, code: codeClean,
     updatedAt: new Date().toISOString()
   }, { merge: true });
 
@@ -80,8 +88,12 @@ async function traiterInvitationDepuisUrl() {
 
       appState.establishmentId = estId;
 
+      // viaToken : preuve exigée par la règle Firestore (voir firestore.rules)
+      // pour empêcher quiconque de s'auto-déclarer gérant d'un établissement
+      // sans connaître un token d'invitation réellement émis pour celui-ci.
       await setDoc(doc(db, "establishments", estId, "gerants", user.uid), {
-        nom: nomGerant, telephone: telephone || null, actif: true, dateActivation: new Date().toISOString()
+        nom: nomGerant, telephone: telephone || null, actif: true, dateActivation: new Date().toISOString(),
+        viaToken: token
       }, { merge: true });
 
       await setDoc(doc(db, "users", user.uid), {
@@ -150,13 +162,11 @@ function reinitialiserTentatives(telClean) {
   try { localStorage.removeItem(cleTentatives(telClean)); } catch { /* ignore */ }
 }
 
-// ⚠️ Ceci n'est qu'un frein côté client (contournable en vidant le
-// localStorage ou en changeant de navigateur). Le code reste lisible en clair
-// dans Firestore et comparé côté client : la vraie protection nécessite de
-// déplacer cette vérification dans une Cloud Function (le client ne devrait
-// jamais pouvoir lire le champ `code`), avec un vrai hash + limitation de
-// débit côté serveur. À traiter en priorité si tu as accès à Firebase
-// Functions ; en attendant, ce verrou réduit fortement le risque.
+// Le verrou anti-brute-force ci-dessus reste côté client (contournable en
+// vidant le localStorage) — pour un vrai débit limité côté serveur, il
+// faudrait une Cloud Function. Mais le code lui-même n'est plus lisible en
+// clair par le client : il vit dans gerant_codes (lecture interdite), vérifié
+// uniquement par la règle Firestore côté serveur au moment de l'écriture.
 async function connecterGerantParCode(telephone, code) {
   const telClean = (telephone || "").replace(/\D/g, "");
   const codeClean = (code || "").replace(/\D/g, "");
@@ -183,11 +193,6 @@ async function connecterGerantParCode(telephone, code) {
   if (loginData.actif === false) {
     return { success: false, message: "Cet acces a ete desactive. Contacte ton responsable." };
   }
-  if (String(loginData.code || "") !== codeClean) {
-    enregistrerEchec(telClean);
-    return { success: false, message: "Code incorrect." };
-  }
-  reinitialiserTentatives(telClean);
 
   const estId = loginData.estId;
   const nomGerant = loginData.nom || "Gerant";
@@ -199,11 +204,22 @@ async function connecterGerantParCode(telephone, code) {
     });
   });
 
-  appState.establishmentId = estId;
+  // Le code n'est plus jamais lu par le client (gerant_logins ne le contient
+  // plus). On tente directement l'ecriture avec le code saisi : c'est la
+  // regle Firestore qui le verifie cote serveur via gerant_codes (illisible
+  // depuis le client) et accepte ou refuse l'operation en consequence.
+  try {
+    await setDoc(doc(db, "establishments", estId, "gerants", uid), {
+      nom: nomGerant, telephone: telClean, actif: true, dateActivation: new Date().toISOString(),
+      codeSaisi: codeClean
+    }, { merge: true });
+  } catch (e) {
+    enregistrerEchec(telClean);
+    return { success: false, message: "Code incorrect." };
+  }
+  reinitialiserTentatives(telClean);
 
-  await setDoc(doc(db, "establishments", estId, "gerants", uid), {
-    nom: nomGerant, telephone: telClean, actif: true, dateActivation: new Date().toISOString()
-  }, { merge: true });
+  appState.establishmentId = estId;
 
   await setDoc(doc(db, "users", uid), {
     nom: nomGerant, telephone: telClean, role: "GERANT",
