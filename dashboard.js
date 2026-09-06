@@ -272,6 +272,37 @@ function afficherAlerteDeficit(solde, totalRecettes, totalDepenses, totalAchats)
   deficitAlertBannerEl.innerHTML = "";
 }
 
+function afficherClotures() {
+  if (!listeCloturesEl) return;
+  const gerantFiltre = filtreClotureGerantEl ? filtreClotureGerantEl.value : "";
+  const periodeFiltre = filtreCloturePeriodeEl ? filtreCloturePeriodeEl.value : "tout";
+  let bornes = null;
+  if (periodeFiltre !== "tout") bornes = calculerPeriode(periodeFiltre);
+
+  const cloturesFiltrees = cloturesEnMemoire.filter((d) => {
+    if (gerantFiltre && d.gerantUid !== gerantFiltre) return false;
+    if (bornes) {
+      const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+      if (!dateObj || dateObj < bornes.debut || dateObj >= bornes.fin) return false;
+    }
+    return true;
+  });
+
+  listeCloturesEl.innerHTML = "";
+  if (!cloturesFiltrees.length) {
+    listeCloturesEl.innerHTML = "<li>Aucune clôture pour ces filtres.</li>";
+    return;
+  }
+  cloturesFiltrees.forEach((d) => {
+    const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+    const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
+    const nomGerant = nomsGerantsEnMemoire[d.gerantUid] || "Gérant";
+    const li = document.createElement("li");
+    li.textContent = `${nomGerant} — ${dateStr} — ${(d.totalVentes || 0).toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
+    listeCloturesEl.appendChild(li);
+  });
+}
+
 async function chargerDonnees(ownerUid) {
   const { debut: debutMois, fin: finMois } = calculerPeriode("mois");
   const { debut: debutMoisPrec, fin: finMoisPrec } = calculerPeriode("mois", -1);
