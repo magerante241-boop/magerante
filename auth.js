@@ -310,6 +310,11 @@ function updateAccountStatusBadge() {
   }
   const estConnecte = window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite";
 
+  const menuRename = document.getElementById("menuRenameEstablishment");
+  if (menuRename) {
+    menuRename.hidden = window.AuthState.role === "GERANT";
+  }
+
   const menuLogout = document.getElementById("menuLogout");
   if (menuLogout) {
     menuLogout.hidden = !estConnecte;
