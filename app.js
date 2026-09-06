@@ -293,7 +293,9 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
     marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
       const p = tousLesProduits.find((x) => x.nom === nomProduit);
       const label = taille;
-      const suffixe = p ? ` · ${p.prixVente} FCFA` : " (non configuré)";
+      const demo = window.InventaireModule?.PRODUITS_DEMO?.find((x) => x.nom === nomProduit);
+      const prixAffiche = p ? p.prixVente : (demo ? demo.prixVente : null);
+      const suffixe = prixAffiche != null ? ` · ${prixAffiche} FCFA` : " (non configuré)";
       return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
     }).join("");
     const maxLeft = Math.max(0, btn.parentElement.offsetWidth - marqueTaillesEl.offsetWidth - 4);
