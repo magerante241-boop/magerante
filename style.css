@@ -799,8 +799,8 @@ button[data-marque="Ricard"] { color: #2b1c00; }
   cursor: pointer; z-index: 5; box-shadow: var(--shadow-sm);
   opacity: 0.92;
 }
-.scroll-arrow-up { top: 2px; }
-.scroll-arrow-down { bottom: 2px; }
+.scroll-arrow-up { bottom: 26px; right: 6px; }
+.scroll-arrow-down { bottom: 2px; right: 6px; }
 .scroll-arrow:active { filter: brightness(0.88); }
 
 /* Chantier admin - listes scrollables avec hauteur limitée */
