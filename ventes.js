@@ -1,7 +1,7 @@
 // ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
 // (deduit automatiquement le stock quand une vente est liee a un produit).
 import {
-  auth, db, doc, collection, addDoc, updateDoc, getDocs, query, orderBy, serverTimestamp, increment
+  auth, db, doc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, increment, runTransaction
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -148,14 +148,28 @@ export function ouvrirModaleVente(montantInitial) {
       try {
         const auteurId2 = auth.currentUser ? auth.currentUser.uid : null;
         const auteurNom2 = (window.AuthState && window.AuthState.nomGerant) || null;
-        await addDoc(ventesRef(), {
-          montant, type: "produit", produitId: produit.id, produitNom: produit.nom,
-          quantite: qte, date: serverTimestamp(), auteurId: auteurId2
+        const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produit.id);
+        const venteDocRef = doc(ventesRef());
+
+        // Transaction atomique : on relit le stock réel au moment de l'écriture
+        // (pas le cache client, qui peut être périmé si un autre gérant a vendu
+        // entre-temps) et on refuse si ce n'est plus suffisant. Vente et
+        // décrément de stock réussissent ou échouent ensemble — jamais l'un
+        // sans l'autre.
+        await runTransaction(db, async (tx) => {
+          const produitSnap = await tx.get(produitDocRef);
+          const stockActuel = produitSnap.exists() ? Number(produitSnap.data().stock || 0) : 0;
+          if (qte > stockActuel) {
+            throw new Error("Stock insuffisant (" + stockActuel + " disponible désormais).");
+          }
+          tx.set(venteDocRef, {
+            montant, type: "produit", produitId: produit.id, produitNom: produit.nom,
+            quantite: qte, date: serverTimestamp(), auteurId: auteurId2
+          });
+          tx.update(produitDocRef, { stock: increment(-qte) });
         });
+
         addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
-        await updateDoc(doc(db, "establishments", appState.establishmentId, "produits", produit.id), {
-          stock: increment(-qte)
-        });
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;

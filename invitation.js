@@ -54,7 +54,7 @@ function afficherEcranBienvenue(nomGerant, nomEtablissement) {
       gerantGate.hidden = true;
       const appRoot = document.getElementById("appRoot");
       if (appRoot) appRoot.hidden = false;
-      if (window.switchView) window.switchView("vente");
+      if (window.switchView) window.switchView("ventes");
     };
   }
 }
@@ -112,11 +112,61 @@ async function traiterInvitationDepuisUrl() {
 
 // Reconnexion permanente d'un gerant deja invite, depuis n'importe quel
 // appareil : numero WhatsApp + code a 4 chiffres fournis par le proprietaire.
+const PIN_MAX_TENTATIVES = 5;
+const PIN_BLOCAGE_MS = 5 * 60 * 1000; // 5 minutes
+
+function cleTentatives(telClean) {
+  return "magerante_pin_tentatives_" + telClean;
+}
+
+function verifierVerrouillage(telClean) {
+  try {
+    const raw = localStorage.getItem(cleTentatives(telClean));
+    if (!raw) return null;
+    const { count, bloqueJusqu } = JSON.parse(raw);
+    if (bloqueJusqu && Date.now() < bloqueJusqu) {
+      const minutesRestantes = Math.ceil((bloqueJusqu - Date.now()) / 60000);
+      return `Trop de tentatives. Réessaie dans ${minutesRestantes} min.`;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function enregistrerEchec(telClean) {
+  try {
+    const raw = localStorage.getItem(cleTentatives(telClean));
+    const actuel = raw ? JSON.parse(raw) : { count: 0 };
+    const count = (actuel.count || 0) + 1;
+    const data = { count };
+    if (count >= PIN_MAX_TENTATIVES) {
+      data.bloqueJusqu = Date.now() + PIN_BLOCAGE_MS;
+      data.count = 0;
+    }
+    localStorage.setItem(cleTentatives(telClean), JSON.stringify(data));
+  } catch { /* localStorage indisponible : on laisse passer plutôt que de bloquer l'usage normal */ }
+}
+
+function reinitialiserTentatives(telClean) {
+  try { localStorage.removeItem(cleTentatives(telClean)); } catch { /* ignore */ }
+}
+
+// ⚠️ Ceci n'est qu'un frein côté client (contournable en vidant le
+// localStorage ou en changeant de navigateur). Le code reste lisible en clair
+// dans Firestore et comparé côté client : la vraie protection nécessite de
+// déplacer cette vérification dans une Cloud Function (le client ne devrait
+// jamais pouvoir lire le champ `code`), avec un vrai hash + limitation de
+// débit côté serveur. À traiter en priorité si tu as accès à Firebase
+// Functions ; en attendant, ce verrou réduit fortement le risque.
 async function connecterGerantParCode(telephone, code) {
   const telClean = (telephone || "").replace(/\D/g, "");
   const codeClean = (code || "").replace(/\D/g, "");
   if (!telClean || !codeClean) {
     return { success: false, message: "Merci de remplir ton numero et ton code." };
+  }
+
+  const messageVerrou = verifierVerrouillage(telClean);
+  if (messageVerrou) {
+    return { success: false, message: messageVerrou };
   }
 
   let loginSnap;
@@ -126,6 +176,7 @@ async function connecterGerantParCode(telephone, code) {
     return { success: false, message: "Erreur de connexion : " + (e.code || e.message) };
   }
   if (!loginSnap.exists()) {
+    enregistrerEchec(telClean);
     return { success: false, message: "Aucun acces trouve pour ce numero." };
   }
   const loginData = loginSnap.data();
@@ -133,8 +184,10 @@ async function connecterGerantParCode(telephone, code) {
     return { success: false, message: "Cet acces a ete desactive. Contacte ton responsable." };
   }
   if (String(loginData.code || "") !== codeClean) {
+    enregistrerEchec(telClean);
     return { success: false, message: "Code incorrect." };
   }
+  reinitialiserTentatives(telClean);
 
   const estId = loginData.estId;
   const nomGerant = loginData.nom || "Gerant";

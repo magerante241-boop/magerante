@@ -564,12 +564,6 @@ body{
   color: #0a0a0a;
 }
 
-.marque-tailles {
-  display: flex;
-  gap: 10px;
-  padding: 10px 12px 4px;
-}
-
 .marque-taille-item {
   flex: 1;
   padding: 14px 8px;
@@ -656,21 +650,6 @@ body{
   position: relative;
 }
 
-.marque-tailles {
-  position: absolute;
-  z-index: 20;
-  background: var(--surface2, #1c1f23);
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
-  padding: 6px;
-  min-width: 140px;
-}
-
-.marque-taille-item {
-  padding: 8px 6px;
-  font-size: 11px;
-}
-
 /* Couleurs thematiques par marque (dominantes d'etiquette) */
 button[data-marque="Régab"] { background: linear-gradient(145deg, #2f7d4f, #1b4d30); }
 button[data-marque="33 Export"] { background: linear-gradient(145deg, #3ea35a, #1f6b34); }
@@ -737,7 +716,13 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 /* Sélecteur de taille (grande/petite), affiché après clic sur une marque */
 .marque-tailles[hidden]{ display:none; }
 .marque-tailles{
+  position: absolute;
+  z-index: 20;
+  min-width: 140px;
   display:flex; gap:8px; padding:8px 6px;
+  background: var(--surface2, #1c1f23);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
 }
 .marque-taille-item{
   position:relative; overflow:hidden;

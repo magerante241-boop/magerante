@@ -5,6 +5,13 @@ import {
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
 
+// Échappe le HTML avant injection via innerHTML — évite l'XSS stocké sur les
+// champs contrôlés par le public (nom d'établissement, nom/prénom/email lors
+// de l'inscription, nom de produit...).
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 const loginBox = document.getElementById("loginBox");
 const adminPanel = document.getElementById("adminPanel");
 const adminError = document.getElementById("adminError");
@@ -130,10 +137,10 @@ function chargerComptesEnAttente() {
         const card = document.createElement("div");
         card.className = "compte-card";
         card.innerHTML =
-          "<strong>" + (d.nom || "") + " " + (d.prenom || "") + "</strong>" +
-          "<div class='meta'>Email : " + (d.email || "") + "</div>" +
-          "<div class='meta'>Telephone : " + (d.telephone || "") + "</div>" +
-          "<button data-uid='" + docSnap.id + "'>Valider ce compte</button>";
+          "<strong>" + escapeHtml((d.nom || "") + " " + (d.prenom || "")) + "</strong>" +
+          "<div class='meta'>Email : " + escapeHtml(d.email || "") + "</div>" +
+          "<div class='meta'>Telephone : " + escapeHtml(d.telephone || "") + "</div>" +
+          "<button data-uid='" + escapeHtml(docSnap.id) + "'>Valider ce compte</button>";
         card.querySelector("button").addEventListener("click", async (e) => {
           const uid = e.target.getAttribute("data-uid");
           await updateDoc(doc(db, "users", uid), { validated: true });
@@ -191,7 +198,7 @@ async function chargerFinanceEtRapports() {
     caTableBody.innerHTML = "<tr><td colspan='3' class='empty-msg'>Aucun etablissement enregistre pour l'instant.</td></tr>";
   } else {
     caTableBody.innerHTML = rows.map((r) =>
-      "<tr><td>" + r.nom + "</td><td>" + r.count + "</td><td>" + r.total.toLocaleString("fr-FR") + " FCFA</td></tr>"
+      "<tr><td>" + escapeHtml(r.nom) + "</td><td>" + r.count + "</td><td>" + r.total.toLocaleString("fr-FR") + " FCFA</td></tr>"
     ).join("");
   }
 
@@ -207,7 +214,7 @@ async function chargerFinanceEtRapports() {
       const nom = etabMap[v.estId] ? etabMap[v.estId].nom : v.estId;
       const dateStr = v.date && v.date.toDate ? v.date.toDate().toLocaleDateString("fr-FR") : "date inconnue";
       return "<div class='vente-item'>" +
-        "<div><div class='v-etab'>" + nom + "</div><div class='v-date'>" + dateStr + "</div></div>" +
+        "<div><div class='v-etab'>" + escapeHtml(nom) + "</div><div class='v-date'>" + dateStr + "</div></div>" +
         "<div class='v-montant'>" + v.montant.toLocaleString("fr-FR") + " FCFA</div></div>";
     }).join("");
   }
@@ -267,19 +274,19 @@ async function chargerEtablissementsParZone() {
     }
     listeZonesEl.innerHTML = zonesAAfficher.filter((z) => parZone[z]).map((zone) => {
       const items = parZone[zone].map((e) => {
-        const mapsLien = e.lienGoogleMaps
-          ? `<a href="${e.lienGoogleMaps}" target="_blank">📍 Voir sur Maps</a>`
+        const mapsLien = (e.lienGoogleMaps && /^https:\/\//.test(e.lienGoogleMaps))
+          ? `<a href="${escapeHtml(e.lienGoogleMaps)}" target="_blank">📍 Voir sur Maps</a>`
           : "<span class='empty-msg'>GPS non renseigné</span>";
         const whatsappLien = e.whatsapp
-          ? `<a href="https://wa.me/${e.whatsapp.replace(/\D/g, "")}" target="_blank">💬 ${e.whatsapp}</a>`
+          ? `<a href="https://wa.me/${e.whatsapp.replace(/\D/g, "")}" target="_blank">💬 ${escapeHtml(e.whatsapp)}</a>`
           : "<span class='empty-msg'>WhatsApp non renseigné</span>";
-        return `<div class="zone-etab-item" data-id="${e.id}">
-          <div><strong>${e.nom}</strong> (${e.type})</div>
+        return `<div class="zone-etab-item" data-id="${escapeHtml(e.id)}">
+          <div><strong>${escapeHtml(e.nom)}</strong> (${escapeHtml(e.type)})</div>
           <div>${mapsLien} — ${whatsappLien}</div>
-          <button class="btn-edit-etab" data-id="${e.id}">✏️ Modifier</button>
+          <button class="btn-edit-etab" data-id="${escapeHtml(e.id)}">✏️ Modifier</button>
         </div>`;
       }).join("");
-      return `<div class="zone-groupe"><h3>${zone}</h3>${items}</div>`;
+      return `<div class="zone-groupe"><h3>${escapeHtml(zone)}</h3>${items}</div>`;
     }).join("");
 
     document.querySelectorAll(".btn-edit-etab").forEach((btn) => {
@@ -547,10 +554,10 @@ function rendreTableauGestionProduits() {
 
   tbody.innerHTML = lignes.map((p) => {
     const nomEtab = _cacheEtablissementsNoms[p.estId] || p.estId.slice(0, 6);
-    return '<tr data-ref-id="' + p.id + '" data-est-id="' + p.estId + '">' +
-      '<td>' + nomEtab + '</td>' +
-      '<td>' + (p.nom || "") + '</td>' +
-      '<td>' + (p.categorie || "") + '</td>' +
+    return '<tr data-ref-id="' + escapeHtml(p.id) + '" data-est-id="' + escapeHtml(p.estId) + '">' +
+      '<td>' + escapeHtml(nomEtab) + '</td>' +
+      '<td>' + escapeHtml(p.nom || "") + '</td>' +
+      '<td>' + escapeHtml(p.categorie || "") + '</td>' +
       '<td>' + (p.prixVente || 0) + ' FCFA</td>' +
       '<td>' + (p.stock || 0) + '</td>' +
       '<td><button class="btn-supprimer-ligne">Suppr.</button></td>' +
