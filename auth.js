@@ -340,8 +340,11 @@ async function ouvrirApplication(establishmentId) {
   appState.establishmentId = establishmentId;
   const estSnap = await getDoc(doc(db, "establishments", establishmentId));
   const name = estSnap.exists() ? estSnap.data().name : DEFAULT_ESTABLISHMENT.name;
+  const type = estSnap.exists() ? estSnap.data().type : DEFAULT_ESTABLISHMENT.type;
   window.AuthState.hasEstablishment = true;
+  window.AuthState.establishmentType = type;
   etablissementNomEl.textContent = name;
+  if (window.filtrerCategoriesCalc) window.filtrerCategoriesCalc(type);
   closeModal();
 }
 
