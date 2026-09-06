@@ -72,6 +72,16 @@
 
   <div class="card">
     <h3 style="margin-top:0;">Clôtures reçues</h3>
+    <div id="filtresClotures" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+      <select id="filtreClotureGerant"><option value="">Tous les gérants</option></select>
+      <select id="filtreCloturePeriode">
+        <option value="tout">Toute la période</option>
+        <option value="jour">Aujourd'hui</option>
+        <option value="semaine">Cette semaine</option>
+        <option value="mois">Ce mois</option>
+      </select>
+      <button id="btnExportClotures">📄 Export PDF groupé</button>
+    </div>
     <div id="listeClotures"></div>
   </div>
 </div>
