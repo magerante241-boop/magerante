@@ -148,6 +148,24 @@ async function agregerVentes(ownerUid, debut, fin) {
   return { totalVentes, nombreVentes, panierMoyen, parCategorie, topProduits, produitsEnRupture, parGerant };
 }
 
+
+async function agregerMouvements(ownerUid, debut, fin) {
+  const mouvementsSnap = await getDocs(query(
+    collection(db, "establishments", ownerUid, "mouvements"),
+    where("date", ">=", debut),
+    where("date", "<", fin)
+  ));
+  let totalAchats = 0, totalDepenses = 0, totalRecettes = 0, totalEntreesStock = 0;
+  mouvementsSnap.forEach((docSnap) => {
+    const d = docSnap.data();
+    const montant = d.montant || 0;
+    if (d.type === "achat") totalAchats += montant;
+    else if (d.type === "depense") totalDepenses += montant;
+    else if (d.type === "recette") totalRecettes += montant;
+    else if (d.type === "entree-stock") totalEntreesStock += montant;
+  });
+  return { totalAchats, totalDepenses, totalRecettes, totalEntreesStock };
+}
 async function genererRapport(ownerUid, type) {
   const { id, debut, fin } = calculerPeriode(type);
   const { totalVentes, nombreVentes, panierMoyen, parCategorie, topProduits, produitsEnRupture } = await agregerVentes(ownerUid, debut, fin);
