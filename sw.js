@@ -1,25 +1,19 @@
-const CACHE_NAME = "magerante-v28"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
-                                    // (v2, v3, v4...) pour forcer le renouvellement du cache
+const CACHE_NAME = "magerante-v29"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
 const CORE_ASSETS = [
   "./index.html",
+  "./dashboard.html",
   "./style.css",
   "./app.js",
   "./auth.js",
   "./firebase-config.js",
+  "./inventaire.js",
+  "./invitation.js",
+  "./cloture.js",
+  "./ventes.js",
+  "./mouvements.js",
+  "./dashboard.js",
   "./manifest.json",
   "./splash.png"
-];
-
-// Fichiers de code : on veut TOUJOURS la dernière version depuis le réseau,
-// le cache ne sert que de secours hors-connexion.
-const NETWORK_FIRST_FILES = [
-  "index.html",
-  "app.js",
-  "auth.js",
-  "inventaire.js",
-  "state.js",
-  "firebase-config.js",
-  "style.css"
 ];
 
 self.addEventListener("install", (event) => {
@@ -38,32 +32,22 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-function isNetworkFirst(url) {
-  return NETWORK_FIRST_FILES.some((name) => url.pathname.endsWith(name)) ||
-         url.pathname === "/" || url.pathname.endsWith("/magerante/");
-}
-
+// STALE-WHILE-REVALIDATE : répond immédiatement avec le cache (façon WhatsApp),
+// puis va chercher la dernière version en fond pour la prochaine ouverture.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  const url = new URL(event.request.url);
 
-  if (isNetworkFirst(url)) {
-    // NETWORK-FIRST : on va chercher la dernière version sur le réseau ;
-    // si ça échoue (hors-ligne), on retombe sur le cache.
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // CACHE-FIRST : pour les assets statiques (images, manifest...) qui changent rarement.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((response) => {
+            cache.put(event.request, response.clone());
+            return response;
+          })
+          .catch(() => cached);
+        return cached || fetchPromise;
+      })
+    )
   );
 });
