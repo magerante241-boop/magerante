@@ -770,3 +770,22 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 .marque-taille-item .taille-prix{
   font-size:11px; font-weight:500; opacity:0.85;
 }
+
+/* Chantier 6 - ajustement : 6 tuiles par ligne, plus compactes */
+#marqueGrid{
+  grid-template-columns:repeat(6,1fr);
+  gap:4px;
+  padding:4px;
+}
+.marque-cell{
+  font-size:10px;
+  padding:4px 2px;
+  min-height:32px;
+  border-radius:8px;
+  line-height:1.15;
+}
+.marque-taille-item{
+  font-size:11px;
+  padding:6px 4px;
+  min-height:36px;
+}
