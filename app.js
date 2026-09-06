@@ -44,7 +44,7 @@ function switchView(view) {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
   } else if (view === "factures") {
-    calcZone.hidden = false;
+    calcZone.hidden = true;
     viewContainer.hidden = false;
     if (window.FacturesModule) {
       window.FacturesModule.render(viewContainer);
