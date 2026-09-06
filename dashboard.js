@@ -300,8 +300,18 @@ async function chargerInfoEtablissement(ownerUid) {
   `;
 }
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = "index.html"; return; }
+  try {
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (userSnap.exists() && userSnap.data().role === "GERANT") {
+      alert("Le tableau de bord est reserve au proprietaire.");
+      window.location.href = "index.html";
+      return;
+    }
+  } catch (e) {
+    console.warn("Verification du role impossible :", e);
+  }
   initTabs();
   chargerDonnees(user.uid);
   brancherBoutonsRapports(user.uid);
