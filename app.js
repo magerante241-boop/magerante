@@ -385,38 +385,43 @@ function quitterModeRecherche() {
   exprEl.textContent = calcExpr || "\u00A0";
 }
 
-if (btnToggleClavier) {
-  btnToggleClavier.addEventListener("click", async () => {
-    modeRecherche = !modeRecherche;
-    if (modeRecherche) {
-      if (!(window.AuthState && window.AuthState.hasEstablishment)) {
-        alert("Initialisation en cours, réessaie dans un instant.");
-        modeRecherche = false;
-        return;
-      }
-      if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) {
-        alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
-        modeRecherche = false;
-        return;
-      }
-      btnToggleClavier.classList.add("active");
-      abcKeyboard.hidden = false;
-      numpadEl.hidden = true;
-      rechercheTexte = "";
-      exprEl.textContent = "Recherche : \u00A0";
-      calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement des produits...</p>`;
-      calcProduitsListe.hidden = false;
-      try {
-        tousProduits = await window.InventaireModule.getTousLesProduits();
-      } catch (err) {
-        tousProduits = [];
-      }
-      afficherResultatsRecherche();
-    } else {
-      quitterModeRecherche();
-      fermerListeProduits();
+async function toggleModeRecherche() {
+  modeRecherche = !modeRecherche;
+  if (modeRecherche) {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      alert("Initialisation en cours, réessaie dans un instant.");
+      modeRecherche = false;
+      return;
     }
-  });
+    if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) {
+      alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+      modeRecherche = false;
+      return;
+    }
+    if (btnToggleClavier) btnToggleClavier.classList.add("active");
+    abcKeyboard.hidden = false;
+    numpadEl.hidden = true;
+    rechercheTexte = "";
+    exprEl.textContent = "Recherche : \u00A0";
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement des produits...</p>`;
+    calcProduitsListe.hidden = false;
+    try {
+      tousProduits = await window.InventaireModule.getTousLesProduits();
+    } catch (err) {
+      tousProduits = [];
+    }
+    afficherResultatsRecherche();
+  } else {
+    quitterModeRecherche();
+    fermerListeProduits();
+  }
+}
+if (btnToggleClavier) {
+  btnToggleClavier.addEventListener("click", toggleModeRecherche);
+}
+const btnAbcToggle = document.getElementById("btnAbcToggle");
+if (btnAbcToggle) {
+  btnAbcToggle.addEventListener("click", toggleModeRecherche);
 }
 
 abcKeyboard.addEventListener("click", (e) => {
@@ -433,6 +438,27 @@ abcKeyboard.addEventListener("click", (e) => {
   exprEl.textContent = "Recherche : " + (rechercheTexte || "\u00A0");
   afficherResultatsRecherche();
 });
+
+const btnAbcEntree = document.getElementById("btnAbcEntree");
+if (btnAbcEntree) {
+  btnAbcEntree.addEventListener("click", () => {
+    const texte = rechercheTexte.trim().toLowerCase();
+    const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
+    if (resultats.length === 1) {
+      const p = resultats[0];
+      calcExpr = String(p.prixVente);
+      produitSelectionne = {
+        nom: p.nom,
+        prixVente: Number(p.prixVente) || 0,
+        prixAchat: Number(p.prixAchat) || 0,
+        stock: Number(p.stock) || 0,
+      };
+      renderCalc();
+    }
+    fermerListeProduits();
+    quitterModeRecherche();
+  });
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
