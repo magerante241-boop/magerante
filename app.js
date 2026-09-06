@@ -282,11 +282,13 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
     const marque = btn.dataset.marque;
     const tailles = MARQUES_TAILLES[marque];
     if (!tailles) return;
+    if (!marqueTaillesEl.hidden && marqueTaillesEl.dataset.openFor === marque) { marqueTaillesEl.hidden = true; marqueTaillesEl.dataset.openFor = ""; return; }
     fermerListeProduits();
     marqueTaillesEl.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
     marqueTaillesEl.hidden = false;
     marqueTaillesEl.style.top = (btn.offsetTop + btn.offsetHeight + 4) + "px";
-    marqueTaillesEl.style.left = btn.offsetLeft + "px";
+    marqueTaillesEl.style.left = "0px";
+    marqueTaillesEl.dataset.openFor = marque;
     const tousLesProduits = await chargerTousProduitsSurs();
     marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
       const p = tousLesProduits.find((x) => x.nom === nomProduit);
@@ -294,6 +296,8 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
       const suffixe = p ? ` · ${p.prixVente} FCFA` : " (non configuré)";
       return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
     }).join("");
+    const maxLeft = Math.max(0, btn.parentElement.offsetWidth - marqueTaillesEl.offsetWidth - 4);
+    marqueTaillesEl.style.left = Math.min(btn.offsetLeft, maxLeft) + "px";
     marqueTaillesEl.querySelectorAll(".marque-taille-item").forEach((item) => {
       item.addEventListener("click", () => {
         const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
