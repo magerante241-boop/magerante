@@ -231,6 +231,10 @@ const MARQUES_TAILLES = {
   "Heineken": { petite: "Heineken 33cl", grande: "Heineken 65cl" },
   "Malta Guinness": { petite: "Malta Guinness 33cl", grande: "Malta Guinness 50cl" },
   "Coca-Cola": { petite: "Coca-Cola 33cl", grande: "Coca-Cola 1L" },
+  "Martini": { bianco: "Martini Bianco 1L", rosso: "Martini Rosso 1L" },
+  "Grand Versant": { blanc: "Grand Versant Blanc 75cl", rouge: "Grand Versant Rouge 75cl" },
+  "Label 5": { petite: "Label 5 70cl", grande: "Label 5 1L" },
+  "Ricard": { petite: "Ricard 70cl", grande: "Ricard 1L" },
 };
 
 const marqueTaillesEl = document.getElementById("marqueTailles");
@@ -256,10 +260,12 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
     fermerListeProduits();
     marqueTaillesEl.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
     marqueTaillesEl.hidden = false;
+    marqueTaillesEl.style.top = (btn.offsetTop + btn.offsetHeight + 4) + "px";
+    marqueTaillesEl.style.left = btn.offsetLeft + "px";
     const tousLesProduits = await chargerTousProduitsSurs();
     marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
       const p = tousLesProduits.find((x) => x.nom === nomProduit);
-      const label = taille === "grande" ? "grande" : "petite";
+      const label = taille;
       const suffixe = p ? ` · ${p.prixVente} FCFA` : " (non configuré)";
       return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
     }).join("");
@@ -525,3 +531,9 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+document.addEventListener("click", (e) => {
+  if (!marqueTaillesEl.hidden && !marqueTaillesEl.contains(e.target) && !e.target.closest(".marque-cell:not(.marque-cell-autres)")) {
+    marqueTaillesEl.hidden = true;
+  }
+});
