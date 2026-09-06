@@ -264,6 +264,7 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
       name: etablissementNom,
       type: etablissementType,
       localisation,
+      telephone,
       status: "en_attente",
       ownerId: uid,
       updatedAt: serverTimestamp()
