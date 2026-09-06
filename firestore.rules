@@ -44,7 +44,19 @@ service cloud.firestore {
       match /ventes/{venteId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() &&
-          (request.auth.uid == estId || estGerantDe(estId));
+              (request.auth.uid == estId || estGerantDe(estId));
+      }
+
+      match /mouvements/{mvtId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId));
+        allow update, delete: if false;
+      }
+
+      match /journal/{journalId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+        allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId));
+        allow update, delete: if false;
       }
 
       match /rapports/{periode} {

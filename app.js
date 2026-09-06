@@ -183,8 +183,25 @@ document.querySelectorAll(".calc-actions button").forEach((btn) => {
       }
       return;
     }
-    // Étape suivante : brancher ACHAT / DÉPENSE / RECETTE / ENTRÉE STOCK sur Firestore.
-    alert(`Action "${btn.dataset.action}" — sera enregistrée dans Firestore à une prochaine étape.\nMontant : ${resultEl.textContent}`);
+    if (!(calcValeurNumerique > 0)) {
+      alert("Entre d'abord un montant avant de choisir une action.");
+      return;
+    }
+    if (window.MouvementsModule) {
+      btn.disabled = true;
+      window.MouvementsModule.enregistrerMouvement(btn.dataset.action, calcValeurNumerique).then((res) => {
+        btn.disabled = false;
+        if (!res.success) {
+          alert(res.message);
+        } else {
+          calcExpr = "";
+          calcValeurNumerique = 0;
+          renderCalc();
+        }
+      });
+    } else {
+      alert("Module Mouvements en cours de chargement, réessaie dans un instant.");
+    }
   });
 });
 
