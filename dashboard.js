@@ -21,6 +21,7 @@ const comparaisonContentEl = document.getElementById("comparaisonContent");
 const topProduitsContentEl = document.getElementById("topProduitsContent");
 const stockAlertBannerEl = document.getElementById("stockAlertBanner");
 const infoEtablissementEl = document.getElementById("infoEtablissement");
+const listeCloturesEl = document.getElementById("listeClotures");
 
 function initTabs() {
   const tabBtns = document.querySelectorAll(".tab-btn");
@@ -273,17 +274,37 @@ async function chargerDonnees(ownerUid) {
   });
 
   const gerantsSnap = await getDocs(collection(db, "establishments", ownerUid, "gerants"));
+  const nomsGerants = {};
   listeGerantsEl.innerHTML = "";
   if (gerantsSnap.empty) {
     listeGerantsEl.innerHTML = "<li>Aucun gérant actif pour le moment.</li>";
   } else {
     gerantsSnap.forEach((g) => {
       const d = g.data();
+      nomsGerants[g.id] = d.nom || "Gérant";
       const stats = donneesMois.parGerant[g.id] || { montant: 0, nombre: 0 };
       const li = document.createElement("li");
       li.textContent = `${d.nom || "Sans nom"} — ${d.actif ? "actif" : "inactif"} — ${stats.montant.toLocaleString("fr-FR")} FCFA (${stats.nombre} ventes) ce mois`;
       listeGerantsEl.appendChild(li);
     });
+  }
+
+  if (listeCloturesEl) {
+    const cloturesSnap = await getDocs(query(collection(db, "establishments", ownerUid, "clotures"), orderBy("date", "desc")));
+    listeCloturesEl.innerHTML = "";
+    if (cloturesSnap.empty) {
+      listeCloturesEl.innerHTML = "<li>Aucune clôture reçue pour le moment.</li>";
+    } else {
+      cloturesSnap.forEach((c) => {
+        const d = c.data();
+        const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+        const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
+        const nomGerant = nomsGerants[d.gerantUid] || "Gérant";
+        const li = document.createElement("li");
+        li.textContent = `${nomGerant} — ${dateStr} — ${(d.totalVentes || 0).toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
+        listeCloturesEl.appendChild(li);
+      });
+    }
   }
 }
 
