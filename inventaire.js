@@ -203,8 +203,8 @@ function escapeAttr(str) { return escapeHtml(str); }
 
 
 const PRODUITS_DEMO = [
-  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 350, stock: 100 },
-  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 600, stock: 80 },
+  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 700, stock: 80 },
   { nom: "Castel Beer 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 100 },
   { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 80 },
   { nom: "Beaufort 33cl", categorie: "Bar", prixAchat: 417, prixVente: 700, stock: 60 },
