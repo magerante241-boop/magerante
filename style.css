@@ -524,3 +524,84 @@ body{
 .calc-produits-liste { order: 2; }
 .calc-display { order: 3; flex: 1; min-height: 160px; }
 .calc-actions { order: 4; margin-top: 8px; }
+
+/* === Chantier 6 : grille de marques === */
+#marqueGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 12px;
+}
+
+.marque-cell {
+  position: relative;
+  padding: 16px 10px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 600;
+  color: #f4f4f4;
+  background: linear-gradient(145deg, #3a3f47, #23262b);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+
+.marque-cell:active {
+  transform: scale(0.96);
+  background: linear-gradient(145deg, var(--primary, #d4a017), #a87a0e);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+  color: #1a1a1a;
+}
+
+.marque-cell-autres {
+  background: linear-gradient(145deg, #4a4f57, #2b2e33);
+  border: 1px dashed rgba(255,255,255,0.2);
+  font-style: italic;
+}
+
+.marque-cell-autres:active {
+  background: linear-gradient(145deg, var(--accent, #17b890), #0e8a6c);
+  color: #0a0a0a;
+}
+
+.marque-tailles {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px 4px;
+}
+
+.marque-taille-item {
+  flex: 1;
+  padding: 14px 8px;
+  border-radius: 12px;
+  text-align: center;
+  background: linear-gradient(145deg, var(--surface2, #2e3238), #1c1f23);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.marque-taille-item span {
+  display: block;
+}
+
+.marque-taille-item .calc-produit-nom {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.marque-taille-item .calc-produit-prix {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent, #17b890);
+}
+
+.marque-taille-item:active {
+  transform: scale(0.96);
+  background: linear-gradient(145deg, var(--primary, #d4a017), #a87a0e);
+}
+
+.marque-taille-item:active .calc-produit-prix {
+  color: #1a1a1a;
+}
