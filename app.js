@@ -27,6 +27,8 @@ setInterval(updateHeaderDate, 30000);
 // --- Navigation bas d'écran : bascule entre calculatrice et modules ---
 function switchView(view) {
   const calcZone = document.getElementById("calcZone");
+  const numpadElement = document.getElementById("numpad");
+  const abcKeyboardElement = document.getElementById("abcKeyboard");
   const viewContainer = document.getElementById("viewContainer");
 
   // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
@@ -37,12 +39,16 @@ function switchView(view) {
   const facturePanelEl = document.getElementById("facturePanel");
 
   if (view === "calc") {
+    if (numpadElement) numpadElement.hidden = (typeof modeRecherche !== "undefined" && modeRecherche);
+    if (abcKeyboardElement) abcKeyboardElement.hidden = !(typeof modeRecherche !== "undefined" && modeRecherche);
     calcZone.hidden = false;
     viewContainer.hidden = true;
     viewContainer.innerHTML = "";
     if (facturePanelEl && window.modeFacturierActif) facturePanelEl.hidden = false;
   } else if (view === "inventaire") {
     calcZone.hidden = true;
+    if (numpadElement) numpadElement.hidden = true;
+    if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.InventaireModule) {
@@ -52,6 +58,8 @@ function switchView(view) {
     }
   } else if (view === "ventes") {
     calcZone.hidden = true;
+    if (numpadElement) numpadElement.hidden = true;
+    if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.VentesModule && window.VentesModule.render) {
@@ -61,6 +69,8 @@ function switchView(view) {
     }
   } else if (view === "factures") {
     calcZone.hidden = true;
+    if (numpadElement) numpadElement.hidden = true;
+    if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.FacturesModule && window.FacturesModule.render) {
@@ -70,6 +80,8 @@ function switchView(view) {
     }
   } else {
     calcZone.hidden = true;
+    if (numpadElement) numpadElement.hidden = true;
+    if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
     viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
