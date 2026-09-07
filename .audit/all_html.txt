@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MAGERANTE — Admin</title>
+<link rel="stylesheet" href="style.css">
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: var(--font-main);
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+}
+header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fdfaf3;
+  padding: 20px;
+}
+.header-flex { display: flex; justify-content: space-between; align-items: center; }
+header h1 { margin: 0; font-size: 22px; }
+header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+.icon-round-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.18); border: none;
+  color: #fdfaf3; font-size: 20px; cursor: pointer;
+}
+.container { padding: 16px; max-width: 700px; margin: 0 auto; }
+#loginBox { max-width: 340px; margin: 40px auto; padding: 20px; }
+#loginBox input {
+  display: block; width: 100%; padding: 12px; margin: 8px 0;
+  border-radius: 10px; border: 1px solid var(--border); font-size: 15px;
+  background: var(--surface2); color: var(--text);
+}
+#loginBox button {
+  width: 100%; padding: 12px; border-radius: 10px; border: none;
+  background: var(--primary); color: #fdfaf3; font-weight: bold; font-size: 15px;
+}
+#adminError { color: var(--danger); font-size: 14px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.stat-card .icon {
+  font-size: 20px; display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface2);
+}
+.stat-card .value { font-size: 24px; font-weight: bold; margin: 8px 0 2px; color: var(--primary-dark); }
+.stat-card .label { font-size: 12px; color: var(--muted); }
+.stat-card.wide { grid-column: 1 / -1; }
+.stat-card.wide .value { color: var(--accent); }
+
+h2.section-title { font-size: 17px; margin: 24px 0 10px; color: var(--primary-dark); font-weight: 700; }
+
+.compte-card {
+  background: var(--surface); border-radius: var(--radius); padding: 16px; margin: 10px 0;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+}
+.compte-card strong { font-size: 15px; color: var(--text); }
+.compte-card .meta { font-size: 13px; color: var(--muted); margin: 4px 0; }
+.compte-card button {
+  margin-top: 10px; padding: 9px 18px; border-radius: 10px; border: none;
+  background: var(--primary); color: #fdfaf3; font-weight: bold; font-size: 14px;
+}
+.empty-msg { color: var(--muted); font-size: 14px; }
+
+.table-wrap {
+  background: var(--surface); border-radius: var(--radius); padding: 8px;
+  box-shadow: var(--shadow-sm); overflow-x: auto; border: 1px solid var(--border);
+}
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data-table th {
+  text-align: left; padding: 10px 8px; color: var(--primary-dark);
+  border-bottom: 2px solid var(--border); font-size: 12px;
+}
+table.data-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+table.data-table tr:last-child td { border-bottom: none; }
+
+.vente-item {
+  background: var(--surface); border-radius: 12px; padding: 12px 14px; margin: 8px 0;
+  box-shadow: var(--shadow-sm); font-size: 13px; border: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.vente-item .v-etab { font-weight: bold; color: var(--text); }
+.vente-item .v-date { color: var(--muted); font-size: 12px; }
+.vente-item .v-montant { color: var(--primary-dark); font-weight: bold; }
+
+.settings-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  align-items: flex-end; z-index: 50;
+}
+.settings-overlay:not([hidden]) { display: flex; }
+.settings-panel {
+  background: var(--bg); width: 100%; border-radius: 18px 18px 0 0;
+  padding: 16px; max-width: 700px; margin: 0 auto;
+}
+.settings-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: bold; font-size: 16px; color: var(--primary-dark); margin-bottom: 12px;
+}
+.icon-btn-plain { background: none; border: none; font-size: 18px; color: var(--text); }
+.settings-email { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+.settings-item {
+  display: block; width: 100%; text-align: left; padding: 14px;
+  border-radius: 12px; border: none; background: var(--surface); font-size: 15px;
+  margin-bottom: 10px; box-shadow: var(--shadow-sm); color: var(--text);
+}
+.settings-item.danger { color: var(--danger); }
+
+.admin-import {
+  background: var(--surface); border-radius: var(--radius); padding: 16px; margin: 24px 0;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+}
+.admin-import .section-title { margin-top: 0; }
+.import-hint { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+.file-input-hidden { display: none; }
+.file-label {
+  display: block; text-align: center; padding: 12px; margin-bottom: 10px;
+  border-radius: 10px; border: 2px dashed var(--primary); color: var(--primary-dark);
+  font-size: 14px; font-weight: 600; cursor: pointer; background: var(--surface2);
+}
+.import-btn {
+  width: 100%; padding: 12px; border-radius: 10px; border: none;
+  background: var(--primary); color: #fdfaf3; font-weight: bold; font-size: 14px;
+  cursor: pointer;
+}
+.import-btn:active { background: var(--primary-dark); }
+.import-status { font-size: 13px; color: var(--muted); margin: 10px 0 0; min-height: 18px; }
+
+.import-progress-wrap {
+  width: 100%; height: 8px; background: var(--surface2); border-radius: 4px;
+  margin-top: 10px; overflow: hidden; transition: opacity 0.8s ease;
+}
+.import-progress-bar {
+  height: 100%; width: 0%; background: var(--primary); transition: width 0.2s ease;
+}
+.import-progress-percent {
+  font-size: 12px; color: var(--primary); font-weight: 600;
+  margin: 4px 0 0; text-align: right; transition: opacity 0.8s ease;
+}
+.import-progress-wrap.fade-out, .import-progress-percent.fade-out { opacity: 0; }
+
+.danger-btn {
+  background: var(--danger) !important; margin-top: 10px;
+}
+.danger-btn:active { filter: brightness(0.85); }
+
+.stat-card[data-target] {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.stat-card[data-target]:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+button:active {
+  filter: brightness(0.92);
+}
+
+.filtre-select {
+  width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+  font-size: 14px; margin-bottom: 10px; background: var(--surface);
+}
+.btn-supprimer-ligne {
+  padding: 6px 10px; border-radius: 8px; border: none;
+  background: var(--danger); color: #fdfaf3; font-size: 12px; cursor: pointer;
+}
+.btn-supprimer-ligne:active { filter: brightness(0.85); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="header-flex">
+      <div>
+        <h1>🛡️ MAGERANTE — Administration</h1>
+        <p id="headerSub">Tableau de bord</p>
+      </div>
+      <button id="btnSettings" class="icon-round-btn" hidden aria-label="Parametres">⚙️</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="loginBox">
+      <p>Connexion admin</p>
+      <input type="email" id="adminEmail" placeholder="Email">
+      <input type="password" id="adminPassword" placeholder="Mot de passe">
+      <button id="btnAdminLogin">Se connecter</button>
+      <p id="adminError"></p>
+    </div>
+
+    <div id="adminPanel" hidden>
+      <div class="stats-grid">
+        <div class="stat-card" data-target="secComptesAttente">
+          <div class="icon">👥</div>
+          <div class="value" id="statTotalComptes">—</div>
+          <div class="label">Comptes proprietaires</div>
+        </div>
+        <div class="stat-card" data-target="secComptesAttente">
+          <div class="icon">✅</div>
+          <div class="value" id="statValides">—</div>
+          <div class="label">Comptes valides</div>
+        </div>
+        <div class="stat-card" data-target="secComptesAttente">
+          <div class="icon">⏳</div>
+          <div class="value" id="statEnAttente">—</div>
+          <div class="label">En attente de validation</div>
+        </div>
+        <div class="stat-card" data-target="secCA">
+          <div class="icon">🏢</div>
+          <div class="value" id="statEtablissements">—</div>
+          <div class="label">Etablissements</div>
+        </div>
+        <div class="stat-card wide" data-target="secVentes">
+          <div class="icon">💰</div>
+          <div class="value" id="statCAGlobal">—</div>
+          <div class="label">Chiffre d'affaires global (tous etablissements)</div>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</h2>
+      <div id="pendingList" class="empty-msg">Chargement...</div>
+
+      <h2 class="section-title" id="secCA">Chiffre d'affaires par etablissement</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
+          <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title" id="secZones">Établissements par zone / quartier</h2>
+      <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
+      <div id="listeZones"></div>
+
+      <h2 class="section-title">Inventaire global</h2>
+      <div class="stats-grid">
+        <div class="stat-card" data-target="secImport">
+          <div class="icon">📦</div>
+          <div class="value" id="statTotalProduits">—</div>
+          <div class="label">Produits references (tous etablissements)</div>
+        </div>
+        <div class="stat-card" data-target="secImport">
+          <div class="icon">💵</div>
+          <div class="value" id="statValeurStock">—</div>
+          <div class="label">Valeur totale du stock estimee</div>
+        </div>
+      </div>
+
+      <section class="admin-import" id="secImport">
+      <h2 class="section-title">📥 Importer un catalogue CSV</h2>
+      <p class="import-hint">Colonnes attendues : Nom, Prix achat, Prix vente, Stock, Catégorie</p>
+      <label for="catalogueFileInput" class="file-label" id="catalogueFileLabel">📄 Choisir un fichier CSV</label>
+      <input type="file" id="catalogueFileInput" accept=".csv" class="file-input-hidden">
+      <button id="btnImporterCatalogue" class="import-btn">Importer vers tous les établissements</button>
+      <p id="importStatus" class="import-status"></p>
+      <div class="import-progress-wrap" id="importProgressWrap" hidden>
+        <div class="import-progress-bar" id="importProgressBar"></div>
+      </div>
+      <p class="import-progress-percent" id="importProgressPercent" hidden>0%</p>
+      <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
+    </section>
+
+      <h2 class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</h2>
+      <select id="filtreEtablissementProduits" class="filtre-select">
+        <option value="tous">Tous les etablissements</option>
+      </select>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
+          <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</h2>
+      <div id="rapportList" class="empty-msg">Chargement...</div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="settings-overlay" hidden>
+    
+    <div class="settings-panel">
+      <div class="settings-header">
+        <span>Parametres</span>
+        <button id="btnCloseSettings" class="icon-btn-plain">✕</button>
+      </div>
+      <p class="settings-email" id="settingsEmail"></p>
+      <button id="btnResetPassword" class="settings-item">🔑 Changer mon mot de passe</button>
+      <button id="btnLogoutAdmin" class="settings-item danger">🚪 Se deconnecter</button>
+    </div>
+  </div>
+
+  <script src="scroll-arrows.js"></script>
+  <script type="module" src="demo.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAGERANTE — Tableau de bord</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: var(--font-main); background:var(--bg); color:var(--text); }
+  .tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
+  .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:var(--muted); border:none; cursor:pointer; font-size:13px; }
+  .tab-btn.active { color:var(--primary); border-bottom:3px solid var(--accent); font-weight:bold; }
+  .tab-content { display:none; padding:16px; }
+  .tab-content.active { display:block; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:16px; }
+  .stock-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .deficit-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .deficit-warning { background:var(--surface2); border-left:4px solid var(--accent); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="ventes">Ventes</button>
+  <button class="tab-btn" data-tab="gerants">Gérants</button>
+  <button class="tab-btn" data-tab="rapports">Rapports</button>
+  <button class="tab-btn" data-tab="parametres">Paramètres</button>
+</div>
+
+<div id="tab-ventes" class="tab-content active">
+  <div id="stockAlertBanner"></div>
+  <div id="deficitAlertBanner"></div>
+
+  <div class="card" id="totauxCard">
+    <div id="totalJour"></div>
+    <div id="totalSemaine"></div>
+    <div id="totalMois"></div>
+  </div>
+
+  <div class="card">
+    <canvas id="ventesChart" height="180"></canvas>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Répartition par catégorie</h3>
+    <canvas id="categorieChart" height="180"></canvas>
+  </div>
+
+  <div class="card" id="comparaisonCard">
+    <h3 style="margin-top:0;">Période actuelle vs précédente</h3>
+    <div id="comparaisonContent"></div>
+  </div>
+
+  <div class="card" id="soldeCard">
+    <h3 style="margin-top:0;">Solde (recettes - depenses/achats)</h3>
+    <div id="soldeContent"></div>
+  </div>
+
+  <div class="card" id="topProduitsCard">
+    <h3 style="margin-top:0;">Top 5 produits</h3>
+    <div id="topProduitsContent"></div>
+  </div>
+</div>
+
+<div id="tab-gerants" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Gérants actifs</h3>
+    <div id="listeGerants"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Clôtures reçues</h3>
+    <div id="filtresClotures" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+      <select id="filtreClotureGerant"><option value="">Tous les gérants</option></select>
+      <select id="filtreCloturePeriode">
+        <option value="tout">Toute la période</option>
+        <option value="jour">Aujourd'hui</option>
+        <option value="semaine">Cette semaine</option>
+        <option value="mois">Ce mois</option>
+      </select>
+      <button id="btnExportClotures">📄 Export PDF groupé</button>
+    </div>
+    <div id="listeClotures"></div>
+  </div>
+</div>
+
+<div id="tab-rapports" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Générer un rapport</h3>
+    <div id="rapportsBoutons">
+      <button id="btnRapportJour">Rapport du jour</button>
+      <button id="btnRapportSemaine">Rapport de la semaine</button>
+      <button id="btnRapportMois">Rapport du mois</button>
+    </div>
+    <div id="rapportStatus"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0;">Historique des rapports</h3>
+    <div id="historiqueRapports"></div>
+  </div>
+</div>
+
+<div id="tab-parametres" class="tab-content">
+  <div class="card">
+    <h3 style="margin-top:0;">Établissement</h3>
+    <div id="infoEtablissement"></div>
+  </div>
+</div>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#f6f1e7">
+  <title>MAGERANTE — Assistant de gestion</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon-32.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- SPLASH SCREEN (affiché à l'ouverture, disparaît automatiquement) -->
+  <div id="splashScreen" class="splash-screen">
+    <img src="splash.png" alt="MAGERANTE" class="splash-img">
+  </div>
+
+  <!-- FENÊTRE DE PREMIÈRE CONFIGURATION : ne s'ouvre qu'une fois, pour nommer l'établissement -->
+  <div id="authGate" class="auth-gate" hidden>
+    <button class="auth-close-btn" id="btnCloseAuth" aria-label="Fermer">✕</button>
+
+    <div id="authEstablishmentView" class="auth-view">
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Ton établissement</h1>
+      <p class="auth-hint">Dernière étape : donne un nom à ton établissement.</p>
+      <p class="auth-error" id="establishmentError"></p>
+      <input type="text" id="establishmentName" placeholder="Nom de l'établissement">
+      <select id="establishmentType">
+        <option value="boutique">Boutique</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="bar">Bar</option>
+        <option value="hotel">Hôtel / Motel</option>
+        <option value="supermarche">Supermarché</option>
+        <option value="salon">Salon</option>
+        <option value="atelier">Atelier</option>
+        <option value="service">Entreprise de services</option>
+        <option value="autre">Autre</option>
+      </select>
+      <button class="auth-btn-primary" id="btnCreateEstablishment">Valider et démarrer</button>
+    </div>
+
+    <div id="authRegisterView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Compte propriétaire</h1>
+      <p class="auth-hint">Crée ton compte pour inviter des gérants et suivre tes ventes à distance. Tes données actuelles sont conservées.</p>
+      <p class="auth-error" id="registerError"></p>
+      <input type="text" id="regNom" placeholder="Nom">
+      <input type="text" id="regPrenom" placeholder="Prénom">
+      <input type="tel" id="regTelephone" placeholder="Numéro de téléphone">
+      <input type="email" id="regEmail" placeholder="Adresse e-mail">
+      <div class="auth-password-wrap">
+        <input type="password" id="regPassword" placeholder="Mot de passe">
+        <button type="button" class="auth-eye-btn" id="btnToggleRegPassword">👁</button>
+      </div>
+      <input type="text" id="regEtablissementNom" placeholder="Nom de l'établissement" autocomplete="off">
+      <select id="regEtablissementType">
+        <option value="bar">Bar</option>
+        <option value="snack">Snack</option>
+        <option value="club">Club</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="autre">Autre</option>
+      </select>
+      <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
+      <input type="text" id="regWhatsappEtablissement" placeholder="WhatsApp de l'établissement (ex: 24177123456)">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="regGpsAffichage" placeholder="Position GPS non definie" readonly style="flex:1;">
+        <button type="button" class="auth-btn" id="btnUtiliserPosition">📍 Utiliser ma position</button>
+      </div>
+      <button class="auth-btn-primary" id="btnRegister">Créer mon compte</button>
+      <p class="auth-switch"><a href="#" id="linkGoToLogin">Déjà un compte ? Se connecter</a></p>
+    </div>
+
+    <div id="authLoginView" class="auth-view" hidden>
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>Se connecter</h1>
+      <p class="auth-hint">Retrouve ton compte propriétaire sur cet appareil.</p>
+      <p class="auth-error" id="loginError"></p>
+      <input type="email" id="loginEmail" placeholder="Adresse e-mail">
+      <div class="auth-password-wrap">
+        <input type="password" id="loginPassword" placeholder="Mot de passe">
+        <button type="button" class="auth-eye-btn" id="btnToggleLoginPassword">👁</button>
+      </div>
+      <button class="auth-btn-primary" id="btnLogin">Se connecter</button>
+      <p class="auth-switch"><a href="#" id="linkForgotPassword">Mot de passe oublie ?</a></p>
+      <p class="auth-switch"><a href="#" id="linkGoToRegister">Pas encore de compte ? En créer un</a></p>
+      <p class="auth-switch"><a href="#" id="linkOpenGerantLogin">Tu es gérant ? Connecte-toi avec ton numéro</a></p>
+    </div>
+
+  </div>
+
+  <!-- RACINE DE L'APPLICATION (toujours visible — la calculatrice est en accès libre) -->
+  <div id="gerantGate" class="auth-gate" hidden>
+    <div class="auth-view">
+      <h1>Bienvenue !</h1>
+      <p class="auth-hint" id="gerantWelcomeText"></p>
+      <button id="gerantContinueBtn" class="auth-btn">Acceder a mon interface</button>
+    </div>
+  </div>
+  <div id="gerantLoginGate" class="auth-gate" hidden>
+    <div class="auth-view">
+      <h1>Connexion gerant</h1>
+      <p class="auth-hint">Saisis ton numero WhatsApp et ton code a 4 chiffres.</p>
+      <p class="auth-error" id="gerantLoginError"></p>
+      <input type="tel" id="gerantLoginTelephone" placeholder="Numero WhatsApp" class="auth-input">
+      <input type="text" id="gerantLoginCode" placeholder="Code a 4 chiffres" class="auth-input" inputmode="numeric" maxlength="4">
+      <button id="btnGerantLogin" class="auth-btn-primary">Se connecter</button>
+      <button id="btnCloseGerantLogin" class="icon-btn">Fermer</button>
+    </div>
+  </div>
+  <div id="clotureGate" class="auth-gate" hidden>
+    <div class="auth-view">
+      <h1>Clôturer ma journée</h1>
+      <p class="auth-hint" id="clotureResume">Chargement du résumé...</p>
+      <p class="auth-error" id="clotureError"></p>
+      <button id="btnConfirmerCloture" class="auth-btn-primary">Envoyer mes comptes au propriétaire</button>
+      <a id="clotureLienWhatsapp" class="auth-btn" target="_blank" hidden>Envoyer aussi par WhatsApp</a>
+      <button id="btnCloseCloture" class="icon-btn">Fermer</button>
+    </div>
+  </div>
+  <div id="inviteGate" class="auth-gate" hidden>
+    <div class="auth-view">
+      <h1>Inviter un gerant</h1>
+      <p class="auth-hint">Indique son nom, puis envoie-lui son lien.</p>
+      <input type="text" id="inviteNomGerant" placeholder="Nom du gerant" class="auth-input">
+      <input type="tel" id="inviteTelGerant" placeholder="Numero WhatsApp (ex: 24177123456)" class="auth-input">
+      <input type="text" id="inviteCodeGerant" placeholder="Code a 4 chiffres pour ce gerant" class="auth-input" inputmode="numeric" maxlength="4">
+      <button id="btnGenererInvitation" class="auth-btn">Generer le lien</button>
+      <div id="inviteLinksZone" hidden>
+        <a id="inviteLienWhatsapp" class="auth-btn" target="_blank">Envoyer par WhatsApp</a>
+        <a id="inviteLienEmail" class="auth-btn" target="_blank">Envoyer par e-mail</a>
+      </div>
+      <button id="btnCloseInvite" class="icon-btn">Fermer</button>
+    </div>
+  </div>
+  <div id="appRoot">
+
+  <!-- EN-TÊTE -->
+  <header class="app-header">
+    <div class="header-left">
+      <img src="logo.png" alt="MAGERANTE" class="app-logo" onerror="this.style.display='none'">
+      <div class="header-info">
+        <span class="etablissement-nom" id="etablissementNom">MAGERANTE</span>
+        <span class="gerant-nom" id="gerantNomHeader" hidden></span>
+        <span class="header-date" id="headerDate">--/--/----</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="btnAdminAccess" aria-label="Administration" hidden>🛡️</button>
+      <button class="icon-btn" id="btnToggleClavier" aria-label="Rechercher un produit">🔍</button>
+      <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔</button>
+      <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
+    </div>
+  </header>
+
+  <!-- ZONE CALCULATRICE DE GESTION -->
+  <main class="main-content">
+    <section class="calc-zone" id="calcZone">
+      <div class="calc-display">
+        <div class="calc-corner coin-tl" id="coinBeneficeUnite">
+          <span class="coin-label">benefice/unite</span>
+          <span class="coin-value">—</span>
+        </div>
+        <div class="calc-corner coin-tr" id="coinValeurStock">
+          <span class="coin-label">valeur stock</span>
+          <span class="coin-value">—</span>
+        </div>
+        <div class="calc-center">
+          <div class="calc-expression" id="calcExpression">&nbsp;</div>
+          <div class="calc-result" id="calcResult"><span id="calcResultValue">0</span><span id="calcResultUnit">FCFA</span></div>
+        </div>
+        <div class="calc-corner coin-bl" id="coinStockRestant">
+          <span class="coin-label">stock restant</span>
+          <span class="coin-value">—</span>
+        </div>
+        <div class="calc-corner coin-br" id="coinQuantite">
+          <span class="coin-label">quantite</span>
+          <span class="coin-value">—</span>
+        </div>
+      </div>
+      <button id="btnToggleFacturier" class="btn-toggle-facturier">🧾 Mode Facturier</button>
+      <div class="marque-grid" id="marqueGrid">
+        <button class="marque-cell" data-marque="Régab">regab</button>
+        <button class="marque-cell" data-marque="33 Export">33 export</button>
+        <button class="marque-cell" data-marque="Castel">castel</button>
+        <button class="marque-cell" data-marque="Booster">booster</button>
+        <button class="marque-cell" data-marque="Guinness">guinness</button>
+        <button class="marque-cell" data-marque="Beaufort">beaufort</button>
+        <button class="marque-cell" data-marque="Tembo">tembo</button>
+        <button class="marque-cell" data-marque="Heineken">heineken</button>
+        <button class="marque-cell" data-marque="Malta Guinness">malta guinness</button>
+        <button class="marque-cell" data-marque="Coca-Cola">coca-cola</button>
+        <button class="marque-cell" data-marque="Martini">martini</button>
+        <button class="marque-cell" data-marque="Grand Versant">grand versant</button>
+        <button class="marque-cell" data-marque="Label 5">label 5</button>
+        <button class="marque-cell" data-marque="Ricard">ricard</button>
+        <button class="marque-cell marque-cell-autres" id="btnMarqueAutres">autres ▾</button>
+        <div class="marque-tailles" id="marqueTailles" hidden></div>
+      </div>
+    <div class="calc-produits-liste" id="calcProduitsListe" hidden></div>
+    <div class="calc-actions">
+      <button data-action="vente">🛒 Nouvelle vente</button>
+    </div>
+    </section>
+    <div class="facture-panel" id="facturePanel" hidden>
+      <div class="facture-lignes" id="factureLignes"></div>
+      <div class="facture-total">
+        <span>Total :</span>
+        <span id="factureTotalValue">0 FCFA</span>
+      </div>
+      <div class="facture-actions">
+        <button id="btnFactureAnnuler" class="btn-facture-annuler">Annuler facture</button>
+        <button id="btnFactureValider" class="btn-facture-valider">✅ Valider la facture</button>
+      </div>
+    </div>
+
+    <section id="viewContainer" class="view-container" hidden>
+      <!-- Les futures vues (inventaire, caisse, ventes...) seront injectées ici -->
+      <p class="placeholder-msg">Les modules (Inventaire, Caisse, Ventes...) arriveront aux prochaines étapes.</p>
+    </section>
+  </main>
+
+  <!-- CLAVIER NUMÉRIQUE -->
+  <div class="numpad" id="numpad">
+    <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="÷">÷</button>
+    <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="×">×</button>
+    <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="-">-</button>
+    <button data-key="0">0</button><button data-key="00">00</button><button data-key=",">,</button><button data-key="+">+</button>
+    <button data-key="AC" class="key-wide key-danger">EFFA</button><button data-key="⌫">⌫</button><button data-key="=" class="key-equal">=</button>
+    <button id="btnAbcToggle" class="key-wide" style="grid-column: span 4;">🔤 ABC (recherche produit)</button>
+  </div>
+
+  <!-- CLAVIER ALPHABÉTIQUE (recherche produit) -->
+  <div class="abc-keyboard" id="abcKeyboard" hidden>
+    <button data-letter="A">A</button><button data-letter="B">B</button><button data-letter="C">C</button><button data-letter="D">D</button><button data-letter="E">E</button><button data-letter="F">F</button>
+    <button data-letter="G">G</button><button data-letter="H">H</button><button data-letter="I">I</button><button data-letter="J">J</button><button data-letter="K">K</button><button data-letter="L">L</button>
+    <button data-letter="M">M</button><button data-letter="N">N</button><button data-letter="O">O</button><button data-letter="P">P</button><button data-letter="Q">Q</button><button data-letter="R">R</button>
+    <button data-letter="S">S</button><button data-letter="T">T</button><button data-letter="U">U</button><button data-letter="V">V</button><button data-letter="W">W</button><button data-letter="X">X</button>
+    <button data-letter="Y">Y</button><button data-letter="Z">Z</button><button data-letter=" " class="abc-key-wide">ESPACE</button><button data-letter="⌫" class="abc-key-wide abc-key-danger">⌫</button>
+    <button id="btnAbcEntree" class="abc-key-wide" style="grid-column: span 6; background:#2e7d32; color:white; font-weight:bold;">ENTRÉE</button>
+  </div>
+
+  <!-- NAVIGATION PRINCIPALE -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-btn active" data-view="calc">🧮<span>Calculer</span></button>
+    <button class="nav-btn" data-view="inventaire">📦<span>Inventaire</span></button>
+    <button class="nav-btn" data-view="factures">🧾<span>Factures</span></button>
+    <button class="nav-btn" data-view="ventes">🛒<span>Ventes</span></button>
+    <button class="nav-btn" data-view="plus">⚙️<span>Plus</span></button>
+  </nav>
+
+  </div><!-- /appRoot -->
+
+  <!-- MENU LATÉRAL -->
+  <div id="sideMenu" class="side-menu" hidden>
+    <div class="side-menu-overlay" id="sideMenuOverlay"></div>
+    <nav class="side-menu-panel">
+      <div class="side-menu-header">
+        <span>Menu</span>
+        <button class="icon-btn" id="btnCloseMenu" aria-label="Fermer le menu">✕</button>
+      </div>
+      <ul class="side-menu-list">
+        <li><button class="side-menu-item" id="menuRenameEstablishment">✏️ Renommer mon établissement</button></li>
+        <li>
+          <button class="side-menu-item" id="menuLogin">🔑 Connexion propriétaire</button>
+          <small class="side-menu-hint">(l'administrateur utilise aussi ce bouton)</small>
+        </li>
+        <li><button class="side-menu-item" id="menuLoginGerant">👤 Connexion gérant</button></li>
+        <li><button class="side-menu-item" id="menuCreateAccount">🏢 Créer un compte propriétaire</button></li>
+        <li><button class="side-menu-item" id="menuInviteGerant" hidden>📨 Inviter un gérant</button></li>
+        <li><button class="side-menu-item" id="menuDashboard" hidden>📊 Tableau de bord</button></li>
+        <li><button class="side-menu-item" id="menuClotureGerant" hidden>🧾 Clôturer ma journée</button></li>
+        <li><button class="side-menu-item" id="menuImportProduits">📥 Importer produits de démo</button></li>
+        <li><button class="side-menu-item" id="menuGenererDemoComplet">🧪 Générer données démo complètes</button></li>
+        <li><button class="side-menu-item" id="menuSupprimerDemo">🗑️ Supprimer données démo</button></li>
+        <li id="accountStatusItem" class="side-menu-status" hidden></li>
+        <li><button class="side-menu-item" id="menuLogout" hidden>🚪 Se deconnecter</button></li>
+        <li><button class="side-menu-item" disabled>📊 Rapports <span class="soon">bientôt</span></button></li>
+        <li><button class="side-menu-item" disabled>👥 Utilisateurs <span class="soon">bientôt</span></button></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="inventaire.js"></script>
+  <script type="module" src="invitation.js"></script>
+  <script type="module" src="cloture.js"></script>
+  <script type="module" src="ventes.js"></script>
+  <script type="module" src="mouvements.js"></script>
+  <script src="scroll-arrows.js"></script>
+  <script type="module" src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAGERANTE — Calculatrice gérant (maquette)</title>
+<style>
+  :root{
+    --bg:#F2ECDD;
+    --surface:#FFFFFF;
+    --ink:#2B2A28;
+    --ink-soft:#726C60;
+    --line:#DDD4BF;
+    --accent:#8A5A3B;
+    --accent-soft:#C98A5E;
+    --header-bar:#3A3630;
+    --yellow:#E0B23A;
+    --teal:#1F9E8B;
+    --red:#D9502E;
+    --blue:#3468C0;
+    --pink:#C33E82;
+    --purple:#6E4FA8;
+    --green:#3F9A4A;
+    --gold:#8A6A2E;
+    --danger:#B23B2E;
+    --nav-active:#8A5A3B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    font-family:"Segoe UI", system-ui, -apple-system, sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  .phone{
+    width:100%;
+    max-width:420px;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* En-tête */
+  .header{
+    background:var(--header-bar);
+    color:#fff;
+    padding:14px 18px 16px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .header .etab-type{
+    font-size:12px;
+    letter-spacing:.04em;
+    color:#C9BFA9;
+    text-transform:lowercase;
+  }
+  .header .etab-nom{
+    font-size:19px;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .header .badge{
+    background:var(--accent-soft);
+    color:#2B2A28;
+    font-size:11px;
+    font-weight:600;
+    padding:4px 9px;
+    border-radius:100px;
+    align-self:flex-start;
+    text-transform:lowercase;
+  }
+
+  /* Grille de marques */
+  .grid-section{
+    padding:14px 14px 6px;
+  }
+  .grid-title{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:0 2px 8px;
+  }
+  .brand-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+  }
+  .brand-cell{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:5px 7px;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+    user-select:none;
+  }
+  .brand-cell:active{transform:scale(0.97);}
+  .brand-cell.selected{
+    border-color:var(--accent);
+    background:#FBF3EA;
+    box-shadow:0 0 0 1px var(--accent) inset;
+  }
+  .brand-cell .nom{
+    font-size:11.5px;
+    font-weight:600;
+    text-transform:lowercase;
+    color:var(--ink);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .brand-cell .tailles{
+    display:flex;
+    gap:4px;
+    margin-top:4px;
+  }
+  .taille-chip{
+    font-size:9.5px;
+    padding:2px 4px;
+    border-radius:5px;
+    background:#EFE8D8;
+    color:var(--ink-soft);
+    flex:1;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .taille-chip.active{
+    background:var(--accent);
+    color:#fff;
+  }
+
+  .autres-cell{
+    grid-column:1 / -1;
+    background:var(--surface);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:lowercase;
+  }
+  .autres-cell .chevron{
+    transition:transform .2s ease;
+    font-size:12px;
+  }
+  .autres-cell.open .chevron{transform:rotate(180deg);}
+
+  .autres-liste{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .25s ease;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-top:none;
+    border-radius:0 0 10px 10px;
+    margin:-8px 0 0;
+  }
+  .autres-liste.open{max-height:260px; overflow-y:auto;}
+  .autres-item{
+    padding:10px 14px;
+    font-size:13px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    cursor:pointer;
+    text-transform:lowercase;
+  }
+  .autres-item:active{background:#F5EFE1;}
+  .autres-item .prix{color:var(--ink-soft);}
+
+  /* Zone d'affichage */
+  .display-section{
+    margin:14px 14px 0;
+    background:var(--header-bar);
+    border-radius:14px;
+    padding:16px 16px 14px;
+    color:#fff;
+  }
+  .display-selection{
+    font-size:12px;
+    color:#C9BFA9;
+    text-transform:lowercase;
+    min-height:16px;
+  }
+  .display-formule{
+    font-size:15px;
+    color:#E7DFCB;
+    margin-top:6px;
+    min-height:20px;
+  }
+  .display-total{
+    font-size:32px;
+    font-weight:700;
+    margin-top:6px;
+    letter-spacing:.01em;
+  }
+  .display-total .devise{
+    font-size:15px;
+    font-weight:500;
+    color:#C9BFA9;
+    margin-left:6px;
+  }
+
+  /* Clavier */
+  .keypad{
+    padding:14px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .key{
+    padding:16px 0;
+    text-align:center;
+    border-radius:10px;
+    font-size:18px;
+    font-weight:600;
+    color:#fff;
+    cursor:pointer;
+    user-select:none;
+  }
+  .key:active{filter:brightness(0.92);}
+  .key.n7{background:var(--yellow);}
+  .key.n8{background:var(--teal);}
+  .key.n9{background:var(--red);}
+  .key.op{background:var(--gold);}
+  .key.n4{background:var(--blue);}
+  .key.n5{background:var(--pink);}
+  .key.n6{background:var(--purple);}
+  .key.n1{background:var(--yellow);}
+  .key.n2{background:var(--green);}
+  .key.n3{background:var(--red);}
+  .key.n0{background:#B9A87E; color:#2B2A28;}
+  .key.n00{background:#B9A87E; color:#2B2A28;}
+  .key.comma{background:#B9A87E; color:#2B2A28;}
+  .key.effa{background:var(--danger); grid-column:span 2;}
+  .key.del{background:#B9A87E; color:#2B2A28;}
+  .key.eq{background:var(--green); grid-column:span 1;}
+
+  .abc-btn{
+    margin:0 14px 10px;
+    padding:11px;
+    background:#EFE8D8;
+    color:var(--ink-soft);
+    text-align:center;
+    border-radius:10px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    text-transform:lowercase;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .abc-btn:active{background:#E5DCC5;}
+  .abc-ic{
+    background:var(--ink-soft);
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+  }
+
+  .valider-btn{
+    margin:0 14px 4px;
+    padding:14px;
+    background:var(--accent);
+    color:#fff;
+    text-align:center;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    text-transform:lowercase;
+  }
+  .valider-btn:active{filter:brightness(0.95);}
+
+  /* Navigation basse */
+  .nav{
+    margin-top:auto;
+    display:flex;
+    border-top:1px solid var(--line);
+    background:var(--surface);
+    padding:8px 4px 10px;
+  }
+  .nav-item{
+    flex:1;
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:lowercase;
+    padding-top:2px;
+  }
+  .nav-item .ic{
+    font-size:19px;
+    display:block;
+    margin-bottom:2px;
+  }
+  .nav-item.active{
+    color:var(--nav-active);
+    font-weight:700;
+  }
+
+  .note{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    padding:10px 20px 16px;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="header">
+    <div>
+      <div class="etab-type">établissement</div>
+      <div class="etab-nom">Chez Mama Rosine</div>
+    </div>
+    <div class="badge">bar</div>
+  </div>
+
+  <div class="grid-section">
+    <div class="grid-title">boissons — choisir marque et taille</div>
+    <div class="brand-grid" id="brandGrid">
+      <!-- cellules générées en JS -->
+    </div>
+
+    <div class="autres-cell" id="autresCell">
+      <span>autres produits</span>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="autres-liste" id="autresListe">
+      <div class="autres-item" data-nom="fanta orange" data-prix="500"><span>fanta orange</span><span class="prix">500 fcfa</span></div>
+      <div class="autres-item" data-nom="sprite" data-prix="500"><span>sprite</span><span class="prix">500 fcfa</span></div>
+      <div class="autres-item" data-nom="whisky label 5" data-prix="15000"><span>whisky label 5</span><span class="prix">15 000 fcfa</span></div>
+      <div class="autres-item" data-nom="baileys" data-prix="20000"><span>baileys</span><span class="prix">20 000 fcfa</span></div>
+      <div class="autres-item" data-nom="jus tampico" data-prix="800"><span>jus tampico</span><span class="prix">800 fcfa</span></div>
+    </div>
+  </div>
+
+  <div class="display-section">
+    <div class="display-selection" id="dispSelection">aucune sélection</div>
+    <div class="display-formule" id="dispFormule">&nbsp;</div>
+    <div class="display-total" id="dispTotal">0 <span class="devise">fcfa</span></div>
+  </div>
+
+  <div class="keypad">
+    <div class="key n7">7</div>
+    <div class="key n8">8</div>
+    <div class="key n9">9</div>
+    <div class="key op">÷</div>
+    <div class="key n4">4</div>
+    <div class="key n5">5</div>
+    <div class="key n6">6</div>
+    <div class="key op">×</div>
+    <div class="key n1">1</div>
+    <div class="key n2">2</div>
+    <div class="key n3">3</div>
+    <div class="key op">−</div>
+    <div class="key n0">0</div>
+    <div class="key n00">00</div>
+    <div class="key comma">,</div>
+    <div class="key op">+</div>
+    <div class="key effa">EFFA</div>
+    <div class="key del">⌫</div>
+    <div class="key eq">=</div>
+  </div>
+
+  <div class="abc-btn" id="btnAbc"><span class="abc-ic">abc</span> recherche produit</div>
+
+  <div class="valider-btn" id="btnValider">ajouter à la facture</div>
+
+  <div class="nav">
+    <div class="nav-item active"><span class="ic">🧮</span>calculer</div>
+    <div class="nav-item"><span class="ic">📦</span>inventaire</div>
+    <div class="nav-item"><span class="ic">🧾</span>factures</div>
+    <div class="nav-item"><span class="ic">📊</span>ventes</div>
+  </div>
+
+  <div class="note">maquette visuelle — sans connexion aux données réelles</div>
+</div>
+
+<script>
+  const marques = [
+    { nom:"regab", grande:600, petite:350 },
+    { nom:"33 export", grande:650, petite:400 },
+    { nom:"castel", grande:600, petite:350 },
+    { nom:"booster", grande:1500, petite:1000 },
+    { nom:"guinness", grande:1200, petite:700 },
+    { nom:"beaufort", grande:700, petite:450 },
+    { nom:"tembo", grande:600, petite:350 },
+    { nom:"heineken", grande:1000, petite:600 },
+    { nom:"malta guinness", grande:900, petite:500 },
+    { nom:"coca-cola", grande:600, petite:350 },
+  ];
+
+  const grid = document.getElementById("brandGrid");
+  let selection = null; // { marque, taille, prix, quantite }
+
+  marques.forEach((m, idx) => {
+    const cell = document.createElement("div");
+    cell.className = "brand-cell";
+    cell.dataset.idx = idx;
+    cell.innerHTML = `
+      <div class="nom">${m.nom}</div>
+      <div class="tailles">
+        <div class="taille-chip" data-taille="grande">grande · ${m.grande}</div>
+        <div class="taille-chip" data-taille="petite">petite · ${m.petite}</div>
+      </div>
+    `;
+    grid.appendChild(cell);
+  });
+
+  grid.addEventListener("click", (e) => {
+    const chip = e.target.closest(".taille-chip");
+    if (!chip) return;
+    const cellEl = chip.closest(".brand-cell");
+    const idx = +cellEl.dataset.idx;
+    const taille = chip.dataset.taille;
+    const m = marques[idx];
+    const prix = taille === "grande" ? m.grande : m.petite;
+
+    document.querySelectorAll(".brand-cell").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".taille-chip").forEach(c => c.classList.remove("active"));
+    cellEl.classList.add("selected");
+    chip.classList.add("active");
+
+    selection = { marque: m.nom, taille, prix, quantite: 1 };
+    updateDisplay();
+  });
+
+  // Cellule "autres" — se déplie vers le bas
+  const autresCell = document.getElementById("autresCell");
+  const autresListe = document.getElementById("autresListe");
+  autresCell.addEventListener("click", () => {
+    autresCell.classList.toggle("open");
+    autresListe.classList.toggle("open");
+  });
+  autresListe.addEventListener("click", (e) => {
+    const item = e.target.closest(".autres-item");
+    if (!item) return;
+    document.querySelectorAll(".brand-cell").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".taille-chip").forEach(c => c.classList.remove("active"));
+    selection = { marque: item.dataset.nom, taille: null, prix: +item.dataset.prix, quantite: 1 };
+    updateDisplay();
+    autresCell.classList.remove("open");
+    autresListe.classList.remove("open");
+  });
+
+  // Clavier — construit la quantité
+  let saisie = "";
+  document.querySelectorAll(".keypad .key").forEach(key => {
+    key.addEventListener("click", () => {
+      const txt = key.textContent.trim();
+      if (key.classList.contains("effa")) { saisie = ""; }
+      else if (key.classList.contains("del")) { saisie = saisie.slice(0, -1); }
+      else if (key.classList.contains("eq")) { /* pas de calcul libre dans la maquette */ }
+      else if (!key.classList.contains("op")) { saisie += txt; }
+      if (selection) {
+        selection.quantite = saisie === "" ? 1 : parseInt(saisie, 10) || 1;
+      }
+      updateDisplay();
+    });
+  });
+
+  document.getElementById("btnAbc").addEventListener("click", () => {
+    document.getElementById("dispSelection").textContent = "recherche produit (texte) — à venir";
+  });
+
+  function updateDisplay() {
+    const dispSelection = document.getElementById("dispSelection");
+    const dispFormule = document.getElementById("dispFormule");
+    const dispTotal = document.getElementById("dispTotal");
+
+    if (!selection) {
+      dispSelection.textContent = "aucune sélection";
+      dispFormule.innerHTML = "&nbsp;";
+      dispTotal.innerHTML = '0 <span class="devise">fcfa</span>';
+      return;
+    }
+    const libelle = selection.taille ? `${selection.marque} (${selection.taille})` : selection.marque;
+    dispSelection.textContent = libelle;
+    dispFormule.textContent = `${selection.prix} × ${selection.quantite}`;
+    const total = selection.prix * selection.quantite;
+    dispTotal.innerHTML = `${total.toLocaleString("fr-FR")} <span class="devise">fcfa</span>`;
+  }
+</script>
+</body>
+</html>

@@ -1038,3 +1038,27 @@ window.showToast = function (message, duration = 2200) {
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => toast.classList.remove("show"), duration);
 };
+
+/* ===== FAB "Installer l'application" ===== */
+.install-fab{
+  position:fixed;right:12px;top:64px;z-index:120;display:none;align-items:center;
+  background:#fff;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.22);
+  animation:installFabIn .45s cubic-bezier(.34,1.56,.64,1) both;
+}
+.install-fab.show{display:flex;}
+.install-fab-main{
+  display:flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  padding:10px 16px 10px 14px;border-radius:30px;
+  background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff;
+  font-size:13px;font-weight:700;box-shadow:0 2px 10px rgba(46,125,50,.35);white-space:nowrap;
+}
+.install-fab-main:active{transform:scale(.96);}
+.install-fab-icon{font-size:16px;animation:installFabPulse 2.4s ease-in-out infinite;}
+.install-fab-close{
+  position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;
+  border:2px solid #fff;background:#1a1a2e;color:#fff;font-size:10px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+@keyframes installFabIn{from{opacity:0;transform:translateY(-10px) scale(.85);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes installFabPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.side-menu-item.installee{opacity:.55;pointer-events:none;}

@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "produits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categorie",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nom",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    }
+  ],
+  "fieldOverrides": []
+}
