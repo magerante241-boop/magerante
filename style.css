@@ -137,12 +137,12 @@ body{
 }
 
 /* MAIN */
-.main-content{flex:1; display:flex; flex-direction:column; padding:14px; overflow-y:auto; min-height:0;}
+.main-content{flex:1; display:flex; flex-direction:column; padding:14px 6px; overflow-y:auto; min-height:0;}
 
 /* CALCULATRICE */
 .calc-zone{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:20px; margin-bottom:16px; text-align:right;
+  padding:20px 8px; margin-bottom:16px; text-align:right;
   box-shadow:var(--shadow);
 }
 .calc-expression{color:var(--muted); font-size:14px; min-height:18px;}
@@ -672,7 +672,7 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 }
 
 .calc-display {
-  min-height: 130px;
+  min-height: 190px;
 }
 
 /* ===== Grille de marques (Chantier 6 — calculatrice gérant) ===== */
