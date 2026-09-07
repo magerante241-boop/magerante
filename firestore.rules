@@ -74,6 +74,19 @@ service cloud.firestore {
               (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
+      match /factures/{factureId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow create: if isSignedIn() &&
+              (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
+        allow update, delete: if false;
+      }
+
+      match /meta/{metaId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow write: if isSignedIn() &&
+              (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
+      }
+
       match /mouvements/{mvtId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());

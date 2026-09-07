@@ -32,6 +32,7 @@ function switchView(view) {
   // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
   if (window.InventaireModule) window.InventaireModule.cleanup();
   if (window.VentesModule && window.VentesModule.cleanup) window.VentesModule.cleanup();
+  if (window.FacturesModule && window.FacturesModule.cleanup) window.FacturesModule.cleanup();
 
   const facturePanelEl = document.getElementById("facturePanel");
 
@@ -62,13 +63,10 @@ function switchView(view) {
     calcZone.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
-    if (window.FacturesModule) {
+    if (window.FacturesModule && window.FacturesModule.render) {
       window.FacturesModule.render(viewContainer);
     } else {
-      // Aucun module Factures n'existe encore (aucun fichier ne définit
-      // window.FacturesModule) : on l'affiche comme "à venir" plutôt que de
-      // laisser un message "Chargement..." qui ne se résout jamais.
-      viewContainer.innerHTML = `<p class="placeholder-msg">Module Factures — à construire à une prochaine étape.</p>`;
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
   } else {
     calcZone.hidden = true;
@@ -766,15 +764,21 @@ if (btnFactureValider) {
     btnFactureValider.disabled = true;
     btnFactureValider.textContent = "Enregistrement...";
     const lignesAValider = [...lignesFacture];
+    const lignesValidees = [];
     const erreurs = [];
     for (const ligne of lignesAValider) {
       const res = await window.VentesModule.enregistrerVenteLigne(ligne.produitId, ligne.quantite);
       if (!res.success) {
         erreurs.push(ligne.nom + " : " + res.message);
       } else {
+        lignesValidees.push(ligne);
         const idx = lignesFacture.findIndex((l) => l === ligne);
         if (idx !== -1) lignesFacture.splice(idx, 1);
       }
+    }
+    if (lignesValidees.length > 0 && window.FacturesModule && window.FacturesModule.enregistrerFacture) {
+      const totalValide = lignesValidees.reduce((acc, l) => acc + l.totalLigne, 0);
+      await window.FacturesModule.enregistrerFacture(lignesValidees, totalValide);
     }
     btnFactureValider.disabled = false;
     btnFactureValider.textContent = "✅ Valider la facture";
