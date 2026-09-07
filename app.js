@@ -675,6 +675,8 @@ if (btnToggleFacturier) {
     btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
     if (facturePanel) facturePanel.hidden = !modeFacturier;
     if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
+    const calcDisplayEl = document.querySelector(".calc-display");
+    if (calcDisplayEl) calcDisplayEl.hidden = modeFacturier;
     calcExpr = "";
     produitSelectionne = null;
     renderCalc();
