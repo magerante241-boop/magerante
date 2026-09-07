@@ -31,13 +31,17 @@ function switchView(view) {
   // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
   if (window.InventaireModule) window.InventaireModule.cleanup();
 
+  const facturePanelEl = document.getElementById("facturePanel");
+
   if (view === "calc") {
     calcZone.hidden = false;
     viewContainer.hidden = true;
     viewContainer.innerHTML = "";
+    if (facturePanelEl && window.modeFacturierActif) facturePanelEl.hidden = false;
   } else if (view === "inventaire") {
     calcZone.hidden = true;
     viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.InventaireModule) {
       window.InventaireModule.render(viewContainer);
     } else {
@@ -46,6 +50,7 @@ function switchView(view) {
   } else if (view === "factures") {
     calcZone.hidden = true;
     viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.FacturesModule) {
       window.FacturesModule.render(viewContainer);
     } else {
@@ -57,6 +62,7 @@ function switchView(view) {
   } else {
     calcZone.hidden = true;
     viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
     viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
   }
 }
@@ -671,6 +677,7 @@ const calcActionsEl = document.querySelector(".calc-actions");
 if (btnToggleFacturier) {
   btnToggleFacturier.addEventListener("click", () => {
     modeFacturier = !modeFacturier;
+    window.modeFacturierActif = modeFacturier;
     btnToggleFacturier.classList.toggle("active", modeFacturier);
     btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
     if (facturePanel) facturePanel.hidden = !modeFacturier;
