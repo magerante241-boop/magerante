@@ -134,6 +134,21 @@
     </div>
   </div>
   <div id="appRoot">
+  <div id="aboutGate" class="auth-gate" hidden>
+    <button class="auth-close-btn" id="btnCloseAbout" aria-label="Fermer">✕</button>
+    <div class="auth-view">
+      <img src="logo.png" class="auth-logo" alt="MAGERANTE">
+      <h1>À propos de MAGERANTE</h1>
+      <p class="auth-hint">MAGERANTE est un assistant de gestion pour boutiques, restaurants, bars, hôtels et petites entreprises : suivi des stocks, des ventes et des factures au quotidien.</p>
+      <p class="auth-hint">Application développée par <strong>KOZANGUE ESSONO Patrick Bertin</strong> — PC-INFORMATIQUE.</p>
+      <p class="auth-hint">📞 +241 60 14 19 24 · ✉️ malagagabon@gmail.com</p>
+      <p class="auth-hint" style="font-size:12px;">
+        <a href="mentions-legales.html">Mentions légales</a> ·
+        <a href="confidentialite.html">Confidentialité</a> ·
+        <a href="cgu.html">CGU</a>
+      </p>
+    </div>
+  </div>
 
   <!-- EN-TÊTE -->
   <header class="app-header">
@@ -152,6 +167,15 @@
       <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
     </div>
   </header>
+
+  <!-- FAB flottant "Installer l'application" -->
+  <div id="install-fab" class="install-fab" role="button" tabindex="0" aria-label="Installer l'application">
+    <button class="install-fab-close" id="install-fab-close" aria-label="Fermer">✕</button>
+    <button class="install-fab-main" id="install-fab-main">
+      <span class="install-fab-icon">📲</span>
+      <span class="install-fab-text">Installer l'app</span>
+    </button>
+  </div>
 
   <!-- ZONE CALCULATRICE DE GESTION -->
   <main class="main-content">
@@ -275,6 +299,8 @@
         <li><button class="side-menu-item" id="menuSupprimerDemo">🗑️ Supprimer données démo</button></li>
         <li id="accountStatusItem" class="side-menu-status" hidden></li>
         <li><button class="side-menu-item" id="menuLogout" hidden>🚪 Se deconnecter</button></li>
+        <li><button class="side-menu-item" id="menuInstallApp">📲 Installer l'application</button></li>
+        <li><button class="side-menu-item" id="menuAbout">ℹ️ À propos</button></li>
         <li><button class="side-menu-item" disabled>📊 Rapports <span class="soon">bientôt</span></button></li>
         <li><button class="side-menu-item" disabled>👥 Utilisateurs <span class="soon">bientôt</span></button></li>
       </ul>
