@@ -901,3 +901,8 @@ button[data-marque="Ricard"] { color: #2b1c00; }
   background: #2e7d32;
   color: white;
 }
+
+/* Ajustement : facture-panel est maintenant hors de .calc-zone */
+.facture-panel {
+  margin: 12px 14px 16px;
+}
