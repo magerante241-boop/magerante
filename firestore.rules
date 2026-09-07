@@ -97,6 +97,19 @@ service cloud.firestore {
         allow create: if isSignedIn() && estGerantDe(estId) && request.resource.data.gerantUid == request.auth.uid;
         allow update, delete: if false;
       }
+
+      // NOUVEAU : notifications temps réel (stock bas, ventes, clôtures,
+      // connexions gérant...). Le propriétaire et ses gérants peuvent tout
+      // lire et créer. Seule la mise à jour du champ "lu" est autorisée
+      // (marquage comme lu) ; la suppression sert uniquement au nettoyage
+      // automatique des notifications de plus de 30 jours (voir notifications.js).
+      match /notifications/{notifId} {
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
+        allow update: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin())
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["lu"]);
+        allow delete: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
+      }
     }
 
     match /invitations/{token} {

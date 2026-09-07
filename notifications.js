@@ -1,6 +1,6 @@
 // notifications.js — Système de notifications temps réel
 import {
-  db, doc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, writeBatch
+  db, doc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -71,8 +71,32 @@ function notifierSysteme(n) {
   try { new Notification(n.titre, { body: n.message, icon: "logo.png" }); } catch (e) {}
 }
 
+const CLEANUP_KEY = "magerante_notif_cleanup_last";
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // une fois par jour max
+const RETENTION_JOURS = 30;
+
+async function nettoyerVieillesNotifications() {
+  try {
+    const dernier = localStorage.getItem(CLEANUP_KEY);
+    if (dernier && (Date.now() - parseInt(dernier, 10)) < CLEANUP_INTERVAL_MS) return;
+    localStorage.setItem(CLEANUP_KEY, String(Date.now()));
+
+    const seuil = new Date(Date.now() - RETENTION_JOURS * 24 * 60 * 60 * 1000);
+    const q = query(notifsRef(), where("createdAt", "<", seuil));
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+    const batch = writeBatch(db);
+    snap.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`Notifications : ${snap.size} ancienne(s) supprimée(s).`);
+  } catch (err) {
+    console.warn("Nettoyage notifications échoué :", err.message);
+  }
+}
+
 export function initNotifications() {
   if (!appState.establishmentId || unsubscribeNotifs) return;
+  nettoyerVieillesNotifications();
   const q = query(notifsRef(), orderBy("createdAt", "desc"));
   unsubscribeNotifs = onSnapshot(q, (snap) => {
     notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
