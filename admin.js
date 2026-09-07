@@ -50,6 +50,36 @@ document.getElementById("btnResetPassword").addEventListener("click", async () =
     alert("Erreur : " + err.message);
   }
 });
+document.getElementById("btnVoirApplication").addEventListener("click", () => {
+  window.location.href = "index.html";
+});
+
+document.getElementById("btnDiffuserNotif").addEventListener("click", async () => {
+  const message = prompt("Message a diffuser a tous les etablissements :");
+  if (!message || !message.trim()) return;
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    const batch = writeBatch(db);
+    let count = 0;
+    estSnap.forEach((estDoc) => {
+      const notifRef = doc(collection(db, "establishments", estDoc.id, "notifications"));
+      batch.set(notifRef, {
+        type: "info",
+        titre: "Message de l'administration",
+        message: message.trim(),
+        lu: false,
+        createdAt: serverTimestamp()
+      });
+      count++;
+    });
+    await batch.commit();
+    alert(`Notification envoyee a ${count} etablissement(s).`);
+    settingsOverlay.hidden = true;
+  } catch (err) {
+    alert("Erreur lors de la diffusion : " + err.message);
+  }
+});
+
 document.getElementById("btnLogoutAdmin").addEventListener("click", async () => {
   settingsOverlay.hidden = true;
   await signOut(auth);
