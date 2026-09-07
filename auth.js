@@ -340,7 +340,17 @@ function updateAccountStatusBadge() {
 
   const menuRename = document.getElementById("menuRenameEstablishment");
   if (menuRename) {
-    menuRename.hidden = window.AuthState.role === "GERANT";
+    menuRename.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+  }
+
+  const menuGenererDemoComplet = document.getElementById("menuGenererDemoComplet");
+  if (menuGenererDemoComplet) {
+    menuGenererDemoComplet.hidden = (window.AuthState.email !== window.ADMIN_EMAIL);
+  }
+
+  const menuSupprimerDemo = document.getElementById("menuSupprimerDemo");
+  if (menuSupprimerDemo) {
+    menuSupprimerDemo.hidden = (window.AuthState.email !== window.ADMIN_EMAIL);
   }
 
   const menuLogout = document.getElementById("menuLogout");
