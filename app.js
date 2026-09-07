@@ -1,3 +1,4 @@
+import { initNotifications } from "./notifications.js";
 // app.js — squelette : horloge, navigation, calculatrice de base
 // (l'Inventaire est géré par inventaire.js, exposé sur window.InventaireModule)
 // (les Ventes sont gérées par ventes.js, exposé sur window.VentesModule)

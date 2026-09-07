@@ -4,6 +4,7 @@ import {
   onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { creerNotification } from "./notifications.js";
 
 let unsubscribe = null;
 let produitEnEdition = null;

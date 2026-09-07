@@ -163,7 +163,7 @@
     <div class="header-right">
       <button class="icon-btn" id="btnAdminAccess" aria-label="Administration" hidden>🛡️</button>
       <button class="icon-btn" id="btnToggleClavier" aria-label="Rechercher un produit">🔍</button>
-      <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔</button>
+      <button class="icon-btn" id="btnNotifications" aria-label="Notifications">🔔<span class="notif-badge" id="notifBadge" hidden></span></button>
       <button class="icon-btn" id="btnMenu" aria-label="Menu">☰</button>
     </div>
   </header>
@@ -274,6 +274,20 @@
   </nav>
 
   </div><!-- /appRoot -->
+
+  <!-- Panneau de notifications -->
+  <div id="notifPanel" class="notif-panel" hidden>
+    <div class="notif-panel-overlay" id="notifPanelOverlay"></div>
+    <div class="notif-panel-box">
+      <div class="notif-panel-header">
+        <span>Notifications</span>
+        <button class="icon-btn" id="btnCloseNotifPanel" aria-label="Fermer">✕</button>
+      </div>
+      <button class="notif-perm-btn" id="btnActiverNotifsSysteme" hidden>🔔 Activer les alertes sur ce téléphone</button>
+      <div class="notif-list" id="notifList"><p class="notif-empty">Chargement...</p></div>
+      <button class="notif-mark-btn" id="btnMarquerToutLu">Tout marquer comme lu</button>
+    </div>
+  </div>
 
   <!-- MENU LATÉRAL -->
   <div id="sideMenu" class="side-menu" hidden>
