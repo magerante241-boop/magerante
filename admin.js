@@ -120,6 +120,7 @@ onAuthStateChanged(auth, (user) => {
     loginBox.hidden = true;
     adminPanel.hidden = false;
     btnSettings.hidden = false;
+    document.getElementById("adminBottomNav").hidden = false;
     adminError.textContent = "";
     chargerDashboard();
     chargerComptesEnAttente();
@@ -132,6 +133,7 @@ onAuthStateChanged(auth, (user) => {
     adminPanel.hidden = true;
     btnSettings.hidden = true;
     settingsOverlay.hidden = true;
+    document.getElementById("adminBottomNav").hidden = true;
     if (loginAttempted && user && !user.isAnonymous && user.email !== ADMIN_EMAIL) {
       adminError.textContent = "Ce compte n'a pas les droits admin.";
     }
@@ -643,3 +645,28 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
     alert("Erreur suppression : " + err.message);
   }
 });
+
+// ===== Menu latéral admin + nav du bas =====
+(function initAdminNav() {
+  const menu = document.getElementById("adminSideMenu");
+  const overlay = document.getElementById("adminSideMenuOverlay");
+  const btnOpen = document.getElementById("btnAdminMenu");
+  const btnClose = document.getElementById("btnCloseAdminMenu");
+  const btnRetourApp = document.getElementById("menuAdminRetourApp");
+
+  function ouvrirMenu() { if (menu) menu.hidden = false; }
+  function fermerMenu() { if (menu) menu.hidden = true; }
+
+  if (btnOpen) btnOpen.addEventListener("click", ouvrirMenu);
+  if (btnClose) btnClose.addEventListener("click", fermerMenu);
+  if (overlay) overlay.addEventListener("click", fermerMenu);
+  if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
+
+  document.querySelectorAll("#adminSideMenu [data-target], #adminBottomNav [data-target]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const cible = document.getElementById(btn.getAttribute("data-target"));
+      if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+      fermerMenu();
+    });
+  });
+})();
