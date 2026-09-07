@@ -184,6 +184,7 @@ button:active {
 <body>
   <header>
     <div class="header-flex">
+      <button id="btnAdminMenu" class="icon-round-btn" aria-label="Menu">☰</button>
       <div>
         <h1>🛡️ MAGERANTE — Administration</h1>
         <p id="headerSub">Tableau de bord</p>
@@ -233,13 +234,15 @@ button:active {
       <h2 class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</h2>
       <div id="pendingList" class="empty-msg">Chargement...</div>
 
-      <h2 class="section-title" id="secCA">Chiffre d'affaires par etablissement</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
-          <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
-        </table>
-      </div>
+      <details class="collapsible-section" open>
+        <summary class="section-title" id="secCA">Chiffre d'affaires par etablissement</summary>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
+            <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
 
       <h2 class="section-title" id="secZones">Établissements par zone / quartier</h2>
       <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
@@ -307,5 +310,34 @@ button:active {
   <script src="scroll-arrows.js"></script>
   <script type="module" src="demo.js"></script>
   <script type="module" src="admin.js"></script>
+
+  <!-- MENU LATÉRAL ADMIN -->
+  <div id="adminSideMenu" class="side-menu" hidden>
+    <div class="side-menu-overlay" id="adminSideMenuOverlay"></div>
+    <nav class="side-menu-panel">
+      <div class="side-menu-header">
+        <span>Menu Admin</span>
+        <button class="icon-btn" id="btnCloseAdminMenu" aria-label="Fermer le menu">✕</button>
+      </div>
+      <ul class="side-menu-list">
+        <li><button class="side-menu-item" data-target="secComptesAttente">👥 Comptes proprietaires</button></li>
+        <li><button class="side-menu-item" data-target="secCA">💰 Chiffre d'affaires</button></li>
+        <li><button class="side-menu-item" data-target="secZones">📍 Établissements par zone</button></li>
+        <li><button class="side-menu-item" data-target="secImport">📦 Inventaire global</button></li>
+        <li><button class="side-menu-item" data-target="secGestionProduits">🛠️ Gestion des produits</button></li>
+        <li><button class="side-menu-item" data-target="secVentes">🧾 Dernieres ventes</button></li>
+        <li><button class="side-menu-item" id="menuAdminRetourApp">🏠 Retour a l'application</button></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- NAV DU BAS ADMIN -->
+  <nav id="adminBottomNav" class="bottom-nav" hidden>
+    <button class="bottom-nav-item" data-target="secComptesAttente"><span class="bottom-nav-icon">👥</span><span>Comptes</span></button>
+    <button class="bottom-nav-item" data-target="secCA"><span class="bottom-nav-icon">💰</span><span>CA</span></button>
+    <button class="bottom-nav-item" data-target="secZones"><span class="bottom-nav-icon">📍</span><span>Zones</span></button>
+    <button class="bottom-nav-item" data-target="secGestionProduits"><span class="bottom-nav-icon">🛠️</span><span>Produits</span></button>
+    <button class="bottom-nav-item" data-target="secVentes"><span class="bottom-nav-icon">🧾</span><span>Ventes</span></button>
+  </nav>
 </body>
 </html>
