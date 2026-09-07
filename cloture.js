@@ -1,5 +1,6 @@
 import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { creerNotification } from "./notifications.js";
 
 function calculerDebutFinJour() {
   const debut = new Date();
@@ -92,6 +93,12 @@ document.addEventListener("DOMContentLoaded", () => {
           totalVentes: Number(btnConfirmer.dataset.total || 0),
           nombreVentes: Number(btnConfirmer.dataset.nombre || 0),
           date: serverTimestamp(),
+        });
+        const nomGerantCl = (window.AuthState && window.AuthState.nomGerant) || "Un gérant";
+        creerNotification({
+          type: "cloture",
+          titre: "Clôture reçue",
+          message: `${nomGerantCl} a envoyé ses comptes : ${Number(btnConfirmer.dataset.nombre || 0)} vente(s), ${Number(btnConfirmer.dataset.total || 0).toLocaleString("fr-FR")} FCFA.`
         });
         btnConfirmer.textContent = "Comptes envoyés ✅";
       } catch (e) {
