@@ -84,13 +84,25 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 
 // --- Calculatrice de gestion (logique de base) ---
 let calcExpr = "";
+let totalCumule = 0;
+let derniereLigneTexte = "";
 
 // Applique le prix d'une marque sélectionnée : si une quantité est déjà tapée,
 // on multiplie (quantité × prix) au lieu d'écraser la saisie.
 function appliquerPrixMarque(prix) {
   const q = calcExpr.trim();
   const estQuantiteValide = q !== "" && /^[0-9]+([.,][0-9]+)?$/.test(q) && Number(q.replace(",", ".")) > 0;
-  calcExpr = estQuantiteValide ? (q + "×" + prix) : String(prix);
+  const expr = estQuantiteValide ? (q + "×" + prix) : String(prix);
+  let valeur = 0;
+  try {
+    const safeExpr = expr.replace(/×/g, "*").replace(/,/g, ".");
+    valeur = Function(`"use strict"; return (${safeExpr})`)();
+  } catch {
+    valeur = 0;
+  }
+  if (isFinite(valeur)) totalCumule += valeur;
+  derniereLigneTexte = expr;
+  calcExpr = "";
 }
 const exprEl = document.getElementById("calcExpression");
 const resultEl = document.getElementById("calcResult");
@@ -112,7 +124,7 @@ function ajusterTailleResultat() {
 }
 
 function renderCalc() {
-  exprEl.textContent = calcExpr || "\u00A0";
+  exprEl.textContent = calcExpr || derniereLigneTexte || "\u00A0";
   try {
     const safeExpr = calcExpr
       .replace(/×/g, "*")
@@ -121,17 +133,11 @@ function renderCalc() {
     // eslint-disable-next-line no-new-func
     const value = safeExpr.trim() === "" ? 0 : Function(`"use strict"; return (${safeExpr})`)();
     calcValeurNumerique = isFinite(value) ? value : 0;
-    if (isFinite(value)) {
-      resultValueEl.textContent = value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
-      resultUnitEl.hidden = false;
-    } else {
-      resultValueEl.textContent = "Erreur";
-      resultUnitEl.hidden = true;
-    }
   } catch {
-    resultValueEl.textContent = "…";
-    resultUnitEl.hidden = true;
+    calcValeurNumerique = 0;
   }
+  resultValueEl.textContent = totalCumule.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+  resultUnitEl.hidden = false;
   ajusterTailleResultat();
   updateCoins();
 }
@@ -172,6 +178,8 @@ document.getElementById("numpad").addEventListener("click", (e) => {
   e.target.classList.add("key-glow");
   if (key === "AC") {
     calcExpr = "";
+    totalCumule = 0;
+    derniereLigneTexte = "";
   } else if (key === "⌫") {
     calcExpr = calcExpr.slice(0, -1);
   } else if (key === "=") {
