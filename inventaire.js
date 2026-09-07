@@ -174,6 +174,13 @@ async function saveProduit() {
         createdAt: serverTimestamp(), updatedAt: serverTimestamp()
       });
     }
+    if (stock <= 5) {
+      creerNotification({
+        type: "stock_bas",
+        titre: stock === 0 ? "Rupture de stock" : "Stock bas",
+        message: `${nom} : il ne reste que ${stock} en stock.`
+      });
+    }
     closeModal();
   } catch (err) {
     errorEl.textContent = "Erreur : " + err.message;
