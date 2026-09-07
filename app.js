@@ -775,3 +775,80 @@ if (btnFactureValider) {
     }
   });
 }
+
+// ===== Installation PWA (FAB + menu) =====
+(function(){
+  let deferredPrompt = null;
+  const DISMISS_KEY = 'magerante_install_fab_dismissed_at';
+  const SNOOZE_DAYS = 7;
+
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true;
+  }
+  function wasRecentlyDismissed(){
+    const ts = localStorage.getItem(DISMISS_KEY);
+    if(!ts) return false;
+    return (Date.now() - parseInt(ts,10)) / 86400000 < SNOOZE_DAYS;
+  }
+  function setInstalledState(){
+    const item = document.getElementById('menuInstallApp');
+    if(item){ item.classList.add('installee'); item.textContent = '✅ Application installée'; }
+    const fab = document.getElementById('install-fab');
+    if(fab){ fab.classList.remove('show'); fab.style.display = 'none'; }
+  }
+  function maybeShowFab(){
+    if(isStandalone() || wasRecentlyDismissed()) return;
+    const fab = document.getElementById('install-fab');
+    if(fab){ fab.classList.add('show'); }
+  }
+  window.installApp = function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(result){
+        if(result.outcome === 'accepted'){ setInstalledState(); }
+        deferredPrompt = null;
+      });
+    } else {
+      alert('📲 Pour installer MAGERANTE :\n\nAndroid Chrome :\nMenu ⋮ → "Installer l\'application"\n\niPhone Safari :\nPartager ⬆️ → "Sur l\'écran d\'accueil"');
+    }
+  };
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(maybeShowFab, 1800);
+  });
+  window.addEventListener('appinstalled', setInstalledState);
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const fabMain = document.getElementById('install-fab-main');
+    if(fabMain) fabMain.addEventListener('click', window.installApp);
+    const fabClose = document.getElementById('install-fab-close');
+    if(fabClose) fabClose.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      const fab = document.getElementById('install-fab');
+      if(fab) fab.classList.remove('show');
+      try{ localStorage.setItem(DISMISS_KEY, String(Date.now())); }catch(e){}
+    });
+    const menuInstall = document.getElementById('menuInstallApp');
+    if(menuInstall) menuInstall.addEventListener('click', window.installApp);
+    if(isStandalone()){ setInstalledState(); }
+    else { setTimeout(maybeShowFab, 2500); }
+  });
+})();
+
+// ===== Panneau "À propos" =====
+document.addEventListener('DOMContentLoaded', function(){
+  const menuAbout = document.getElementById('menuAbout');
+  const aboutGate = document.getElementById('aboutGate');
+  const btnCloseAbout = document.getElementById('btnCloseAbout');
+  if(menuAbout && aboutGate){
+    menuAbout.addEventListener('click', function(){
+      aboutGate.hidden = false;
+      if(typeof closeSideMenu === 'function') closeSideMenu();
+    });
+  }
+  if(btnCloseAbout && aboutGate){
+    btnCloseAbout.addEventListener('click', function(){ aboutGate.hidden = true; });
+  }
+});

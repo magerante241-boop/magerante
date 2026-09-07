@@ -1,0 +1,3765 @@
+import {
+  auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
+  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
+} from "./firebase-config.js";
+
+const ADMIN_EMAIL = "magerante241@gmail.com";
+
+// Échappe le HTML avant injection via innerHTML — évite l'XSS stocké sur les
+// champs contrôlés par le public (nom d'établissement, nom/prénom/email lors
+// de l'inscription, nom de produit...).
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+const loginBox = document.getElementById("loginBox");
+const adminPanel = document.getElementById("adminPanel");
+const adminError = document.getElementById("adminError");
+const pendingList = document.getElementById("pendingList");
+if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(pendingList);
+const btnSettings = document.getElementById("btnSettings");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const settingsEmail = document.getElementById("settingsEmail");
+
+let loginAttempted = false;
+
+document.getElementById("btnAdminLogin").addEventListener("click", async () => {
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminPassword").value;
+  adminError.textContent = "";
+  loginAttempted = true;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    adminError.textContent = "Erreur : " + err.message;
+  }
+});
+
+btnSettings.addEventListener("click", () => {
+  settingsEmail.textContent = auth.currentUser ? auth.currentUser.email : "";
+  settingsOverlay.hidden = false;
+});
+document.getElementById("btnCloseSettings").addEventListener("click", () => {
+  settingsOverlay.hidden = true;
+});
+document.getElementById("btnResetPassword").addEventListener("click", async () => {
+  try {
+    await sendPasswordResetEmail(auth, ADMIN_EMAIL);
+    alert("Email de reinitialisation envoye a " + ADMIN_EMAIL);
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  }
+});
+document.getElementById("btnLogoutAdmin").addEventListener("click", async () => {
+  settingsOverlay.hidden = true;
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user && !user.isAnonymous && user.email === ADMIN_EMAIL) {
+    loginBox.hidden = true;
+    adminPanel.hidden = false;
+    btnSettings.hidden = false;
+    adminError.textContent = "";
+    chargerDashboard();
+    chargerComptesEnAttente();
+    chargerFinanceEtRapports();
+    chargerEtablissementsParZone();
+    chargerInventaireGlobal();
+    chargerGestionProduits();
+  } else {
+    loginBox.hidden = false;
+    adminPanel.hidden = true;
+    btnSettings.hidden = true;
+    settingsOverlay.hidden = true;
+    if (loginAttempted && user && !user.isAnonymous && user.email !== ADMIN_EMAIL) {
+      adminError.textContent = "Ce compte n'a pas les droits admin.";
+    }
+  }
+});
+
+async function chargerDashboard() {
+  try {
+    const usersSnap = await getDocs(collection(db, "users"));
+    let totalComptes = 0, valides = 0, enAttente = 0;
+    usersSnap.forEach((d) => {
+      const data = d.data();
+      if (data.accountType === "enregistre") {
+        totalComptes++;
+        if (data.validated) valides++; else enAttente++;
+      }
+    });
+    document.getElementById("statTotalComptes").textContent = totalComptes;
+    document.getElementById("statValides").textContent = valides;
+    document.getElementById("statEnAttente").textContent = enAttente;
+  } catch (err) {
+    console.error("Erreur stats comptes:", err);
+  }
+
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    document.getElementById("statEtablissements").textContent = estSnap.size;
+  } catch (err) {
+    console.error("Erreur stats etablissements:", err);
+    document.getElementById("statEtablissements").textContent = "?";
+  }
+
+  try {
+    const ventesSnap = await getDocs(collectionGroup(db, "ventes"));
+    let total = 0;
+    ventesSnap.forEach((d) => {
+      const data = d.data();
+      total += Number(data.montant || 0);
+    });
+    document.getElementById("statCAGlobal").textContent = total.toLocaleString("fr-FR") + " FCFA";
+  } catch (err) {
+    console.error("Erreur CA global (normal si module Ventes pas encore actif):", err);
+    document.getElementById("statCAGlobal").textContent = "0 FCFA";
+  }
+}
+
+function chargerComptesEnAttente() {
+  const q = query(
+    collection(db, "users"),
+    where("accountType", "==", "enregistre")
+  );
+  onSnapshot(
+    q,
+    (snap) => {
+      const enAttente = snap.docs.filter((docSnap) => docSnap.data().validated !== true);
+      if (enAttente.length === 0) {
+        pendingList.innerHTML = "<p class='empty-msg'>Aucun compte en attente.</p>";
+        return;
+      }
+      pendingList.innerHTML = "";
+      enAttente.forEach((docSnap) => {
+        const d = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "compte-card";
+        card.innerHTML =
+          "<strong>" + escapeHtml((d.nom || "") + " " + (d.prenom || "")) + "</strong>" +
+          "<div class='meta'>Email : " + escapeHtml(d.email || "") + "</div>" +
+          "<div class='meta'>Telephone : " + escapeHtml(d.telephone || "") + "</div>" +
+          "<button data-uid='" + escapeHtml(docSnap.id) + "'>Valider ce compte</button>";
+        card.querySelector("button").addEventListener("click", async (e) => {
+          const uid = e.target.getAttribute("data-uid");
+          await updateDoc(doc(db, "users", uid), { validated: true });
+        });
+        pendingList.appendChild(card);
+      });
+    },
+    (err) => {
+      pendingList.innerHTML =
+        "<p style='color:#b00020; word-break:break-all;'>Erreur de chargement : " + err.message + "</p>";
+      console.error("Erreur onSnapshot users:", err);
+    }
+  );
+}
+
+async function chargerFinanceEtRapports() {
+  const caTableBody = document.getElementById("caTableBody");
+  const rapportList = document.getElementById("rapportList");
+  if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(rapportList);
+  const etabMap = {};
+
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    estSnap.forEach((d) => {
+      const data = d.data();
+      etabMap[d.id] = {
+        nom: data.nom || data.name || ("Etablissement " + d.id.slice(0, 6)),
+        count: 0,
+        total: 0
+      };
+    });
+  } catch (err) {
+    console.error("Erreur chargement etablissements (finance):", err);
+  }
+
+  let ventesDocs = [];
+  try {
+    const ventesSnap = await getDocs(collectionGroup(db, "ventes"));
+    ventesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const estId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : "inconnu";
+      if (!etabMap[estId]) {
+        etabMap[estId] = { nom: "Etablissement " + estId.slice(0, 6), count: 0, total: 0 };
+      }
+      etabMap[estId].count++;
+      etabMap[estId].total += Number(data.montant || 0);
+      ventesDocs.push({ estId, montant: Number(data.montant || 0), date: data.date || data.createdAt || null });
+    });
+  } catch (err) {
+    console.error("Erreur ventes (normal si module Ventes pas encore actif):", err);
+  }
+
+  const rows = Object.values(etabMap).sort((a, b) => b.total - a.total);
+  if (rows.length === 0) {
+    caTableBody.innerHTML = "<tr><td colspan='3' class='empty-msg'>Aucun etablissement enregistre pour l'instant.</td></tr>";
+  } else {
+    caTableBody.innerHTML = rows.map((r) =>
+      "<tr><td>" + escapeHtml(r.nom) + "</td><td>" + r.count + "</td><td>" + r.total.toLocaleString("fr-FR") + " FCFA</td></tr>"
+    ).join("");
+  }
+
+  if (ventesDocs.length === 0) {
+    rapportList.innerHTML = "<p class='empty-msg'>Aucune vente enregistree pour l'instant (module Ventes a venir).</p>";
+  } else {
+    ventesDocs.sort((a, b) => {
+      const da = a.date && a.date.toMillis ? a.date.toMillis() : 0;
+      const db2 = b.date && b.date.toMillis ? b.date.toMillis() : 0;
+      return db2 - da;
+    });
+    rapportList.innerHTML = ventesDocs.slice(0, 20).map((v) => {
+      const nom = etabMap[v.estId] ? etabMap[v.estId].nom : v.estId;
+      const dateStr = v.date && v.date.toDate ? v.date.toDate().toLocaleDateString("fr-FR") : "date inconnue";
+      return "<div class='vente-item'>" +
+        "<div><div class='v-etab'>" + escapeHtml(nom) + "</div><div class='v-date'>" + dateStr + "</div></div>" +
+        "<div class='v-montant'>" + v.montant.toLocaleString("fr-FR") + " FCFA</div></div>";
+    }).join("");
+  }
+}
+
+
+async function chargerEtablissementsParZone() {
+  const listeZonesEl = document.getElementById("listeZones");
+  if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(listeZonesEl);
+  const filtreZoneEl = document.getElementById("filtreZone");
+  if (!listeZonesEl) return;
+  let etablissements = [];
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    estSnap.forEach((d) => {
+      const data = d.data();
+      etablissements.push({
+        id: d.id,
+        nom: data.name || data.nom || ("Etablissement " + d.id.slice(0, 6)),
+        type: data.type || "?",
+        zone: data.localisation || "Zone non renseignée",
+        whatsapp: data.whatsappEtablissement || null,
+        gps: data.gps || null,
+        lienGoogleMaps: data.lienGoogleMaps || null
+      });
+    });
+  } catch (err) {
+    console.error("Erreur chargement etablissements (zones):", err);
+    listeZonesEl.innerHTML = "<p class='empty-msg'>Erreur de chargement.</p>";
+    return;
+  }
+
+  const parZone = {};
+  etablissements.forEach((e) => {
+    if (!parZone[e.zone]) parZone[e.zone] = [];
+    parZone[e.zone].push(e);
+  });
+
+  if (filtreZoneEl) {
+    const selectionActuelle = filtreZoneEl.value;
+    filtreZoneEl.innerHTML = '<option value="">Toutes les zones</option>';
+    Object.keys(parZone).sort().forEach((zone) => {
+      const opt = document.createElement("option");
+      opt.value = zone;
+      opt.textContent = `${zone} (${parZone[zone].length})`;
+      filtreZoneEl.appendChild(opt);
+    });
+    filtreZoneEl.value = selectionActuelle;
+  }
+
+  function rendre() {
+    const zoneFiltre = filtreZoneEl ? filtreZoneEl.value : "";
+    const zonesAAfficher = zoneFiltre ? [zoneFiltre] : Object.keys(parZone).sort();
+    if (!zonesAAfficher.length || !zonesAAfficher.some((z) => parZone[z])) {
+      listeZonesEl.innerHTML = "<p class='empty-msg'>Aucun établissement.</p>";
+      return;
+    }
+    listeZonesEl.innerHTML = zonesAAfficher.filter((z) => parZone[z]).map((zone) => {
+      const items = parZone[zone].map((e) => {
+        const mapsLien = (e.lienGoogleMaps && /^https:\/\//.test(e.lienGoogleMaps))
+          ? `<a href="${escapeHtml(e.lienGoogleMaps)}" target="_blank">📍 Voir sur Maps</a>`
+          : "<span class='empty-msg'>GPS non renseigné</span>";
+        const whatsappLien = e.whatsapp
+          ? `<a href="https://wa.me/${e.whatsapp.replace(/\D/g, "")}" target="_blank">💬 ${escapeHtml(e.whatsapp)}</a>`
+          : "<span class='empty-msg'>WhatsApp non renseigné</span>";
+        return `<div class="zone-etab-item" data-id="${escapeHtml(e.id)}">
+          <div><strong>${escapeHtml(e.nom)}</strong> (${escapeHtml(e.type)})</div>
+          <div>${mapsLien} — ${whatsappLien}</div>
+          <button class="btn-edit-etab" data-id="${escapeHtml(e.id)}">✏️ Modifier</button>
+        </div>`;
+      }).join("");
+      return `<div class="zone-groupe"><h3>${escapeHtml(zone)}</h3>${items}</div>`;
+    }).join("");
+
+    document.querySelectorAll(".btn-edit-etab").forEach((btn) => {
+      btn.addEventListener("click", () => ouvrirEditionEtablissement(btn.dataset.id, etablissements));
+    });
+  }
+
+  rendre();
+  if (filtreZoneEl) filtreZoneEl.addEventListener("change", rendre);
+}
+async function ouvrirEditionEtablissement(id, etablissements) {
+  const etab = etablissements.find((e) => e.id === id);
+  if (!etab) return;
+  const nouveauNom = prompt("Nom de l'établissement :", etab.nom);
+  if (nouveauNom === null) return;
+  const nouvelleZone = prompt("Zone / quartier :", etab.zone);
+  if (nouvelleZone === null) return;
+  const nouveauWhatsapp = prompt("WhatsApp (ex: 24177123456) :", etab.whatsapp || "");
+  if (nouveauWhatsapp === null) return;
+  try {
+    await updateDoc(doc(db, "establishments", id), {
+      name: nouveauNom,
+      localisation: nouvelleZone,
+      whatsappEtablissement: nouveauWhatsapp || null,
+      updatedAt: serverTimestamp()
+    });
+    alert("Établissement mis à jour.");
+    chargerEtablissementsParZone();
+  } catch (err) {
+    console.error("Erreur mise à jour établissement:", err);
+    alert("Erreur lors de la mise à jour.");
+  }
+}
+
+async function chargerInventaireGlobal() {
+  try {
+    const prodSnap = await getDocs(collectionGroup(db, "produits"));
+    let valeurTotale = 0;
+    prodSnap.forEach((d) => {
+      const data = d.data();
+      const prix = Number(data.prix || data.prixAchat || data.prixVente || 0);
+      const qte = Number(data.quantite || data.stock || 0);
+      valeurTotale += prix * qte;
+    });
+    document.getElementById("statTotalProduits").textContent = prodSnap.size;
+    document.getElementById("statValeurStock").textContent = valeurTotale.toLocaleString("fr-FR") + " FCFA";
+  } catch (err) {
+    console.error("Erreur inventaire global (normal si module Inventaire pas encore synchronise):", err);
+    document.getElementById("statTotalProduits").textContent = "0";
+    document.getElementById("statValeurStock").textContent = "0 FCFA";
+  }
+}
+
+// --- Import catalogue CSV vers tous les etablissements ---
+function parserCSV(text) {
+  const lignes = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+  const entetes = lignes[0].split(",").map((h) => h.trim());
+  return lignes.slice(1).map((ligne) => {
+    const valeurs = ligne.split(",");
+    const obj = {};
+    entetes.forEach((h, i) => { obj[h] = (valeurs[i] || "").trim(); });
+    return obj;
+  });
+}
+
+document.getElementById("btnImporterCatalogue").addEventListener("click", async () => {
+  const fileInput = document.getElementById("catalogueFileInput");
+  const statusEl = document.getElementById("importStatus");
+  const file = fileInput.files[0];
+  if (!file) {
+    statusEl.textContent = "Choisis d'abord un fichier CSV.";
+    return;
+  }
+  if (!confirm("Importer ce catalogue vers TOUS les etablissements ? Cette action ajoutera des produits a chaque etablissement existant.")) {
+    return;
+  }
+  statusEl.textContent = "Lecture du fichier...";
+  try {
+    const texte = await file.text();
+    const lignes = parserCSV(texte);
+    const produits = lignes.map((l) => ({
+      nom: l["Nom"] || "",
+      categorie: l["Catégorie"] || l["Categorie"] || "",
+      prixAchat: Number(l["Prix achat"]) || 0,
+      prixVente: Number(l["Prix vente"]) || 0,
+      stock: Number(l["Stock"]) || 0,
+    })).filter((p) => p.nom);
+
+    if (!produits.length) {
+      statusEl.textContent = "Aucun produit valide trouve dans le fichier.";
+      return;
+    }
+
+    statusEl.textContent = "Lecture des etablissements...";
+    const estSnap = await getDocs(collection(db, "establishments"));
+    const etablissementIds = estSnap.docs.map((d) => d.id);
+
+    if (!etablissementIds.length) {
+      statusEl.textContent = "Aucun etablissement trouve.";
+      return;
+    }
+
+    const progressWrap = document.getElementById("importProgressWrap");
+    const progressBar = document.getElementById("importProgressBar");
+    const progressPercent = document.getElementById("importProgressPercent");
+    const totalAFaire = produits.length * etablissementIds.length;
+    progressWrap.hidden = false;
+    progressPercent.hidden = false;
+    progressWrap.classList.remove("fade-out");
+    progressPercent.classList.remove("fade-out");
+    progressBar.style.width = "0%";
+    progressPercent.textContent = "0%";
+
+    const TAILLE_LOT = 450;
+    let total = 0;
+    for (const estId of etablissementIds) {
+      let batch = writeBatch(db);
+      let compteurLot = 0;
+      for (const p of produits) {
+        const nouveauDocRef = doc(collection(db, "establishments", estId, "produits"));
+        batch.set(nouveauDocRef, {
+          ...p,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        compteurLot++;
+        total++;
+        if (compteurLot >= TAILLE_LOT) {
+          await batch.commit();
+          batch = writeBatch(db);
+          compteurLot = 0;
+        }
+        const pct = Math.round((total / totalAFaire) * 100);
+        progressBar.style.width = pct + "%";
+        progressPercent.textContent = pct + "%";
+      }
+      if (compteurLot > 0) {
+        await batch.commit();
+      }
+      statusEl.textContent = `Import en cours... (${total} produits crees)`;
+    }
+    statusEl.textContent = `Import termine : ${produits.length} produits ajoutes a ${etablissementIds.length} etablissement(s), soit ${total} documents crees.`;
+    progressBar.style.width = "100%";
+    progressPercent.textContent = "100%";
+    setTimeout(() => {
+      progressWrap.classList.add("fade-out");
+      progressPercent.classList.add("fade-out");
+      setTimeout(() => {
+        progressWrap.hidden = true;
+        progressPercent.hidden = true;
+      }, 800);
+    }, 1200);
+  } catch (err) {
+    statusEl.textContent = "Erreur : " + err.message;
+    console.error(err);
+    const pw = document.getElementById("importProgressWrap");
+    const pp = document.getElementById("importProgressPercent");
+    if (pw) pw.hidden = true;
+    if (pp) pp.hidden = true;
+  }
+});
+
+document.getElementById("catalogueFileInput").addEventListener("change", (e) => {
+  const label = document.getElementById("catalogueFileLabel");
+  if (e.target.files.length) {
+    label.textContent = "📄 " + e.target.files[0].name;
+  } else {
+    label.textContent = "📄 Choisir un fichier CSV";
+  }
+});
+
+// --- Vider l'inventaire de tous les etablissements ---
+document.getElementById("btnViderInventaire").addEventListener("click", async () => {
+  const statusEl = document.getElementById("importStatus");
+  const confirmation1 = confirm("Ceci va SUPPRIMER tous les produits de TOUS les etablissements. Cette action est irreversible. Continuer ?");
+  if (!confirmation1) return;
+  const confirmation2 = confirm("Es-tu vraiment sur ? Tape OK une derniere fois pour confirmer la suppression definitive.");
+  if (!confirmation2) return;
+
+  statusEl.textContent = "Lecture des etablissements...";
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    const etablissementIds = estSnap.docs.map((d) => d.id);
+    let totalSupprime = 0;
+
+    for (const estId of etablissementIds) {
+      const produitsSnap = await getDocs(collection(db, "establishments", estId, "produits"));
+      const docs = produitsSnap.docs;
+      const TAILLE_LOT = 450;
+      for (let i = 0; i < docs.length; i += TAILLE_LOT) {
+        const lot = docs.slice(i, i + TAILLE_LOT);
+        const batch = writeBatch(db);
+        lot.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+        totalSupprime += lot.length;
+        statusEl.textContent = `Suppression en cours... (${totalSupprime} produits supprimes)`;
+      }
+    }
+    statusEl.textContent = `Nettoyage termine : ${totalSupprime} produits supprimes sur ${etablissementIds.length} etablissement(s).`;
+  } catch (err) {
+    statusEl.textContent = "Erreur : " + err.message;
+    console.error(err);
+  }
+});
+
+// --- Tuiles stats cliquables : defilement vers la section correspondante ---
+document.querySelectorAll(".stat-card[data-target]").forEach((card) => {
+  card.addEventListener("click", () => {
+    const cible = document.getElementById(card.dataset.target);
+    if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+// --- Gestion des produits (tous etablissements) ---
+let _cacheProduitsGestion = [];
+let _cacheEtablissementsNoms = {};
+
+async function chargerGestionProduits() {
+  const tbody = document.getElementById("produitsGestionTableBody");
+  const select = document.getElementById("filtreEtablissementProduits");
+  try {
+    const estSnap = await getDocs(collection(db, "establishments"));
+    _cacheEtablissementsNoms = {};
+    const valeurActuelle = select.value;
+    select.innerHTML = '<option value="tous">Tous les etablissements</option>';
+    estSnap.forEach((d) => {
+      const data = d.data();
+      const nomAffiche = (data.name || "Etablissement") + " (" + d.id.slice(0, 6) + ")";
+      _cacheEtablissementsNoms[d.id] = data.name || "Etablissement";
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = nomAffiche;
+      select.appendChild(opt);
+    });
+    if ([...select.options].some((o) => o.value === valeurActuelle)) {
+      select.value = valeurActuelle;
+    }
+
+    const prodSnap = await getDocs(collectionGroup(db, "produits"));
+    _cacheProduitsGestion = prodSnap.docs.map((d) => ({
+      ref: d.ref,
+      id: d.id,
+      estId: d.ref.parent.parent.id,
+      ...d.data(),
+    }));
+    rendreTableauGestionProduits();
+  } catch (err) {
+    console.error("Erreur chargement gestion produits:", err);
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur : ' + err.message + '</td></tr>';
+  }
+}
+
+function rendreTableauGestionProduits() {
+  const tbody = document.getElementById("produitsGestionTableBody");
+  const select = document.getElementById("filtreEtablissementProduits");
+  const filtre = select.value;
+  const lignes = filtre === "tous"
+    ? _cacheProduitsGestion
+    : _cacheProduitsGestion.filter((p) => p.estId === filtre);
+
+  if (!lignes.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Aucun produit.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lignes.map((p) => {
+    const nomEtab = _cacheEtablissementsNoms[p.estId] || p.estId.slice(0, 6);
+    return '<tr data-ref-id="' + escapeHtml(p.id) + '" data-est-id="' + escapeHtml(p.estId) + '">' +
+      '<td>' + escapeHtml(nomEtab) + '</td>' +
+      '<td>' + escapeHtml(p.nom || "") + '</td>' +
+      '<td>' + escapeHtml(p.categorie || "") + '</td>' +
+      '<td>' + (p.prixVente || 0) + ' FCFA</td>' +
+      '<td>' + (p.stock || 0) + '</td>' +
+      '<td><button class="btn-supprimer-ligne">Suppr.</button></td>' +
+      '</tr>';
+  }).join("");
+}
+
+document.getElementById("filtreEtablissementProduits").addEventListener("change", rendreTableauGestionProduits);
+
+document.getElementById("produitsGestionTableBody").addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("btn-supprimer-ligne")) return;
+  const tr = e.target.closest("tr");
+  const refId = tr.dataset.refId;
+  const estId = tr.dataset.estId;
+  const produit = _cacheProduitsGestion.find((p) => p.id === refId && p.estId === estId);
+  if (!produit) return;
+  if (!confirm('Supprimer "' + (produit.nom || "ce produit") + '" ?')) return;
+  try {
+    await deleteDoc(produit.ref);
+    _cacheProduitsGestion = _cacheProduitsGestion.filter((p) => !(p.id === refId && p.estId === estId));
+    rendreTableauGestionProduits();
+  } catch (err) {
+    alert("Erreur suppression : " + err.message);
+  }
+});
+// app.js — squelette : horloge, navigation, calculatrice de base
+// (l'Inventaire est géré par inventaire.js, exposé sur window.InventaireModule)
+// (les Ventes sont gérées par ventes.js, exposé sur window.VentesModule)
+
+// --- Splash screen : affiché ~2.2s à l'ouverture, puis disparaît en fondu ---
+window.addEventListener("load", () => {
+  const splash = document.getElementById("splashScreen");
+  if (splash) {
+    setTimeout(() => splash.classList.add("hidden"), 2200);
+  }
+  if (window.InvitationModule) window.InvitationModule.traiterInvitationDepuisUrl();
+});
+
+// --- Date/heure dans l'en-tête ---
+function updateHeaderDate() {
+  const el = document.getElementById("headerDate");
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleDateString("fr-FR", {
+    day: "2-digit", month: "2-digit", year: "numeric"
+  }) + " — " + now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+updateHeaderDate();
+setInterval(updateHeaderDate, 30000);
+
+// --- Navigation bas d'écran : bascule entre calculatrice et modules ---
+function switchView(view) {
+  const calcZone = document.getElementById("calcZone");
+  const viewContainer = document.getElementById("viewContainer");
+
+  // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
+  if (window.InventaireModule) window.InventaireModule.cleanup();
+
+  const facturePanelEl = document.getElementById("facturePanel");
+
+  if (view === "calc") {
+    calcZone.hidden = false;
+    viewContainer.hidden = true;
+    viewContainer.innerHTML = "";
+    if (facturePanelEl && window.modeFacturierActif) facturePanelEl.hidden = false;
+  } else if (view === "inventaire") {
+    calcZone.hidden = true;
+    viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
+    if (window.InventaireModule) {
+      window.InventaireModule.render(viewContainer);
+    } else {
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
+    }
+  } else if (view === "factures") {
+    calcZone.hidden = true;
+    viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
+    if (window.FacturesModule) {
+      window.FacturesModule.render(viewContainer);
+    } else {
+      // Aucun module Factures n'existe encore (aucun fichier ne définit
+      // window.FacturesModule) : on l'affiche comme "à venir" plutôt que de
+      // laisser un message "Chargement..." qui ne se résout jamais.
+      viewContainer.innerHTML = `<p class="placeholder-msg">Module Factures — à construire à une prochaine étape.</p>`;
+    }
+  } else {
+    calcZone.hidden = true;
+    viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
+    viewContainer.innerHTML = `<p class="placeholder-msg">Module "${view}" — à construire à une prochaine étape.</p>`;
+  }
+}
+
+window.switchView = switchView;
+
+document.querySelectorAll(".nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const view = btn.dataset.view;
+    // Mode visiteur : l'établissement par défaut est créé en silence par auth.js,
+    // on ne bloque plus jamais la navigation avec une modale. S'il n'est pas encore
+    // prêt (connexion anonyme en cours, ~1s max), le module affiche son propre
+    // état de chargement le temps que window.AuthState.hasEstablishment passe à true.
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    switchView(view);
+  });
+});
+
+// --- Calculatrice de gestion (logique de base) ---
+let calcExpr = "";
+const exprEl = document.getElementById("calcExpression");
+const resultEl = document.getElementById("calcResult");
+let calcValeurNumerique = 0;
+let produitSelectionne = null;
+
+const resultValueEl = document.getElementById("calcResultValue");
+const resultUnitEl = document.getElementById("calcResultUnit");
+
+function ajusterTailleResultat() {
+  resultValueEl.style.fontSize = "";
+  const maxFontSize = parseFloat(getComputedStyle(resultValueEl).fontSize);
+  let taille = maxFontSize;
+  const minFontSize = 7;
+  while (resultValueEl.scrollWidth > resultValueEl.clientWidth && taille > minFontSize) {
+    taille -= 1;
+    resultValueEl.style.fontSize = taille + "px";
+  }
+}
+
+function renderCalc() {
+  exprEl.textContent = calcExpr || "\u00A0";
+  try {
+    const safeExpr = calcExpr
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/,/g, ".");
+    // eslint-disable-next-line no-new-func
+    const value = safeExpr.trim() === "" ? 0 : Function(`"use strict"; return (${safeExpr})`)();
+    calcValeurNumerique = isFinite(value) ? value : 0;
+    if (isFinite(value)) {
+      resultValueEl.textContent = value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+      resultUnitEl.hidden = false;
+    } else {
+      resultValueEl.textContent = "Erreur";
+      resultUnitEl.hidden = true;
+    }
+  } catch {
+    resultValueEl.textContent = "…";
+    resultUnitEl.hidden = true;
+  }
+  ajusterTailleResultat();
+  updateCoins();
+}
+
+function updateCoins() {
+  const elBenefice = document.getElementById("coinBeneficeUnite");
+  const elValeurStock = document.getElementById("coinValeurStock");
+  const elStockRestant = document.getElementById("coinStockRestant");
+  const elQuantite = document.getElementById("coinQuantite");
+  if (!elBenefice || !elValeurStock || !elStockRestant || !elQuantite) return;
+
+  if (!produitSelectionne) {
+    elBenefice.querySelector(".coin-value").textContent = "—";
+    elValeurStock.querySelector(".coin-value").textContent = "—";
+    elStockRestant.querySelector(".coin-value").textContent = "—";
+    elQuantite.querySelector(".coin-value").textContent = "—";
+    return;
+  }
+
+  const prixVente = produitSelectionne.prixVente;
+  const prixAchat = produitSelectionne.prixAchat;
+  const stock = produitSelectionne.stock;
+  const benefice = prixVente - prixAchat;
+  const valeurStock = stock * prixVente;
+  const quantite = prixVente > 0 && calcValeurNumerique > 0 ? calcValeurNumerique / prixVente : 0;
+
+  elBenefice.querySelector(".coin-value").textContent = benefice.toLocaleString("fr-FR") + " FCFA";
+  elValeurStock.querySelector(".coin-value").textContent = valeurStock.toLocaleString("fr-FR") + " FCFA";
+  elStockRestant.querySelector(".coin-value").textContent = stock + " u.";
+  elQuantite.querySelector(".coin-value").textContent = quantite > 0 ? quantite.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " u." : "—";
+}
+
+document.getElementById("numpad").addEventListener("click", (e) => {
+  const key = e.target.dataset.key;
+  if (!key) return;
+  e.target.classList.remove("key-glow");
+  void e.target.offsetWidth;
+  e.target.classList.add("key-glow");
+  if (key === "AC") {
+    calcExpr = "";
+  } else if (key === "⌫") {
+    calcExpr = calcExpr.slice(0, -1);
+  } else if (key === "=") {
+    // Le calcul est déjà recalculé en direct dans renderCalc()
+  } else {
+    const chiffresActuels = (calcExpr.match(/[0-9]/g) || []).length;
+    if (/[0-9]/.test(key) && chiffresActuels >= 10) {
+      // Limite atteinte : on ignore les chiffres supplémentaires
+    } else {
+      calcExpr += key;
+    }
+  }
+  renderCalc();
+});
+
+document.querySelectorAll(".calc-actions button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      // Cas très rare : connexion anonyme encore en cours (fraction de seconde).
+      alert("Initialisation en cours, réessaie dans un instant.");
+      return;
+    }
+    if (window.AuthState.accountType === "anonyme") {
+      alert("Veuillez vous inscrire en tant que propriétaire pour bénéficier de ce service.");
+      if (window.openRegisterModal) window.openRegisterModal();
+      return;
+    }
+    if (btn.dataset.action === "vente") {
+      if (window.VentesModule) {
+        window.VentesModule.ouvrirModaleVente(calcValeurNumerique > 0 ? calcValeurNumerique : "");
+      } else {
+        alert("Module Ventes en cours de chargement, réessaie dans un instant.");
+      }
+      return;
+    }
+    if (!(calcValeurNumerique > 0)) {
+      alert("Entre d'abord un montant avant de choisir une action.");
+      return;
+    }
+    if (window.MouvementsModule) {
+      btn.disabled = true;
+      window.MouvementsModule.enregistrerMouvement(btn.dataset.action, calcValeurNumerique).then((res) => {
+        btn.disabled = false;
+        if (!res.success) {
+          alert(res.message);
+        } else {
+          calcExpr = "";
+          calcValeurNumerique = 0;
+          renderCalc();
+        }
+      });
+    } else {
+      alert("Module Mouvements en cours de chargement, réessaie dans un instant.");
+    }
+  });
+});
+
+renderCalc();
+
+// --- Filtrage des tuiles Bar/Snack/Club selon le type d'etablissement ---
+// Types d'établissement pour lesquels la grille de marques (boissons) n'a pas
+// de sens et doit rester masquée. Tout type absent de cette liste (y compris
+// le "boutique" créé par défaut en mode visiteur) l'affiche.
+// ⚠️ À ajuster selon ton besoin réel si la liste ne te convient pas.
+const TYPES_SANS_GRILLE_MARQUES = ["hotel", "salon", "atelier", "service"];
+function filtrerCategoriesCalc(type) {
+  const masquer = TYPES_SANS_GRILLE_MARQUES.includes((type || "").toLowerCase());
+  const marqueGrid = document.getElementById("marqueGrid");
+  if (marqueGrid) marqueGrid.hidden = masquer;
+}
+window.filtrerCategoriesCalc = filtrerCategoriesCalc;
+
+// --- Tuiles Bar / Snack / Club : liste de produits filtrée par catégorie ---
+const calcProduitsListe = document.getElementById("calcProduitsListe");
+if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(calcProduitsListe);
+
+function fermerListeProduits() {
+  calcProduitsListe.hidden = true;
+  calcProduitsListe.innerHTML = "";
+}
+
+const MARQUES_TAILLES = {
+  "Régab": { petite: "Régab 33cl", grande: "Régab 65cl" },
+  "33 Export": { petite: "33 Export 33cl", grande: "33 Export 65cl" },
+  "Castel": { petite: "Castel Beer 33cl", grande: "Castel Beer 65cl" },
+  "Booster": { petite: "Booster 24cl", grande: "Booster 50cl" },
+  "Guinness": { petite: "Guinness 33cl", grande: "Guinness 65cl" },
+  "Beaufort": { petite: "Beaufort 33cl", grande: "Beaufort 65cl" },
+  "Tembo": { petite: "Tembo 33cl", grande: "Tembo 65cl" },
+  "Heineken": { petite: "Heineken 33cl", grande: "Heineken 65cl" },
+  "Malta Guinness": { petite: "Malta Guinness 33cl", grande: "Malta Guinness 50cl" },
+  "Coca-Cola": { petite: "Coca-Cola 33cl", grande: "Coca-Cola 1L" },
+  "Martini": { petite: "Martini 70cl", grande: "Martini 1L" },
+  "Grand Versant": { petite: "Grand Versant 70cl", grande: "Grand Versant 1L" },
+  "Label 5": { petite: "Label 5 70cl", grande: "Label 5 1L" },
+  "Ricard": { petite: "Ricard 70cl", grande: "Ricard 1L" },
+};
+
+const marqueTaillesEl = document.getElementById("marqueTailles");
+// NB : on n'attache PAS les flèches de scroll ici. attachScrollArrows() déplace
+// l'élément dans un wrapper `position: relative`, ce qui change son offsetParent
+// et casse le positionnement dynamique (top/left calculés par rapport à
+// #marqueGrid dans le gestionnaire de clic ci-dessous) — c'est ce qui causait
+// le popup mal placé / les flèches qui débordaient sur la grille. Ce popup n'a
+// de toute façon jamais plus de 2 entrées (petite/grande) : pas besoin de scroll.
+
+async function chargerTousProduitsSurs() {
+  if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
+  try {
+    return await window.InventaireModule.getTousLesProduits();
+  } catch (err) {
+    return [];
+  }
+}
+
+document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      alert("Initialisation en cours, réessaie dans un instant.");
+      return;
+    }
+    const marque = btn.dataset.marque;
+    const tailles = MARQUES_TAILLES[marque];
+    if (!tailles) return;
+    if (!marqueTaillesEl.hidden && marqueTaillesEl.dataset.openFor === marque) { marqueTaillesEl.hidden = true; marqueTaillesEl.dataset.openFor = ""; return; }
+    fermerListeProduits();
+    marqueTaillesEl.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
+    marqueTaillesEl.hidden = false;
+    marqueTaillesEl.style.top = (btn.offsetTop + btn.offsetHeight + 4) + "px";
+    marqueTaillesEl.style.left = "0px";
+    marqueTaillesEl.dataset.openFor = marque;
+    const tousLesProduits = await chargerTousProduitsSurs();
+    marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
+      const p = tousLesProduits.find((x) => x.nom === nomProduit);
+      const label = taille;
+      const demo = window.InventaireModule?.PRODUITS_DEMO?.find((x) => x.nom === nomProduit);
+      const prixAffiche = p ? p.prixVente : (demo ? demo.prixVente : null);
+      const suffixe = prixAffiche != null ? ` · ${prixAffiche} FCFA` : " (non configuré)";
+      return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
+    }).join("");
+    const maxLeft = Math.max(0, btn.parentElement.offsetWidth - marqueTaillesEl.offsetWidth - 4);
+    marqueTaillesEl.style.left = Math.min(btn.offsetLeft, maxLeft) + "px";
+    marqueTaillesEl.querySelectorAll(".marque-taille-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
+        if (!p) {
+          alert("Ce produit n'est pas encore configuré dans l'inventaire.");
+          return;
+        }
+        if (modeFacturier) { ajouterLigneFacture(p); return; }
+        calcExpr = String(p.prixVente);
+        produitSelectionne = {
+          nom: p.nom,
+          prixVente: Number(p.prixVente) || 0,
+          prixAchat: Number(p.prixAchat) || 0,
+          stock: Number(p.stock) || 0,
+        };
+        renderCalc();
+        marqueTaillesEl.hidden = true;
+      });
+    });
+  });
+});
+
+document.getElementById("btnMarqueAutres").addEventListener("click", async () => {
+  if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+    alert("Initialisation en cours, réessaie dans un instant.");
+    return;
+  }
+  marqueTaillesEl.hidden = true;
+  calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
+  calcProduitsListe.hidden = false;
+  const tousLesProduits = await chargerTousProduitsSurs();
+  if (!tousLesProduits.length) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit dans l'inventaire.</p>`;
+    return;
+  }
+  calcProduitsListe.innerHTML = tousLesProduits.map((p) => `
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
+      <span class="calc-produit-nom">${p.nom}</span>
+      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+    </button>
+  `).join("");
+  calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const pf1 = tousLesProduits.find((x) => x.nom === item.dataset.nom);
+      if (modeFacturier) { ajouterLigneFacture(pf1); return; }
+      calcExpr = item.dataset.prix;
+      produitSelectionne = {
+        nom: item.dataset.nom,
+        prixVente: Number(item.dataset.prix) || 0,
+        prixAchat: Number(item.dataset.prixAchat) || 0,
+        stock: Number(item.dataset.stock) || 0,
+      };
+      renderCalc();
+      fermerListeProduits();
+    });
+  });
+});
+
+// --- Menu latéral ---
+const sideMenu = document.getElementById("sideMenu");
+function openSideMenu() {
+  sideMenu.hidden = false;
+}
+function closeSideMenu() {
+  sideMenu.hidden = true;
+}
+document.getElementById("btnMenu").addEventListener("click", openSideMenu);
+document.getElementById("btnCloseMenu").addEventListener("click", closeSideMenu);
+document.getElementById("sideMenuOverlay").addEventListener("click", closeSideMenu);
+document.getElementById("menuRenameEstablishment").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.openAuthModal) window.openAuthModal();
+});
+document.getElementById("menuImportProduits").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
+  closeSideMenu();
+  if (!window.InventaireModule || !window.InventaireModule.importProduitsDemo) {
+    alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Importer 56 produits de démo (Bar, Snack, Club) dans l'inventaire ?")) return;
+  try {
+    const res = await window.InventaireModule.importProduitsDemo();
+    if (res.success) {
+      alert(res.count + " produits importés avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de l'import : " + err.message);
+  }
+});
+
+document.getElementById("menuLogin").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.openLoginModal) window.openLoginModal();
+});
+
+document.getElementById("menuLoginGerant").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.ouvrirEcranConnexionGerant) window.ouvrirEcranConnexionGerant();
+});
+document.getElementById("menuCreateAccount").addEventListener("click", () => {
+  closeSideMenu();
+  if (window.openRegisterModal) window.openRegisterModal();
+});
+
+// --- Service Worker (mode PWA / hors-connexion) ---
+// Purge forcée, une seule fois par appareil : supprime tout ancien Service
+// Worker resté bloqué en cache-first (ex. magerante-v1) avant d'enregistrer
+// le nouveau. Nécessaire car certains téléphones ne libèrent jamais l'ancien
+// SW même après un vidage manuel du cache navigateur.
+// --- Recherche de produit par nom (clavier alphabétique) ---
+const btnToggleClavier = document.getElementById("btnToggleClavier");
+const abcKeyboard = document.getElementById("abcKeyboard");
+const numpadEl = document.getElementById("numpad");
+let modeRecherche = false;
+let rechercheTexte = "";
+let tousProduits = [];
+
+function afficherResultatsRecherche() {
+  const texte = rechercheTexte.trim().toLowerCase();
+  if (!texte) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Tape le nom d'un produit...</p>`;
+    calcProduitsListe.hidden = false;
+    return;
+  }
+  const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
+  if (!resultats.length) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit trouvé pour "${rechercheTexte}".</p>`;
+    calcProduitsListe.hidden = false;
+    return;
+  }
+  calcProduitsListe.innerHTML = resultats.map((p) => `
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
+      <span class="calc-produit-nom">${p.nom}</span>
+      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+    </button>
+  `).join("");
+  calcProduitsListe.hidden = false;
+  calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const pf2 = tousProduits.find((x) => x.nom === item.dataset.nom);
+      if (modeFacturier) { ajouterLigneFacture(pf2); return; }
+      calcExpr = item.dataset.prix;
+      produitSelectionne = {
+        nom: item.dataset.nom,
+        prixVente: Number(item.dataset.prix) || 0,
+        prixAchat: Number(item.dataset.prixAchat) || 0,
+        stock: Number(item.dataset.stock) || 0,
+      };
+      renderCalc();
+      fermerListeProduits();
+      quitterModeRecherche();
+    });
+  });
+}
+
+function quitterModeRecherche() {
+  modeRecherche = false;
+  rechercheTexte = "";
+  abcKeyboard.hidden = true;
+  numpadEl.hidden = false;
+  if (btnToggleClavier) btnToggleClavier.classList.remove("active");
+  exprEl.textContent = calcExpr || "\u00A0";
+}
+
+async function toggleModeRecherche() {
+  modeRecherche = !modeRecherche;
+  if (modeRecherche) {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      alert("Initialisation en cours, réessaie dans un instant.");
+      modeRecherche = false;
+      return;
+    }
+    if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) {
+      alert("Module Inventaire en cours de chargement, réessaie dans un instant.");
+      modeRecherche = false;
+      return;
+    }
+    if (btnToggleClavier) btnToggleClavier.classList.add("active");
+    abcKeyboard.hidden = false;
+    numpadEl.hidden = true;
+    rechercheTexte = "";
+    exprEl.textContent = "Recherche : \u00A0";
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Chargement des produits...</p>`;
+    calcProduitsListe.hidden = false;
+    try {
+      tousProduits = await window.InventaireModule.getTousLesProduits();
+    } catch (err) {
+      tousProduits = [];
+    }
+    afficherResultatsRecherche();
+  } else {
+    quitterModeRecherche();
+    fermerListeProduits();
+  }
+}
+if (btnToggleClavier) {
+  btnToggleClavier.addEventListener("click", toggleModeRecherche);
+}
+const btnAbcToggle = document.getElementById("btnAbcToggle");
+if (btnAbcToggle) {
+  btnAbcToggle.addEventListener("click", toggleModeRecherche);
+}
+
+abcKeyboard.addEventListener("click", (e) => {
+  const lettre = e.target.dataset.letter;
+  if (lettre === undefined) return;
+  e.target.classList.remove("key-glow");
+  void e.target.offsetWidth;
+  e.target.classList.add("key-glow");
+  if (lettre === "⌫") {
+    rechercheTexte = rechercheTexte.slice(0, -1);
+  } else {
+    rechercheTexte += lettre;
+  }
+  exprEl.textContent = "Recherche : " + (rechercheTexte || "\u00A0");
+  afficherResultatsRecherche();
+});
+
+const btnAbcEntree = document.getElementById("btnAbcEntree");
+if (btnAbcEntree) {
+  btnAbcEntree.addEventListener("click", () => {
+    const texte = rechercheTexte.trim().toLowerCase();
+    const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
+    if (resultats.length === 1) {
+      const p = resultats[0];
+      if (modeFacturier) { ajouterLigneFacture(p); return; }
+      calcExpr = String(p.prixVente);
+      produitSelectionne = {
+        nom: p.nom,
+        prixVente: Number(p.prixVente) || 0,
+        prixAchat: Number(p.prixAchat) || 0,
+        stock: Number(p.stock) || 0,
+      };
+      renderCalc();
+    }
+    fermerListeProduits();
+    quitterModeRecherche();
+  });
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      if (!localStorage.getItem("sw_force_cleared_v2")) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+        localStorage.setItem("sw_force_cleared_v2", "1");
+      }
+    } catch (err) {
+      console.warn("Purge de l'ancien Service Worker impossible :", err);
+    }
+    navigator.serviceWorker.register("./sw.js").catch((err) => {
+      console.warn("Échec enregistrement du service worker :", err);
+    });
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (!marqueTaillesEl.hidden && !marqueTaillesEl.contains(e.target) && !e.target.closest(".marque-cell:not(.marque-cell-autres)")) {
+    marqueTaillesEl.hidden = true;
+  }
+});
+document.getElementById("menuGenererDemoComplet").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
+  closeSideMenu();
+  if (!window.DemoModule || !window.DemoModule.genererDonneesDemoCompletes) {
+    alert("Module Démo en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Générer toutes les données de démonstration (produits, ventes, comptes, établissements) ?")) return;
+  try {
+    const res = await window.DemoModule.genererDonneesDemoCompletes();
+    if (res.success) {
+      alert("Données démo générées avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de la génération : " + err.message);
+  }
+});
+
+document.getElementById("menuSupprimerDemo").addEventListener("click", async () => {
+  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
+    alert("Cette action est réservée au compte administrateur.");
+    return;
+  }
+  closeSideMenu();
+  if (!window.DemoModule || !window.DemoModule.supprimerDonneesDemo) {
+    alert("Module Démo en cours de chargement, réessaie dans un instant.");
+    return;
+  }
+  if (!confirm("Supprimer toutes les données de démonstration ?")) return;
+  try {
+    const res = await window.DemoModule.supprimerDonneesDemo();
+    if (res.success) {
+      alert(res.count + " éléments de démo supprimés avec succès !");
+    } else {
+      alert("Erreur : " + res.message);
+    }
+  } catch (err) {
+    alert("Erreur lors de la suppression : " + err.message);
+  }
+});
+
+
+// --- Mode Facturier (lignes multiples) ---
+let modeFacturier = false;
+let lignesFacture = [];
+
+function ajouterLigneFacture(p) {
+  if (!p || !p.id) {
+    alert("Ce produit n'est pas configuré correctement (id manquant).");
+    return;
+  }
+  const quantite = calcValeurNumerique > 0 ? calcValeurNumerique : 1;
+  const prixUnitaire = Number(p.prixVente) || 0;
+  lignesFacture.push({
+    produitId: p.id,
+    nom: p.nom,
+    prixUnitaire,
+    quantite,
+    totalLigne: quantite * prixUnitaire,
+  });
+  calcExpr = "";
+  produitSelectionne = null;
+  renderCalc();
+  renderFacture();
+}
+
+function renderFacture() {
+  const factureLignesEl = document.getElementById("factureLignes");
+  const factureTotalEl = document.getElementById("factureTotalValue");
+  if (!factureLignesEl || !factureTotalEl) return;
+  if (lignesFacture.length === 0) {
+    factureLignesEl.innerHTML = `<p class="placeholder-msg">Aucune ligne. Tape une quantité puis choisis une marque.</p>`;
+  } else {
+    factureLignesEl.innerHTML = lignesFacture.map((l, i) => `
+      <div class="facture-ligne" data-index="${i}">
+        <span class="facture-ligne-nom">${l.nom}</span>
+        <span class="facture-ligne-detail">${l.quantite} × ${l.prixUnitaire.toLocaleString("fr-FR")} FCFA</span>
+        <span class="facture-ligne-total">${l.totalLigne.toLocaleString("fr-FR")} FCFA</span>
+        <button class="facture-ligne-suppr" data-index="${i}">✕</button>
+      </div>
+    `).join("");
+  }
+  const total = lignesFacture.reduce((acc, l) => acc + l.totalLigne, 0);
+  factureTotalEl.textContent = total.toLocaleString("fr-FR") + " FCFA";
+}
+
+const btnToggleFacturier = document.getElementById("btnToggleFacturier");
+const facturePanel = document.getElementById("facturePanel");
+const calcActionsEl = document.querySelector(".calc-actions");
+if (btnToggleFacturier) {
+  btnToggleFacturier.addEventListener("click", () => {
+    modeFacturier = !modeFacturier;
+    window.modeFacturierActif = modeFacturier;
+    btnToggleFacturier.classList.toggle("active", modeFacturier);
+    btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
+    if (facturePanel) facturePanel.hidden = !modeFacturier;
+    if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
+    // calc-display reste visible dans les deux modes : c'est la même calculatrice,
+    // seule la formule change (ajout de ligne en mode facturier).
+    calcExpr = "";
+    produitSelectionne = null;
+    renderCalc();
+    renderFacture();
+  });
+}
+
+const factureLignesContainer = document.getElementById("factureLignes");
+if (factureLignesContainer) {
+  factureLignesContainer.addEventListener("click", (e) => {
+    const btn = e.target.closest(".facture-ligne-suppr");
+    if (!btn) return;
+    const idx = Number(btn.dataset.index);
+    lignesFacture.splice(idx, 1);
+    renderFacture();
+  });
+}
+
+const btnFactureAnnuler = document.getElementById("btnFactureAnnuler");
+if (btnFactureAnnuler) {
+  btnFactureAnnuler.addEventListener("click", () => {
+    if (lignesFacture.length && !confirm("Annuler toute la facture en cours ?")) return;
+    lignesFacture = [];
+    renderFacture();
+  });
+}
+
+const btnFactureValider = document.getElementById("btnFactureValider");
+if (btnFactureValider) {
+  btnFactureValider.addEventListener("click", async () => {
+    if (!lignesFacture.length) {
+      alert("Ajoute au moins une ligne avant de valider.");
+      return;
+    }
+    if (!window.VentesModule || !window.VentesModule.enregistrerVenteLigne) {
+      alert("Module Ventes en cours de chargement, réessaie dans un instant.");
+      return;
+    }
+    btnFactureValider.disabled = true;
+    btnFactureValider.textContent = "Enregistrement...";
+    const lignesAValider = [...lignesFacture];
+    const erreurs = [];
+    for (const ligne of lignesAValider) {
+      const res = await window.VentesModule.enregistrerVenteLigne(ligne.produitId, ligne.quantite);
+      if (!res.success) {
+        erreurs.push(ligne.nom + " : " + res.message);
+      } else {
+        const idx = lignesFacture.findIndex((l) => l === ligne);
+        if (idx !== -1) lignesFacture.splice(idx, 1);
+      }
+    }
+    btnFactureValider.disabled = false;
+    btnFactureValider.textContent = "✅ Valider la facture";
+    renderFacture();
+    if (erreurs.length) {
+      alert("Facture partiellement enregistrée. Erreurs :\n" + erreurs.join("\n"));
+    } else {
+      alert("Facture enregistrée avec succès !");
+    }
+  });
+}
+// auth.js — mode visiteur complet : connexion anonyme automatique ET
+// création automatique de l'établissement par défaut, 100% invisible.
+// L'utilisateur n'a plus jamais besoin de remplir de formulaire pour
+// commencer à utiliser Inventaire / Caisse / Ventes. Il pourra renommer
+// son établissement plus tard depuis le menu "Plus" (modale réutilisée
+// dans ce cas précis, à la demande de l'utilisateur uniquement).
+import {
+  auth, db, doc, getDoc, setDoc, serverTimestamp,
+  onAuthStateChanged, signInAnonymously,
+  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+const ADMIN_EMAIL = "magerante241@gmail.com";
+window.ADMIN_EMAIL = ADMIN_EMAIL;
+
+const authGate = document.getElementById("authGate");
+const establishmentView = document.getElementById("authEstablishmentView");
+const registerView = document.getElementById("authRegisterView");
+const loginView = document.getElementById("authLoginView");
+const etablissementNomEl = document.getElementById("etablissementNom");
+const accountStatusItem = document.getElementById("accountStatusItem");
+const btnAdminAccess = document.getElementById("btnAdminAccess");
+const menuDashboardBtn = document.getElementById("menuDashboard");
+const menuImportProduitsBtn = document.getElementById("menuImportProduits");
+if (menuDashboardBtn) menuDashboardBtn.addEventListener("click", () => { window.location.href = "dashboard.html"; });
+
+window.AuthState = { ready: false, hasEstablishment: false, accountType: "anonyme", validated: false };
+
+const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
+
+if (btnAdminAccess) {
+  btnAdminAccess.addEventListener("click", () => {
+    window.location.href = "admin.html";
+  });
+}
+
+function hideAllViews() {
+  establishmentView.hidden = true;
+  registerView.hidden = true;
+  loginView.hidden = true;
+}
+
+// Attend jusqu'à 5s que la connexion anonyme se termine, au lieu d'échouer
+// immédiatement si le formulaire est rempli et validé très vite après l'ouverture.
+function attendreUid() {
+  if (auth.currentUser?.uid) return Promise.resolve(auth.currentUser.uid);
+  return new Promise((resolve) => {
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      if (auth.currentUser?.uid) {
+        clearInterval(interval);
+        resolve(auth.currentUser.uid);
+      } else if (tries > 25) {
+        clearInterval(interval);
+        resolve(null);
+      }
+    }, 200);
+  });
+}
+
+function openEstablishmentModal() {
+  // N'est plus déclenchée automatiquement : uniquement si l'utilisateur
+  // choisit explicitement "Personnaliser mon établissement" (ex. menu Plus).
+  hideAllViews();
+  const nameInput = document.getElementById("establishmentName");
+  const currentName = etablissementNomEl.textContent.trim();
+  if (nameInput && currentName && currentName !== "MAGERANTE") {
+    nameInput.value = currentName;
+  }
+  establishmentView.hidden = false;
+  authGate.hidden = false;
+}
+function openRegisterModal() {
+  hideAllViews();
+  const nomInput = document.getElementById("regEtablissementNom");
+  const currentName = etablissementNomEl.textContent.trim();
+  if (nomInput && currentName && currentName !== "MAGERANTE") {
+    nomInput.value = currentName;
+  }
+  registerView.hidden = false;
+  authGate.hidden = false;
+}
+function closeModal() {
+  authGate.hidden = true;
+}
+// Conservées pour un usage volontaire futur (menu latéral),
+// mais plus jamais appelées pour bloquer l'accès à un module.
+window.openAuthModal = openEstablishmentModal;
+window.openRegisterModal = openRegisterModal;
+
+function openLoginModal() {
+  hideAllViews();
+  loginView.hidden = false;
+  authGate.hidden = false;
+}
+window.openLoginModal = openLoginModal;
+
+document.getElementById("linkGoToLogin")?.addEventListener("click", (e) => { e.preventDefault(); openLoginModal(); });
+
+document.getElementById("btnUtiliserPosition")?.addEventListener("click", () => {
+  const gpsAffichageEl = document.getElementById("regGpsAffichage");
+  if (!navigator.geolocation) {
+    if (gpsAffichageEl) gpsAffichageEl.value = "Géolocalisation non supportée par ce navigateur.";
+    return;
+  }
+  if (gpsAffichageEl) gpsAffichageEl.value = "Localisation en cours...";
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      window.gpsCaptureLat = position.coords.latitude;
+      window.gpsCaptureLng = position.coords.longitude;
+      if (gpsAffichageEl) gpsAffichageEl.value = `Position capturée : ${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+    },
+    (err) => {
+      if (gpsAffichageEl) gpsAffichageEl.value = "Impossible de récupérer la position : " + err.message;
+    }
+  );
+});
+document.getElementById("linkGoToRegister")?.addEventListener("click", (e) => { e.preventDefault(); openRegisterModal(); });
+
+document.getElementById("btnCloseAuth").addEventListener("click", closeModal);
+authGate.addEventListener("click", (e) => {
+  if (e.target === authGate) closeModal();
+});
+
+// --- Création (manuelle, via modale) ou mise à jour de l'établissement ---
+document.getElementById("btnCreateEstablishment").addEventListener("click", async () => {
+  const name = document.getElementById("establishmentName").value.trim();
+  const type = document.getElementById("establishmentType").value;
+  const errorEl = document.getElementById("establishmentError");
+  const btn = document.getElementById("btnCreateEstablishment");
+  errorEl.textContent = "";
+  if (!name) {
+    errorEl.textContent = "Donne un nom à ton établissement.";
+    return;
+  }
+  const uid = await attendreUid();
+  if (!uid) {
+    errorEl.textContent = "Connexion impossible : " + (window.AuthState.lastAuthError || "erreur inconnue (pas de connexion anonyme détectée)");
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Enregistrement...";
+  try {
+    await setDoc(doc(db, "establishments", uid), {
+      name,
+      type,
+      ownerId: uid,
+      createdAt: serverTimestamp()
+    }, { merge: true });
+    await setDoc(doc(db, "users", uid), {
+      role: "PROPRIETAIRE",
+      establishmentId: uid,
+      createdAt: serverTimestamp()
+    }, { merge: true });
+    await ouvrirApplication(uid);
+  } catch (err) {
+    errorEl.textContent = "Erreur : " + err.message;
+    btn.disabled = false;
+    btn.textContent = "Valider et démarrer";
+  }
+});
+
+// --- Afficher/masquer le mot de passe dans le formulaire d'inscription ---
+document.getElementById("btnToggleRegPassword").addEventListener("click", () => {
+  const pwdInput = document.getElementById("regPassword");
+  pwdInput.type = pwdInput.type === "password" ? "text" : "password";
+});
+
+document.getElementById("btnToggleLoginPassword").addEventListener("click", () => {
+  const pwdInput = document.getElementById("loginPassword");
+  pwdInput.type = pwdInput.type === "password" ? "text" : "password";
+});
+
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errorEl = document.getElementById("loginError");
+  const btn = document.getElementById("btnLogin");
+  errorEl.textContent = "";
+  if (!email || !password) {
+    errorEl.textContent = "Merci de remplir ton e-mail et le mot de passe.";
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Connexion...";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+      errorEl.textContent = "E-mail ou mot de passe incorrect.";
+    } else if (err.code === "auth/invalid-email") {
+      errorEl.textContent = "Adresse e-mail invalide.";
+    } else if (err.code === "auth/too-many-requests") {
+      errorEl.textContent = "Trop de tentatives. Reessaie dans quelques minutes.";
+    } else {
+      errorEl.textContent = "Erreur : " + err.message;
+    }
+    btn.disabled = false;
+    btn.textContent = "Se connecter";
+  }
+});
+
+document.getElementById("linkForgotPassword")?.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const errorEl = document.getElementById("loginError");
+  if (!email) {
+    errorEl.textContent = "Indique ton e-mail ci-dessus, puis clique de nouveau sur ce lien.";
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    errorEl.textContent = "E-mail envoye ! Verifie ta boite de reception.";
+  } catch (err) {
+    if (err.code === "auth/user-not-found") {
+      errorEl.textContent = "Aucun compte associe a cet e-mail.";
+    } else if (err.code === "auth/invalid-email") {
+      errorEl.textContent = "Adresse e-mail invalide.";
+    } else {
+      errorEl.textContent = "Erreur : " + err.message;
+    }
+  }
+});
+
+document.getElementById("menuLogout").addEventListener("click", async () => {
+  try {
+    localStorage.removeItem("magerante_wasGerant");
+    await signOut(auth);
+    location.reload();
+  } catch (err) {
+    console.warn("Deconnexion impossible :", err);
+  }
+});
+
+// --- Inscription propriétaire : transforme la session anonyme en compte
+// permanent (mêmes uid/établissement/données, rien n'est perdu ni dupliqué) ---
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  const nom = document.getElementById("regNom").value.trim();
+  const prenom = document.getElementById("regPrenom").value.trim();
+  const telephone = document.getElementById("regTelephone").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value;
+  const etablissementNom = document.getElementById("regEtablissementNom").value.trim();
+  const etablissementType = document.getElementById("regEtablissementType").value;
+  const localisation = document.getElementById("regLocalisation").value.trim();
+  const whatsappEtablissement = document.getElementById("regWhatsappEtablissement").value.trim();
+  const gpsLat = window.gpsCaptureLat || null;
+  const gpsLng = window.gpsCaptureLng || null;
+  const lienGoogleMaps = (gpsLat && gpsLng) ? `https://www.google.com/maps?q=${gpsLat},${gpsLng}` : null;
+  const errorEl = document.getElementById("registerError");
+  const btn = document.getElementById("btnRegister");
+  errorEl.textContent = "";
+
+  if (!nom || !prenom || !telephone || !email || !password || !etablissementNom) {
+    errorEl.textContent = "Merci de remplir tous les champs obligatoires.";
+    return;
+  }
+  if (password.length < 6) {
+    errorEl.textContent = "Le mot de passe doit contenir au moins 6 caractères.";
+    return;
+  }
+  const uid = await attendreUid();
+  if (!uid) {
+    errorEl.textContent = "Connexion impossible : " + (window.AuthState.lastAuthError || "erreur inconnue (pas de connexion anonyme détectée)");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Création du compte...";
+  try {
+    const credential = EmailAuthProvider.credential(email, password);
+    await linkWithCredential(auth.currentUser, credential);
+
+    await setDoc(doc(db, "users", uid), {
+      nom, prenom, telephone, email,
+      role: "PROPRIETAIRE",
+      accountType: "enregistre",
+      validated: false,
+      establishmentId: uid,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    await setDoc(doc(db, "establishments", uid), {
+      name: etablissementNom,
+      type: etablissementType,
+      localisation,
+      whatsappEtablissement: whatsappEtablissement || null,
+      gps: (gpsLat && gpsLng) ? { lat: gpsLat, lng: gpsLng } : null,
+      lienGoogleMaps,
+      telephone,
+      status: "en_attente",
+      ownerId: uid,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    window.AuthState.accountType = "enregistre";
+    window.AuthState.validated = false;
+    updateAccountStatusBadge();
+    await ouvrirApplication(uid);
+  } catch (err) {
+    if (err.code === "auth/email-already-in-use") {
+      errorEl.textContent = "Cet e-mail est déjà utilisé par un autre compte.";
+    } else if (err.code === "auth/invalid-email") {
+      errorEl.textContent = "Adresse e-mail invalide.";
+    } else if (err.code === "auth/weak-password") {
+      errorEl.textContent = "Mot de passe trop faible (6 caractères minimum).";
+    } else {
+      errorEl.textContent = "Erreur : " + err.message;
+    }
+    btn.disabled = false;
+    btn.textContent = "Créer mon compte";
+  }
+});
+
+function updateAccountStatusBadge() {
+  if (!accountStatusItem) return;
+  if (window.AuthState.accountType !== "enregistre") {
+    accountStatusItem.hidden = true;
+    return;
+  }
+  accountStatusItem.hidden = false;
+  if (window.AuthState.validated) {
+    accountStatusItem.textContent = "✅ Compte validé";
+    accountStatusItem.className = "side-menu-status validated";
+  } else {
+    accountStatusItem.textContent = "⏳ Compte en attente de validation";
+    accountStatusItem.className = "side-menu-status pending";
+  }
+  const menuInvite = document.getElementById("menuInviteGerant");
+  if (menuInvite) {
+    menuInvite.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  }
+  const menuDashboard = document.getElementById("menuDashboard");
+  if (menuDashboard) menuDashboard.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  const estConnecte = window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite";
+
+  const menuRename = document.getElementById("menuRenameEstablishment");
+  if (menuRename) {
+    menuRename.hidden = window.AuthState.role === "GERANT";
+  }
+
+  const menuLogout = document.getElementById("menuLogout");
+  if (menuLogout) {
+    menuLogout.hidden = !estConnecte;
+  }
+
+  const menuLogin = document.getElementById("menuLogin");
+  if (menuLogin) {
+    menuLogin.hidden = estConnecte;
+  }
+  const menuLoginGerant = document.getElementById("menuLoginGerant");
+  if (menuLoginGerant) {
+    menuLoginGerant.hidden = estConnecte;
+  }
+
+  const menuCreateAccount = document.getElementById("menuCreateAccount");
+  if (menuCreateAccount) {
+    menuCreateAccount.hidden = estConnecte;
+  }
+}
+
+async function ouvrirApplication(establishmentId) {
+  appState.establishmentId = establishmentId;
+  const estSnap = await getDoc(doc(db, "establishments", establishmentId));
+  const name = estSnap.exists() ? estSnap.data().name : DEFAULT_ESTABLISHMENT.name;
+  const type = estSnap.exists() ? estSnap.data().type : DEFAULT_ESTABLISHMENT.type;
+  window.AuthState.hasEstablishment = true;
+  window.AuthState.establishmentType = type;
+  etablissementNomEl.textContent = name;
+  if (window.filtrerCategoriesCalc) window.filtrerCategoriesCalc(type);
+  closeModal();
+}
+
+// Crée un établissement par défaut en silence, sans aucune interaction utilisateur.
+async function creerEtablissementParDefaut(uid) {
+  await setDoc(doc(db, "establishments", uid), {
+    name: DEFAULT_ESTABLISHMENT.name,
+    type: DEFAULT_ESTABLISHMENT.type,
+    ownerId: uid,
+    createdAt: serverTimestamp()
+  }, { merge: true });
+  await setDoc(doc(db, "users", uid), {
+    role: "PROPRIETAIRE",
+    establishmentId: uid,
+    createdAt: serverTimestamp()
+  }, { merge: true });
+}
+
+// --- Connexion anonyme automatique, invisible pour l'utilisateur ---
+onAuthStateChanged(auth, async (user) => {
+  const navPlusBtn = document.querySelector('.nav-btn[data-view="plus"]');
+  if (navPlusBtn) navPlusBtn.hidden = user?.email !== ADMIN_EMAIL;
+  if (menuImportProduitsBtn) menuImportProduitsBtn.hidden = user?.email !== ADMIN_EMAIL;
+  if (!user) {
+    if (btnAdminAccess) btnAdminAccess.hidden = true;
+    try {
+      await signInAnonymously(auth);
+    } catch (err) {
+      console.warn("Connexion anonyme impossible :", err); window.AuthState.lastAuthError = err && (err.code + " - " + err.message);
+    }
+    return;
+  }
+
+  if (btnAdminAccess) {
+    btnAdminAccess.hidden = !(!user.isAnonymous && user.email === ADMIN_EMAIL);
+  }
+
+  window.AuthState.ready = true;
+
+  let userSnap;
+  try {
+    userSnap = await getDoc(doc(db, "users", user.uid));
+  } catch (err) {
+    if (accountStatusItem) {
+      accountStatusItem.hidden = false;
+      accountStatusItem.textContent = "Erreur lecture profil : " + (err.code || err.message);
+      accountStatusItem.className = "side-menu-status pending";
+    }
+    console.warn("Erreur getDoc users :", err);
+    return;
+  }
+  if (!userSnap.exists()) {
+    const _inviteParams = new URLSearchParams(window.location.search);
+    if (_inviteParams.has("invite")) { return; }
+    if (localStorage.getItem("magerante_wasGerant") === "1") {
+      const authGateEl = document.getElementById("authGate");
+      const gerantLoginGateEl = document.getElementById("gerantLoginGate");
+      if (authGateEl) authGateEl.hidden = true;
+      if (gerantLoginGateEl) gerantLoginGateEl.hidden = false;
+      return;
+    }
+    // Mode visiteur : on crée l'établissement par défaut tout seul,
+    // aucune modale, aucune action requise de l'utilisateur.
+    try {
+      await creerEtablissementParDefaut(user.uid);
+      await ouvrirApplication(user.uid);
+    } catch (err) {
+      console.warn("Création automatique de l'établissement impossible :", err);
+      window.AuthState.hasEstablishment = false;
+    }
+    return;
+  }
+
+  const userData = userSnap.data();
+  const accountTypeReel = user.isAnonymous ? "anonyme" : "enregistre";
+  window.AuthState.accountType = accountTypeReel;
+  if (userData.accountType !== accountTypeReel) {
+    setDoc(doc(db, "users", user.uid), { accountType: accountTypeReel }, { merge: true }).catch((err) => {
+      console.warn("Correction accountType impossible :", err);
+    });
+  }
+  window.AuthState.validated = !!userData.validated;
+  window.AuthState.role = userData.role || "PROPRIETAIRE";
+  window.AuthState.email = user.email || null;
+  window.AuthState.nomGerant = userData.nom || null;
+  const gerantNomHeaderEl = document.getElementById("gerantNomHeader");
+  if (gerantNomHeaderEl) {
+    if (window.AuthState.role === "GERANT" && window.AuthState.nomGerant) {
+      gerantNomHeaderEl.textContent = window.AuthState.nomGerant;
+      gerantNomHeaderEl.hidden = false;
+    } else {
+      gerantNomHeaderEl.hidden = true;
+    }
+  }
+  updateAccountStatusBadge();
+  await ouvrirApplication(userData.establishmentId);
+});
+import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
+import { appState } from "./state.js";
+
+function calculerDebutFinJour() {
+  const debut = new Date();
+  debut.setHours(0, 0, 0, 0);
+  const fin = new Date(debut);
+  fin.setDate(fin.getDate() + 1);
+  return { debut, fin };
+}
+
+async function chargerResumeJour(estId, uid) {
+  const { debut, fin } = calculerDebutFinJour();
+  const ventesSnap = await getDocs(query(
+    collection(db, "establishments", estId, "ventes"),
+    where("date", ">=", debut),
+    where("date", "<", fin)
+  ));
+  let total = 0, nombre = 0;
+  ventesSnap.forEach((docSnap) => {
+    const v = docSnap.data();
+    if (v.auteurId === uid) {
+      total += v.montant || 0;
+      nombre += 1;
+    }
+  });
+  return { total, nombre };
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const menuBtn = document.getElementById("menuClotureGerant");
+  const clotureGate = document.getElementById("clotureGate");
+  const resumeEl = document.getElementById("clotureResume");
+  const errorEl = document.getElementById("clotureError");
+  const btnConfirmer = document.getElementById("btnConfirmerCloture");
+  const lienWhatsapp = document.getElementById("clotureLienWhatsapp");
+  const btnClose = document.getElementById("btnCloseCloture");
+
+  if (!menuBtn || !clotureGate) return;
+
+  menuBtn.addEventListener("click", async () => {
+    const sideMenu = document.getElementById("sideMenu");
+    if (sideMenu) sideMenu.hidden = true;
+    errorEl.textContent = "";
+    lienWhatsapp.hidden = true;
+    btnConfirmer.disabled = false;
+    btnConfirmer.textContent = "Envoyer mes comptes au propriétaire";
+    resumeEl.textContent = "Chargement du résumé...";
+    clotureGate.hidden = false;
+
+    const estId = appState.establishmentId;
+    const uid = auth.currentUser?.uid;
+    if (!estId || !uid) {
+      resumeEl.textContent = "Impossible de charger le résumé pour le moment.";
+      return;
+    }
+
+    try {
+      const { total, nombre } = await chargerResumeJour(estId, uid);
+      resumeEl.textContent = `Aujourd'hui : ${nombre} vente(s) pour un total de ${total.toLocaleString("fr-FR")} FCFA.`;
+      btnConfirmer.dataset.total = total;
+      btnConfirmer.dataset.nombre = nombre;
+
+      const estSnap = await getDoc(doc(db, "establishments", estId));
+      const telephoneProprietaire = estSnap.exists() ? estSnap.data().telephone : null;
+      if (telephoneProprietaire) {
+        const texte = `Bonjour, voici mes comptes du jour : ${nombre} vente(s), ${total.toLocaleString("fr-FR")} FCFA au total.`;
+        lienWhatsapp.href = `https://wa.me/${telephoneProprietaire}?text=${encodeURIComponent(texte)}`;
+        lienWhatsapp.hidden = false;
+      }
+    } catch (e) {
+      resumeEl.textContent = "Erreur lors du chargement du résumé.";
+      console.warn("Erreur resume cloture :", e);
+    }
+  });
+
+  if (btnClose) btnClose.addEventListener("click", () => { clotureGate.hidden = true; });
+  clotureGate.addEventListener("click", (e) => {
+    if (e.target === clotureGate) clotureGate.hidden = true;
+  });
+
+  if (btnConfirmer) {
+    btnConfirmer.addEventListener("click", async () => {
+      const estId = appState.establishmentId;
+      const uid = auth.currentUser?.uid;
+      if (!estId || !uid) return;
+      btnConfirmer.disabled = true;
+      btnConfirmer.textContent = "Envoi...";
+      try {
+        await addDoc(collection(db, "establishments", estId, "clotures"), {
+          gerantUid: uid,
+          totalVentes: Number(btnConfirmer.dataset.total || 0),
+          nombreVentes: Number(btnConfirmer.dataset.nombre || 0),
+          date: serverTimestamp(),
+        });
+        btnConfirmer.textContent = "Comptes envoyés ✅";
+      } catch (e) {
+        errorEl.textContent = "Erreur lors de l'envoi : " + (e.code || e.message);
+        btnConfirmer.disabled = false;
+        btnConfirmer.textContent = "Envoyer mes comptes au propriétaire";
+      }
+    });
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { menuBtn.hidden = true; return; }
+    menuBtn.hidden = !(window.AuthState && window.AuthState.role === "GERANT");
+  });
+});
+import { auth, db, collection, getDocs, getDoc, query, orderBy, where, doc, setDoc, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
+
+const canvas = document.getElementById("ventesChart");
+const ctx = canvas.getContext("2d");
+let chart = null;
+
+const canvasCategorie = document.getElementById("categorieChart");
+const ctxCategorie = canvasCategorie.getContext("2d");
+let chartCategorie = null;
+
+const listeGerantsEl = document.getElementById("listeGerants");
+const totalJourEl = document.getElementById("totalJour");
+const totalSemaineEl = document.getElementById("totalSemaine");
+const totalMoisEl = document.getElementById("totalMois");
+const btnRapportJour = document.getElementById("btnRapportJour");
+const btnRapportSemaine = document.getElementById("btnRapportSemaine");
+const btnRapportMois = document.getElementById("btnRapportMois");
+const rapportStatusEl = document.getElementById("rapportStatus");
+const listeRapportsEl = document.getElementById("historiqueRapports");
+const comparaisonContentEl = document.getElementById("comparaisonContent");
+const soldeContentEl = document.getElementById("soldeContent");
+const topProduitsContentEl = document.getElementById("topProduitsContent");
+const stockAlertBannerEl = document.getElementById("stockAlertBanner");
+const deficitAlertBannerEl = document.getElementById("deficitAlertBanner");
+const filtreClotureGerantEl = document.getElementById("filtreClotureGerant");
+const filtreCloturePeriodeEl = document.getElementById("filtreCloturePeriode");
+const btnExportCloturesEl = document.getElementById("btnExportClotures");
+let cloturesEnMemoire = [];
+let nomsGerantsEnMemoire = {};
+const infoEtablissementEl = document.getElementById("infoEtablissement");
+const listeCloturesEl = document.getElementById("listeClotures");
+
+function initTabs() {
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabBtns.forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+}
+
+async function chargerHistoriqueRapports(ownerUid) {
+  const rapportsSnap = await getDocs(query(collection(db, "establishments", ownerUid, "rapports"), orderBy("genereLe", "desc")));
+  listeRapportsEl.innerHTML = "";
+  if (rapportsSnap.empty) {
+    listeRapportsEl.innerHTML = "<li>Aucun rapport généré pour le moment.</li>";
+    return;
+  }
+  rapportsSnap.forEach((docSnap) => {
+    const d = docSnap.data();
+    const li = document.createElement("li");
+    const dateDebut = d.periodeDebut && d.periodeDebut.toDate ? d.periodeDebut.toDate() : null;
+    const dateStr = dateDebut ? dateDebut.toLocaleDateString("fr-FR") : "?";
+    const totalStr = (d.totalVentes || 0).toLocaleString("fr-FR");
+    const panierStr = Math.round(d.panierMoyen || 0).toLocaleString("fr-FR");
+    li.textContent = `${d.type || "?"} (${dateStr}) — ${totalStr} FCFA, ${d.nombreVentes || 0} ventes, panier moyen ${panierStr} FCFA`;
+    listeRapportsEl.appendChild(li);
+  });
+}
+
+function lundiDe(date) {
+  const d = new Date(date);
+  const jourSemaine = d.getDay();
+  const diff = (jourSemaine === 0 ? -6 : 1) - jourSemaine;
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function calculerPeriode(type, decalage = 0) {
+  const maintenant = new Date();
+  if (type === "jour") {
+    const debut = new Date(maintenant);
+    debut.setDate(debut.getDate() + decalage);
+    debut.setHours(0, 0, 0, 0);
+    const fin = new Date(debut);
+    fin.setDate(fin.getDate() + 1);
+    return { id: "jour-" + debut.toISOString().slice(0, 10), debut, fin };
+  }
+  if (type === "semaine") {
+    const debut = lundiDe(maintenant);
+    debut.setDate(debut.getDate() + decalage * 7);
+    const fin = new Date(debut);
+    fin.setDate(fin.getDate() + 7);
+    return { id: "semaine-" + debut.toISOString().slice(0, 10), debut, fin };
+  }
+  if (type === "mois") {
+    const debut = new Date(maintenant.getFullYear(), maintenant.getMonth() + decalage, 1);
+    const fin = new Date(maintenant.getFullYear(), maintenant.getMonth() + decalage + 1, 1);
+    return { id: "mois-" + debut.toISOString().slice(0, 7), debut, fin };
+  }
+  throw new Error("Type de période inconnu : " + type);
+}
+
+async function agregerVentes(ownerUid, debut, fin) {
+  const ventesSnap = await getDocs(query(
+    collection(db, "establishments", ownerUid, "ventes"),
+    where("date", ">=", debut),
+    where("date", "<", fin)
+  ));
+  const ventes = ventesSnap.docs.map((d) => d.data());
+
+  const produitsSnap = await getDocs(collection(db, "establishments", ownerUid, "produits"));
+  const produitsParId = {};
+  produitsSnap.forEach((p) => { produitsParId[p.id] = p.data(); });
+
+  let totalVentes = 0;
+  const parCategorie = {};
+  const parProduit = {};
+  const parGerant = {};
+
+  ventes.forEach((v) => {
+    const montant = v.montant || 0;
+    totalVentes += montant;
+
+    let categorie = "Vente libre";
+    if (v.type === "produit" && v.produitId && produitsParId[v.produitId]) {
+      categorie = produitsParId[v.produitId].categorie || "Sans catégorie";
+    }
+    parCategorie[categorie] = (parCategorie[categorie] || 0) + montant;
+
+    if (v.type === "produit" && v.produitId) {
+      if (!parProduit[v.produitId]) {
+        parProduit[v.produitId] = {
+          produitId: v.produitId,
+          nom: v.produitNom || produitsParId[v.produitId]?.nom || "Produit",
+          quantite: 0,
+          montant: 0,
+        };
+      }
+      parProduit[v.produitId].quantite += v.quantite || 0;
+      parProduit[v.produitId].montant += montant;
+    }
+
+    if (v.auteurId) {
+      if (!parGerant[v.auteurId]) parGerant[v.auteurId] = { montant: 0, nombre: 0 };
+      parGerant[v.auteurId].montant += montant;
+      parGerant[v.auteurId].nombre += 1;
+    }
+  });
+
+  const nombreVentes = ventes.length;
+  const panierMoyen = nombreVentes > 0 ? totalVentes / nombreVentes : 0;
+  const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
+
+  const produitsEnRupture = [];
+  produitsSnap.forEach((p) => {
+    const d = p.data();
+    if ((d.stock || 0) <= 0) produitsEnRupture.push({ produitId: p.id, nom: d.nom || "Produit" });
+  });
+
+  return { totalVentes, nombreVentes, panierMoyen, parCategorie, topProduits, produitsEnRupture, parGerant };
+}
+
+
+async function agregerMouvements(ownerUid, debut, fin) {
+  const mouvementsSnap = await getDocs(query(
+    collection(db, "establishments", ownerUid, "mouvements"),
+    where("date", ">=", debut),
+    where("date", "<", fin)
+  ));
+  let totalAchats = 0, totalDepenses = 0, totalRecettes = 0, totalEntreesStock = 0;
+  mouvementsSnap.forEach((docSnap) => {
+    const d = docSnap.data();
+    const montant = d.montant || 0;
+    if (d.type === "achat") totalAchats += montant;
+    else if (d.type === "depense") totalDepenses += montant;
+    else if (d.type === "recette") totalRecettes += montant;
+    else if (d.type === "entree-stock") totalEntreesStock += montant;
+  });
+  return { totalAchats, totalDepenses, totalRecettes, totalEntreesStock };
+}
+async function genererRapport(ownerUid, type) {
+  const { id, debut, fin } = calculerPeriode(type);
+  const { totalVentes, nombreVentes, panierMoyen, parCategorie, topProduits, produitsEnRupture } = await agregerVentes(ownerUid, debut, fin);
+
+  await setDoc(doc(db, "establishments", ownerUid, "rapports", id), {
+    type,
+    periodeDebut: debut,
+    periodeFin: fin,
+    totalVentes,
+    nombreVentes,
+    panierMoyen,
+    parCategorie,
+    topProduits,
+    produitsEnRupture,
+    genereParUid: auth.currentUser?.uid || null,
+    genereLe: serverTimestamp(),
+  });
+
+  return id;
+}
+
+function brancherBoutonsRapports(ownerUid) {
+  const brancher = (btn, type, label) => {
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      if (rapportStatusEl) rapportStatusEl.textContent = `Génération du rapport (${label})...`;
+      try {
+        const id = await genererRapport(ownerUid, type);
+        if (rapportStatusEl) rapportStatusEl.textContent = `Rapport "${id}" généré avec succès.`;
+        chargerHistoriqueRapports(ownerUid);
+      } catch (e) {
+        console.error(e);
+        if (rapportStatusEl) rapportStatusEl.textContent = "Erreur lors de la génération du rapport.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  };
+  brancher(btnRapportJour, "jour", "jour");
+  brancher(btnRapportSemaine, "semaine", "semaine");
+  brancher(btnRapportMois, "mois", "mois");
+}
+
+function afficherComparaison(actuel, precedent) {
+  const diff = actuel - precedent;
+  const pct = precedent > 0 ? Math.round((diff / precedent) * 100) : (actuel > 0 ? 100 : 0);
+  const signe = diff >= 0 ? "+" : "";
+  const couleur = diff >= 0 ? "#22c55e" : "#e5484d";
+  comparaisonContentEl.innerHTML = `
+    <div>Mois en cours : <strong>${actuel.toLocaleString("fr-FR")} FCFA</strong></div>
+    <div>Mois précédent : ${precedent.toLocaleString("fr-FR")} FCFA</div>
+    <div style="color:${couleur};">${signe}${diff.toLocaleString("fr-FR")} FCFA (${signe}${pct}%)</div>
+  `;
+}
+
+function afficherSolde(totalRecettes, totalDepenses, totalAchats) {
+  const solde = totalRecettes - totalDepenses - totalAchats;
+  const couleur = solde >= 0 ? "#22c55e" : "#e5484d";
+  soldeContentEl.innerHTML = `
+    <div>Recettes : ${totalRecettes.toLocaleString("fr-FR")} FCFA</div>
+    <div>Dépenses : ${totalDepenses.toLocaleString("fr-FR")} FCFA</div>
+    <div>Achats : ${totalAchats.toLocaleString("fr-FR")} FCFA</div>
+    <div style="color:${couleur}; font-weight:bold;">Solde net : ${solde.toLocaleString("fr-FR")} FCFA</div>
+  `;
+}
+
+function afficherTopProduits(topProduits) {
+  if (!topProduits.length) {
+    topProduitsContentEl.innerHTML = "<p>Aucune vente de produit sur la période.</p>";
+    return;
+  }
+  topProduitsContentEl.innerHTML = "<ol>" + topProduits.map((p) =>
+    `<li>${p.nom} — ${p.quantite} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
+  ).join("") + "</ol>";
+}
+
+function afficherAlerteStock(produitsEnRupture) {
+  if (!produitsEnRupture.length) {
+    stockAlertBannerEl.innerHTML = "";
+    return;
+  }
+  const noms = produitsEnRupture.map((p) => p.nom).join(", ");
+  stockAlertBannerEl.innerHTML = `<div class="stock-alert">⚠️ Rupture de stock : ${noms}</div>`;
+}
+
+function afficherAlerteDeficit(solde, totalRecettes, totalDepenses, totalAchats) {
+  const chargesTotales = totalDepenses + totalAchats;
+  if (solde < 0) {
+    deficitAlertBannerEl.innerHTML = `<div class="deficit-alert">🔴 Déficit : les dépenses et achats (${chargesTotales.toLocaleString("fr-FR")} FCFA) dépassent les recettes (${totalRecettes.toLocaleString("fr-FR")} FCFA). Solde net : ${solde.toLocaleString("fr-FR")} FCFA.</div>`;
+    return;
+  }
+  if (totalRecettes > 0 && chargesTotales > totalRecettes * 0.8) {
+    deficitAlertBannerEl.innerHTML = `<div class="deficit-warning">🟠 Avertissement : les dépenses et achats atteignent ${Math.round((chargesTotales / totalRecettes) * 100)}% des recettes.</div>`;
+    return;
+  }
+  deficitAlertBannerEl.innerHTML = "";
+}
+
+function afficherClotures() {
+  if (!listeCloturesEl) return;
+  const gerantFiltre = filtreClotureGerantEl ? filtreClotureGerantEl.value : "";
+  const periodeFiltre = filtreCloturePeriodeEl ? filtreCloturePeriodeEl.value : "tout";
+  let bornes = null;
+  if (periodeFiltre !== "tout") bornes = calculerPeriode(periodeFiltre);
+
+  const cloturesFiltrees = cloturesEnMemoire.filter((d) => {
+    if (gerantFiltre && d.gerantUid !== gerantFiltre) return false;
+    if (bornes) {
+      const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+      if (!dateObj || dateObj < bornes.debut || dateObj >= bornes.fin) return false;
+    }
+    return true;
+  });
+
+  listeCloturesEl.innerHTML = "";
+  if (!cloturesFiltrees.length) {
+    listeCloturesEl.innerHTML = "<li>Aucune clôture pour ces filtres.</li>";
+    return;
+  }
+  cloturesFiltrees.forEach((d) => {
+    const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+    const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
+    const nomGerant = nomsGerantsEnMemoire[d.gerantUid] || "Gérant";
+    const li = document.createElement("li");
+    li.textContent = `${nomGerant} — ${dateStr} — ${(d.totalVentes || 0).toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
+    listeCloturesEl.appendChild(li);
+  });
+}
+
+function brancherFiltresClotures() {
+  if (filtreClotureGerantEl) filtreClotureGerantEl.addEventListener("change", afficherClotures);
+  if (filtreCloturePeriodeEl) filtreCloturePeriodeEl.addEventListener("change", afficherClotures);
+}
+
+function cloturesFiltreesActuelles() {
+  const gerantFiltre = filtreClotureGerantEl ? filtreClotureGerantEl.value : "";
+  const periodeFiltre = filtreCloturePeriodeEl ? filtreCloturePeriodeEl.value : "tout";
+  let bornes = null;
+  if (periodeFiltre !== "tout") bornes = calculerPeriode(periodeFiltre);
+  return cloturesEnMemoire.filter((d) => {
+    if (gerantFiltre && d.gerantUid !== gerantFiltre) return false;
+    if (bornes) {
+      const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+      if (!dateObj || dateObj < bornes.debut || dateObj >= bornes.fin) return false;
+    }
+    return true;
+  });
+}
+
+function genererPdfClotures(liste, titre) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  pdf.setFontSize(16);
+  pdf.text(titre, 14, 18);
+  pdf.setFontSize(11);
+  let y = 30;
+  let totalGeneral = 0;
+  liste.forEach((d) => {
+    const dateObj = d.date && d.date.toDate ? d.date.toDate() : null;
+    const dateStr = dateObj ? dateObj.toLocaleString("fr-FR") : "?";
+    const nomGerant = nomsGerantsEnMemoire[d.gerantUid] || "Gérant";
+    const montant = d.totalVentes || 0;
+    totalGeneral += montant;
+    const ligne = `${nomGerant} — ${dateStr} — ${montant.toLocaleString("fr-FR")} FCFA (${d.nombreVentes || 0} ventes)`;
+    pdf.text(ligne, 14, y);
+    y += 8;
+    if (y > 280) { pdf.addPage(); y = 20; }
+  });
+  y += 6;
+  pdf.setFontSize(13);
+  pdf.text(`Total : ${totalGeneral.toLocaleString("fr-FR")} FCFA (${liste.length} clôture(s))`, 14, y);
+  pdf.save(titre.replace(/[^a-z0-9]+/gi, "_") + ".pdf");
+}
+
+function brancherExportPDF() {
+  if (!btnExportCloturesEl) return;
+  btnExportCloturesEl.addEventListener("click", () => {
+    const liste = cloturesFiltreesActuelles();
+    if (!liste.length) { alert("Aucune clôture à exporter avec ces filtres."); return; }
+    genererPdfClotures(liste, "Export clôtures MAGERANTE");
+  });
+}
+
+async function chargerDonnees(ownerUid) {
+  const { debut: debutMois, fin: finMois } = calculerPeriode("mois");
+  const { debut: debutMoisPrec, fin: finMoisPrec } = calculerPeriode("mois", -1);
+
+  const [donneesMois, donneesMoisPrec, donneesMouvements] = await Promise.all([
+    agregerVentes(ownerUid, debutMois, finMois),
+    agregerVentes(ownerUid, debutMoisPrec, finMoisPrec),
+    agregerMouvements(ownerUid, debutMois, finMois),
+  ]);
+
+  afficherComparaison(donneesMois.totalVentes, donneesMoisPrec.totalVentes);
+  afficherTopProduits(donneesMois.topProduits);
+  afficherAlerteStock(donneesMois.produitsEnRupture);
+  afficherSolde(donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
+  const soldeNet = donneesMouvements.totalRecettes - donneesMouvements.totalDepenses - donneesMouvements.totalAchats;
+  afficherAlerteDeficit(soldeNet, donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
+
+  const labelsCategorie = Object.keys(donneesMois.parCategorie);
+  const dataCategorie = labelsCategorie.map((k) => donneesMois.parCategorie[k]);
+  if (chartCategorie) chartCategorie.destroy();
+  chartCategorie = new Chart(ctxCategorie, {
+    type: "pie",
+    data: { labels: labelsCategorie, datasets: [{ data: dataCategorie, backgroundColor: ["#22c55e", "#f2c94c", "#4a90d9", "#e5484d", "#9b59b6", "#f39c12"] }] },
+    options: { responsive: true },
+  });
+
+  const ventesSnap = await getDocs(query(collection(db, "establishments", ownerUid, "ventes"), orderBy("date", "desc")));
+  const ventes = ventesSnap.docs.map((d) => d.data()).filter((v) => v.date);
+  const maintenant = new Date();
+  const parJour = {};
+  let totalJour = 0, totalSemaine = 0, totalMoisGlissant = 0;
+  ventes.forEach((v) => {
+    const d = v.date.toDate();
+    const cle = d.toISOString().slice(0, 10);
+    parJour[cle] = (parJour[cle] || 0) + (v.montant || 0);
+    const diffJours = (maintenant - d) / (1000 * 60 * 60 * 24);
+    if (diffJours <= 1) totalJour += v.montant || 0;
+    if (diffJours <= 7) totalSemaine += v.montant || 0;
+    if (diffJours <= 30) totalMoisGlissant += v.montant || 0;
+  });
+
+  totalJourEl.textContent = totalJour.toLocaleString("fr-FR") + " FCFA";
+  totalSemaineEl.textContent = totalSemaine.toLocaleString("fr-FR") + " FCFA";
+  totalMoisEl.textContent = totalMoisGlissant.toLocaleString("fr-FR") + " FCFA";
+
+  const labels = Object.keys(parJour).sort().slice(-14);
+  const data = labels.map((k) => parJour[k]);
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets: [{ label: "Ventes (FCFA)", data, borderColor: "#22c55e", tension: 0.3 }] },
+    options: { responsive: true, plugins: { legend: { display: false } } },
+  });
+
+  const gerantsSnap = await getDocs(collection(db, "establishments", ownerUid, "gerants"));
+  const nomsGerants = {};
+  listeGerantsEl.innerHTML = "";
+  if (gerantsSnap.empty) {
+    listeGerantsEl.innerHTML = "<li>Aucun gérant actif pour le moment.</li>";
+  } else {
+    gerantsSnap.forEach((g) => {
+      const d = g.data();
+      nomsGerants[g.id] = d.nom || "Gérant";
+      const stats = donneesMois.parGerant[g.id] || { montant: 0, nombre: 0 };
+      const li = document.createElement("li");
+      li.textContent = `${d.nom || "Sans nom"} — ${d.actif ? "actif" : "inactif"} — ${stats.montant.toLocaleString("fr-FR")} FCFA (${stats.nombre} ventes) ce mois`;
+      listeGerantsEl.appendChild(li);
+    });
+  }
+  nomsGerantsEnMemoire = nomsGerants;
+
+  if (filtreClotureGerantEl) {
+    const selectionActuelle = filtreClotureGerantEl.value;
+    filtreClotureGerantEl.innerHTML = '<option value="">Tous les gérants</option>';
+    Object.keys(nomsGerants).forEach((uid) => {
+      const opt = document.createElement("option");
+      opt.value = uid;
+      opt.textContent = nomsGerants[uid];
+      filtreClotureGerantEl.appendChild(opt);
+    });
+    filtreClotureGerantEl.value = selectionActuelle;
+  }
+
+  if (listeCloturesEl) {
+    const cloturesSnap = await getDocs(query(collection(db, "establishments", ownerUid, "clotures"), orderBy("date", "desc")));
+    cloturesEnMemoire = cloturesSnap.docs.map((c) => c.data());
+    afficherClotures();
+  }
+}
+
+async function chargerInfoEtablissement(ownerUid) {
+  const etabSnap = await getDoc(doc(db, "establishments", ownerUid));
+  if (!etabSnap.exists()) {
+    infoEtablissementEl.innerHTML = "<p>Aucune information disponible.</p>";
+    return;
+  }
+  const d = etabSnap.data();
+  infoEtablissementEl.innerHTML = `
+    <div><strong>Nom :</strong> ${d.name || "Non renseigné"}</div>
+    <div><strong>Type :</strong> ${d.type || "Non renseigné"}</div>
+  `;
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  try {
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (userSnap.exists() && userSnap.data().role === "GERANT") {
+      alert("Le tableau de bord est reserve au proprietaire.");
+      window.location.href = "index.html";
+      return;
+    }
+  } catch (e) {
+    console.warn("Verification du role impossible :", e);
+  }
+  initTabs();
+  chargerDonnees(user.uid);
+  brancherBoutonsRapports(user.uid);
+  chargerHistoriqueRapports(user.uid);
+  chargerInfoEtablissement(user.uid);
+  brancherFiltresClotures();
+  brancherExportPDF();
+});
+// demo.js — Génération et suppression de données de démonstration (admin uniquement)
+// Permet de tester toutes les fonctionnalités (stock, ventes, comptes en attente,
+// établissements par zone) sans polluer les vraies données. Tout ce qui est créé
+// ici porte le flag isDemo:true afin de pouvoir tout supprimer d'un clic.
+import {
+  db, doc, collection, addDoc, setDoc, getDocs, query, where,
+  writeBatch, serverTimestamp
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+function produitsRef() {
+  return collection(db, "establishments", appState.establishmentId, "produits");
+}
+function ventesRef() {
+  return collection(db, "establishments", appState.establishmentId, "ventes");
+}
+
+const PRODUITS_DEMO_ETENDU = [
+  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 700, stock: 80 },
+  { nom: "Castel Beer 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 100 },
+  { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 80 },
+  { nom: "Beaufort 33cl", categorie: "Bar", prixAchat: 417, prixVente: 700, stock: 60 },
+  { nom: "Guinness 33cl", categorie: "Bar", prixAchat: 583, prixVente: 1000, stock: 50 },
+  { nom: "33 Export 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 60 },
+  { nom: "Heineken 33cl", categorie: "Bar", prixAchat: 750, prixVente: 1100, stock: 50 },
+  { nom: "Tembo 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 70 },
+  { nom: "Malta Guinness 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 40 },
+  { nom: "Malta Guinness 50cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 30 },
+  { nom: "Coca-Cola 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 120 },
+  { nom: "Coca-Cola 1L", categorie: "Bar", prixAchat: 600, prixVente: 1000, stock: 40 },
+  { nom: "Martini 70cl", categorie: "Bar", prixAchat: 4500, prixVente: 7000, stock: 15 },
+  { nom: "Martini 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Grand Versant 70cl", categorie: "Bar", prixAchat: 2000, prixVente: 3500, stock: 15 },
+  { nom: "Grand Versant 1L", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
+  { nom: "Label 5 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 15 },
+  { nom: "Label 5 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
+  { nom: "Ricard 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 15 },
+  { nom: "Ricard 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
+  { nom: "Brochette de bœuf", categorie: "Snack", prixAchat: 500, prixVente: 1000, stock: 40 },
+  { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 2500, stock: 25 },
+  { nom: "Beignets (lot de 5)", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
+  { nom: "Whisky Johnnie Walker Red Label 70cl", categorie: "Club", prixAchat: 8000, prixVente: 15000, stock: 20 },
+  { nom: "Champagne Moët (bouteille)", categorie: "Club", prixAchat: 25000, prixVente: 40000, stock: 8 },
+];
+
+export async function genererProduitsDemo() {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Établissement non initialisé." };
+  }
+  const batch = writeBatch(db);
+  const ref = produitsRef();
+  PRODUITS_DEMO_ETENDU.forEach((p) => {
+    const newDocRef = doc(ref);
+    batch.set(newDocRef, {
+      ...p,
+      isDemo: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  });
+  await batch.commit();
+  return { success: true, count: PRODUITS_DEMO_ETENDU.length };
+}
+
+export async function genererVentesDemo(nombreVentes = 18) {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Établissement non initialisé." };
+  }
+  const snap = await getDocs(produitsRef());
+  const produits = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  if (produits.length === 0) {
+    return { success: false, message: "Aucun produit dans l'inventaire — importe d'abord les produits démo." };
+  }
+
+  const batch = writeBatch(db);
+  const ref = ventesRef();
+  const maintenant = Date.now();
+  const septJoursMs = 7 * 24 * 60 * 60 * 1000;
+
+  for (let i = 0; i < nombreVentes; i++) {
+    const dateAlea = new Date(maintenant - Math.random() * septJoursMs);
+    const nouvelleVenteRef = doc(ref);
+
+    if (Math.random() < 0.8) {
+      const produit = produits[Math.floor(Math.random() * produits.length)];
+      const qte = 1 + Math.floor(Math.random() * 4);
+      const montant = qte * (produit.prixVente || 0);
+      batch.set(nouvelleVenteRef, {
+        montant, type: "produit",
+        produitId: produit.id, produitNom: produit.nom,
+        quantite: qte,
+        date: dateAlea,
+        isDemo: true,
+      });
+    } else {
+      const montant = [500, 1000, 1500, 2000, 3000, 5000][Math.floor(Math.random() * 6)];
+      batch.set(nouvelleVenteRef, {
+        montant, type: "libre",
+        date: dateAlea,
+        isDemo: true,
+      });
+    }
+  }
+
+  await batch.commit();
+  return { success: true, count: nombreVentes };
+}
+
+export async function genererComptesEtZonesDemo() {
+  const comptesDemo = [
+    { nom: "Ndong", prenom: "Paul", email: "demo.paul.ndong@example.com", telephone: "074000001", zone: "Akanda" },
+    { nom: "Obiang", prenom: "Sylvie", email: "demo.sylvie.obiang@example.com", telephone: "074000002", zone: "Nzeng-Ayong" },
+    { nom: "Mba", prenom: "Jean", email: "demo.jean.mba@example.com", telephone: "074000003", zone: "Akanda" },
+    { nom: "Koumba", prenom: "Alice", email: "demo.alice.koumba@example.com", telephone: "074000004", zone: "Charbonnages" },
+  ];
+
+  const batch = writeBatch(db);
+
+  comptesDemo.forEach((c) => {
+    const uidRef = doc(collection(db, "users"));
+    const etabRef = doc(collection(db, "establishments"));
+    batch.set(uidRef, {
+      nom: c.nom, prenom: c.prenom, telephone: c.telephone, email: c.email,
+      role: "PROPRIETAIRE",
+      accountType: "enregistre",
+      validated: false,
+      establishmentId: etabRef.id,
+      isDemo: true,
+      updatedAt: serverTimestamp(),
+    });
+    batch.set(etabRef, {
+      name: "Bar demo " + c.prenom,
+      type: "bar",
+      localisation: c.zone,
+      whatsappEtablissement: null,
+      gps: null,
+      lienGoogleMaps: "",
+      telephone: c.telephone,
+      status: "en_attente",
+      ownerId: uidRef.id,
+      isDemo: true,
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  await batch.commit();
+  return { success: true, count: comptesDemo.length };
+}
+
+export async function genererDonneesDemoCompletes() {
+  const resProduits = await genererProduitsDemo();
+  if (!resProduits.success) return resProduits;
+  const resVentes = await genererVentesDemo();
+  const resComptes = await genererComptesEtZonesDemo();
+  return {
+    success: true,
+    resume: `${resProduits.count} produits, ${resVentes.count || 0} ventes, ${resComptes.count} comptes/établissements démo créés.`,
+  };
+}
+
+export async function supprimerDonneesDemo() {
+  let total = 0;
+
+  if (appState.establishmentId) {
+    const qProduits = query(produitsRef(), where("isDemo", "==", true));
+    const snapProduits = await getDocs(qProduits);
+    if (!snapProduits.empty) {
+      const batch1 = writeBatch(db);
+      snapProduits.docs.forEach((d) => batch1.delete(d.ref));
+      await batch1.commit();
+      total += snapProduits.size;
+    }
+
+    const qVentes = query(ventesRef(), where("isDemo", "==", true));
+    const snapVentes = await getDocs(qVentes);
+    if (!snapVentes.empty) {
+      const batch2 = writeBatch(db);
+      snapVentes.docs.forEach((d) => batch2.delete(d.ref));
+      await batch2.commit();
+      total += snapVentes.size;
+    }
+  }
+
+  const qUsers = query(collection(db, "users"), where("isDemo", "==", true));
+  const snapUsers = await getDocs(qUsers);
+  if (!snapUsers.empty) {
+    const batch3 = writeBatch(db);
+    snapUsers.docs.forEach((d) => batch3.delete(d.ref));
+    await batch3.commit();
+    total += snapUsers.size;
+  }
+
+  const qEtabs = query(collection(db, "establishments"), where("isDemo", "==", true));
+  const snapEtabs = await getDocs(qEtabs);
+  if (!snapEtabs.empty) {
+    const batch4 = writeBatch(db);
+    snapEtabs.docs.forEach((d) => batch4.delete(d.ref));
+    await batch4.commit();
+    total += snapEtabs.size;
+  }
+
+  return { success: true, count: total };
+}
+
+window.DemoModule = {
+  genererProduitsDemo,
+  genererVentesDemo,
+  genererComptesEtZonesDemo,
+  genererDonneesDemoCompletes,
+  supprimerDonneesDemo,
+};
+// firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, getDocs, setDoc, serverTimestamp,
+  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment,
+  writeBatch, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInAnonymously,
+  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCt2I_RjoWmfnJ-8N3kT9WIIezc9EqrSCA",
+  authDomain: "magerante-c1b66.firebaseapp.com",
+  projectId: "magerante-c1b66",
+  storageBucket: "magerante-c1b66.firebasestorage.app",
+  messagingSenderId: "264116354317",
+  appId: "1:264116354317:web:eae5b779f0ac3ad34bc444",
+  measurementId: "G-2JTMWVXVXW"
+};
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+export {
+  doc, getDoc, getDocs, setDoc, serverTimestamp,
+  collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment,
+  writeBatch, runTransaction,
+  onAuthStateChanged, signInAnonymously,
+  EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut
+};
+// inventaire.js — Module Inventaire : liste, ajout, édition, suppression des produits
+import {
+  db, doc, collection, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+let unsubscribe = null;
+let produitEnEdition = null;
+
+function produitsRef() {
+  return collection(db, "establishments", appState.establishmentId, "produits");
+}
+
+// --- Point d'entrée appelé par app.js quand l'onglet Inventaire est ouvert ---
+export function render(container) {
+  if (!appState.establishmentId) {
+    container.innerHTML = `<p class="placeholder-msg">Chargement de l'établissement...</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="inv-toolbar">
+      <span class="inv-title">Produits</span>
+      <button class="inv-add-btn" id="invAddBtn">+ Ajouter</button>
+    </div>
+    <div class="inv-list" id="invList"><p class="inv-empty">Chargement...</p></div>
+  `;
+  document.getElementById("invAddBtn").addEventListener("click", () => openModal(null));
+
+  if (unsubscribe) unsubscribe();
+  const q = query(produitsRef(), orderBy("nom"));
+  unsubscribe = onSnapshot(q, (snap) => {
+    const listEl = document.getElementById("invList");
+    if (!listEl) return; // vue quittée entre-temps
+
+    if (snap.empty) {
+      listEl.innerHTML = `<p class="inv-empty">Aucun produit pour l'instant.<br>Ajoute ton premier produit pour démarrer l'inventaire.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = "";
+    snap.forEach((docSnap) => {
+      const p = docSnap.data();
+      const isLow = Number(p.stock) <= 5;
+      const card = document.createElement("div");
+      card.className = "inv-card";
+      card.innerHTML = `
+        <div class="inv-card-info">
+          <span class="inv-card-nom">${escapeHtml(p.nom)}</span>
+          <span class="inv-card-meta">Achat ${formatFcfa(p.prixAchat)} · Vente ${formatFcfa(p.prixVente)}${p.categorie ? " · " + escapeHtml(p.categorie) : ""}</span>
+        </div>
+        <span class="inv-card-stock${isLow ? " low" : ""}">${p.stock} en stock</span>
+      `;
+      card.addEventListener("click", () => openModal({ id: docSnap.id, ...p }));
+      listEl.appendChild(card);
+    });
+  }, (err) => {
+    const listEl = document.getElementById("invList");
+    if (listEl) listEl.innerHTML = `<p class="inv-empty">Erreur de chargement : ${escapeHtml(err.message)}</p>`;
+  });
+}
+
+// --- Appelé par app.js quand on quitte l'onglet Inventaire ---
+export function cleanup() {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+  closeModal();
+}
+
+// --- Appelé par app.js (tuiles Bar/Snack/Club) pour récupérer les produits d'une catégorie ---
+export async function getProduitsParCategorie(categorie) {
+  if (!appState.establishmentId) return [];
+  const q = query(produitsRef(), where("categorie", "==", categorie), orderBy("nom"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// --- Appelé par app.js (recherche texte via clavier alphabétique) ---
+export async function getTousLesProduits() {
+  if (!appState.establishmentId) return [];
+  const q = query(produitsRef(), orderBy("nom"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+const CATEGORIES = ["Bar", "Snack", "Club"];
+
+function openModal(produit) {
+  produitEnEdition = produit;
+  const backdrop = document.createElement("div");
+  backdrop.className = "inv-modal-backdrop";
+  backdrop.id = "invModalBackdrop";
+  backdrop.innerHTML = `
+    <div class="inv-modal">
+      <h2>${produit ? "Modifier le produit" : "Nouveau produit"}</h2>
+      <p class="inv-error" id="invModalError"></p>
+      <div class="inv-field">
+        <label>Nom du produit</label>
+        <input type="text" id="invNom" value="${produit ? escapeAttr(produit.nom) : ""}" placeholder="Ex : Bière Régab 65cl">
+      </div>
+      <div class="inv-field">
+        <label>Catégorie</label>
+        <select id="invCategorie">
+          <option value="">— Choisir —</option>
+          ${CATEGORIES.map((c) => `<option value="${c}" ${produit && produit.categorie === c ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
+      </div>
+      <div class="inv-field">
+        <label>Prix d'achat (FCFA)</label>
+        <input type="number" id="invPrixAchat" value="${produit ? produit.prixAchat : ""}" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="inv-field">
+        <label>Prix de vente (FCFA)</label>
+        <input type="number" id="invPrixVente" value="${produit ? produit.prixVente : ""}" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="inv-field">
+        <label>Stock actuel</label>
+        <input type="number" id="invStock" value="${produit ? produit.stock : ""}" placeholder="0" inputmode="numeric">
+      </div>
+      <div class="inv-modal-actions">
+        <button class="inv-btn-secondary" id="invCancelBtn">Annuler</button>
+        <button class="inv-btn-primary" id="invSaveBtn">Enregistrer</button>
+      </div>
+      ${produit ? '<button class="inv-btn-danger" id="invDeleteBtn">Supprimer ce produit</button>' : ""}
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
+  document.getElementById("invCancelBtn").addEventListener("click", closeModal);
+  document.getElementById("invSaveBtn").addEventListener("click", saveProduit);
+  const delBtn = document.getElementById("invDeleteBtn");
+  if (delBtn) delBtn.addEventListener("click", supprimerProduit);
+}
+
+function closeModal() {
+  const backdrop = document.getElementById("invModalBackdrop");
+  if (backdrop) backdrop.remove();
+  produitEnEdition = null;
+}
+
+async function saveProduit() {
+  const errorEl = document.getElementById("invModalError");
+  const nom = document.getElementById("invNom").value.trim();
+  const categorie = document.getElementById("invCategorie").value;
+  const prixAchat = parseFloat(document.getElementById("invPrixAchat").value);
+  const prixVente = parseFloat(document.getElementById("invPrixVente").value);
+  const stock = parseInt(document.getElementById("invStock").value, 10);
+  errorEl.textContent = "";
+
+  if (!nom) { errorEl.textContent = "Donne un nom au produit."; return; }
+  if (!categorie) { errorEl.textContent = "Choisis une catégorie."; return; }
+  if (isNaN(prixAchat) || prixAchat < 0) { errorEl.textContent = "Prix d'achat invalide."; return; }
+  if (isNaN(prixVente) || prixVente < 0) { errorEl.textContent = "Prix de vente invalide."; return; }
+  if (isNaN(stock) || stock < 0) { errorEl.textContent = "Stock invalide."; return; }
+
+  const saveBtn = document.getElementById("invSaveBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Enregistrement...";
+
+  try {
+    if (produitEnEdition) {
+      await updateDoc(
+        doc(db, "establishments", appState.establishmentId, "produits", produitEnEdition.id),
+        { nom, categorie, prixAchat, prixVente, stock, updatedAt: serverTimestamp() }
+      );
+    } else {
+      await addDoc(produitsRef(), {
+        nom, categorie, prixAchat, prixVente, stock,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      });
+    }
+    closeModal();
+  } catch (err) {
+    errorEl.textContent = "Erreur : " + err.message;
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Enregistrer";
+  }
+}
+
+async function supprimerProduit() {
+  if (!produitEnEdition) return;
+  if (!confirm(`Supprimer "${produitEnEdition.nom}" ?`)) return;
+  try {
+    await deleteDoc(doc(db, "establishments", appState.establishmentId, "produits", produitEnEdition.id));
+    closeModal();
+  } catch (err) {
+    const errorEl = document.getElementById("invModalError");
+    if (errorEl) errorEl.textContent = "Erreur : " + err.message;
+  }
+}
+
+function formatFcfa(n) {
+  return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
+}
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function escapeAttr(str) { return escapeHtml(str); }
+
+
+const PRODUITS_DEMO = [
+  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 700, stock: 80 },
+  { nom: "Castel Beer 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 100 },
+  { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 80 },
+  { nom: "Beaufort 33cl", categorie: "Bar", prixAchat: 417, prixVente: 700, stock: 60 },
+  { nom: "Guinness 33cl", categorie: "Bar", prixAchat: 583, prixVente: 1000, stock: 50 },
+  { nom: "33 Export 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 60 },
+  { nom: "Heineken 33cl", categorie: "Bar", prixAchat: 750, prixVente: 1100, stock: 50 },
+  { nom: "Coca-Cola 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 120 },
+  { nom: "Fanta Orange 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Sprite 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+  { nom: "Eau minérale Andza 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
+  { nom: "Eau minérale Andza 1.5L", categorie: "Bar", prixAchat: 400, prixVente: 550, stock: 80 },
+  { nom: "Eau minérale Odzi 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
+  { nom: "Jus d'ananas 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
+  { nom: "Jus de mangue 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
+  { nom: "Vin rouge (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
+  { nom: "Vin blanc (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
+  { nom: "Vin rosé (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 20 },
+  { nom: "Whisky Johnnie Walker Red Label 70cl", categorie: "Club", prixAchat: 8000, prixVente: 15000, stock: 20 },
+  { nom: "Whisky Jack Daniel's 70cl", categorie: "Club", prixAchat: 10000, prixVente: 18000, stock: 15 },
+  { nom: "Pastis 51 70cl", categorie: "Club", prixAchat: 6000, prixVente: 12000, stock: 15 },
+  { nom: "Ricard 70cl", categorie: "Club", prixAchat: 6500, prixVente: 12500, stock: 15 },
+  { nom: "Gin Gordon's 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
+  { nom: "Vodka Smirnoff 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
+  { nom: "Rhum Negrita 70cl", categorie: "Club", prixAchat: 4500, prixVente: 9000, stock: 15 },
+  { nom: "Cognac Hennessy VS 70cl", categorie: "Club", prixAchat: 15000, prixVente: 28000, stock: 10 },
+  { nom: "Liqueur Baileys 70cl", categorie: "Club", prixAchat: 9000, prixVente: 16000, stock: 10 },
+  { nom: "Champagne Moët & Chandon 75cl", categorie: "Club", prixAchat: 25000, prixVente: 45000, stock: 6 },
+  { nom: "Vin mousseux 75cl", categorie: "Club", prixAchat: 3000, prixVente: 6000, stock: 15 },
+  { nom: "Chips paquet 45g", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
+  { nom: "Cacahuètes grillées sachet", categorie: "Snack", prixAchat: 200, prixVente: 400, stock: 50 },
+  { nom: "Biscuits paquet", categorie: "Snack", prixAchat: 250, prixVente: 450, stock: 40 },
+  { nom: "Chocolat tablette", categorie: "Snack", prixAchat: 400, prixVente: 700, stock: 30 },
+  { nom: "Brochettes de bœuf (unité)", categorie: "Snack", prixAchat: 500, prixVente: 1000, stock: 40 },
+  { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 3000, stock: 20 },
+  { nom: "Cigarettes Rothmans (paquet)", categorie: "Snack", prixAchat: 1000, prixVente: 1500, stock: 40 },
+  { nom: "Cigarettes Marlboro (paquet)", categorie: "Snack", prixAchat: 1200, prixVente: 1800, stock: 40 },
+  { nom: "Cigarettes Dunhill (paquet)", categorie: "Snack", prixAchat: 1300, prixVente: 2000, stock: 30 },
+  { nom: "Cigarettes London (paquet)", categorie: "Snack", prixAchat: 900, prixVente: 1400, stock: 30 },
+  { nom: "Glaçons (sachet)", categorie: "Snack", prixAchat: 200, prixVente: 500, stock: 60 },
+  { nom: "33 Export 65cl", categorie: "Bar", prixAchat: 500, prixVente: 800, stock: 40 },
+  { nom: "Beaufort 65cl", categorie: "Bar", prixAchat: 800, prixVente: 1300, stock: 40 },
+  { nom: "Guinness 65cl", categorie: "Bar", prixAchat: 1100, prixVente: 1900, stock: 30 },
+  { nom: "Heineken 65cl", categorie: "Bar", prixAchat: 1400, prixVente: 2100, stock: 30 },
+  { nom: "Coca-Cola 1L", categorie: "Bar", prixAchat: 500, prixVente: 900, stock: 60 },
+  { nom: "Booster 24cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 60 },
+  { nom: "Booster 50cl", categorie: "Bar", prixAchat: 700, prixVente: 1200, stock: 40 },
+  { nom: "Tembo 33cl", categorie: "Bar", prixAchat: 275, prixVente: 400, stock: 60 },
+  { nom: "Tembo 65cl", categorie: "Bar", prixAchat: 500, prixVente: 700, stock: 40 },
+  { nom: "Malta Guinness 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 40 },
+  { nom: "Malta Guinness 50cl", categorie: "Bar", prixAchat: 600, prixVente: 1000, stock: 30 },
+  { nom: "Martini Rosso 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Martini Bianco 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Grand Versant Rouge 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
+  { nom: "Grand Versant Blanc 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
+  { nom: "Martini 70cl", categorie: "Bar", prixAchat: 4500, prixVente: 7000, stock: 15 },
+  { nom: "Martini 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
+  { nom: "Grand Versant 70cl", categorie: "Bar", prixAchat: 2000, prixVente: 3500, stock: 15 },
+  { nom: "Grand Versant 1L", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
+  { nom: "Label 5 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 15 },
+  { nom: "Label 5 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
+  { nom: "Ricard 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
+];
+
+export async function importProduitsDemo() {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Établissement non initialisé." };
+  }
+  const batch = writeBatch(db);
+  const ref = produitsRef();
+  PRODUITS_DEMO.forEach((p) => {
+    const newDocRef = doc(ref);
+    batch.set(newDocRef, { ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  });
+  await batch.commit();
+  return { success: true, count: PRODUITS_DEMO.length };
+}
+
+window.InventaireModule = { render, cleanup, getProduitsParCategorie, getTousLesProduits, importProduitsDemo, PRODUITS_DEMO };
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { db, auth } from "./firebase-config.js";
+import { appState } from "./state.js";
+
+function genererToken() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+// Cree l'invitation (comme avant) ET enregistre immediatement le couple
+// telephone + code comme identifiant de connexion permanent du gerant,
+// independant de toute session technique.
+async function creerInvitationGerant(estId, nomGerant, telephone, code) {
+  const token = genererToken();
+  const telClean = (telephone || "").replace(/\D/g, "");
+  const codeClean = (code || "").replace(/\D/g, "");
+
+  await setDoc(doc(db, "invitations", token), {
+    estId, nomGerant, telephone: telClean, createdAt: new Date().toISOString()
+  });
+
+  await setDoc(doc(db, "gerant_logins", telClean), {
+    estId, nom: nomGerant, actif: true,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  // Le code PIN vit désormais dans une collection séparée, jamais lisible
+  // depuis le client (voir firestore.rules). Il n'est vérifié que côté
+  // serveur, via get(), au moment de la tentative de connexion du gérant.
+  await setDoc(doc(db, "gerant_codes", telClean), {
+    estId, code: codeClean,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  const lien = `${window.location.origin}${window.location.pathname}?invite=${token}`;
+  const texteWhatsapp = `Bonjour ${nomGerant}, voici ton acces MAGERANTE : ${lien}\n\nPour te reconnecter plus tard, utilise ton numero et le code ${codeClean} depuis l'ecran de connexion gerant.`;
+  const lienWhatsapp = telClean
+    ? `https://wa.me/${telClean}?text=${encodeURIComponent(texteWhatsapp)}`
+    : `https://wa.me/?text=${encodeURIComponent(texteWhatsapp)}`;
+  const sujet = "Ton acces MAGERANTE";
+  const corps = `Bonjour ${nomGerant},\n\nVoici ton lien d'acces a ton interface de gestion MAGERANTE :\n${lien}\n\nTon code de reconnexion : ${codeClean}\n\nClique sur le lien pour acceder directement a ton espace.`;
+  const lienEmail = `mailto:?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+  return { token, lien, lienWhatsapp, lienEmail };
+}
+
+function afficherEcranBienvenue(nomGerant, nomEtablissement) {
+  const splash = document.getElementById("splashScreen");
+  const authGate = document.getElementById("authGate");
+  const gerantGate = document.getElementById("gerantGate");
+  const gerantLoginGate = document.getElementById("gerantLoginGate");
+  const texte = document.getElementById("gerantWelcomeText");
+  const etablissementNomEl = document.getElementById("etablissementNom");
+  if (splash) splash.hidden = true;
+  if (authGate) authGate.hidden = true;
+  if (gerantLoginGate) gerantLoginGate.hidden = true;
+  if (texte) texte.textContent = nomGerant + ", tu es maintenant connecte(e) a " + (nomEtablissement || "ton etablissement") + ".";
+  if (etablissementNomEl) etablissementNomEl.textContent = nomEtablissement || "";
+  if (gerantGate) gerantGate.hidden = false;
+  const btn = document.getElementById("gerantContinueBtn");
+  if (btn) {
+    btn.onclick = () => {
+      gerantGate.hidden = true;
+      const appRoot = document.getElementById("appRoot");
+      if (appRoot) appRoot.hidden = false;
+      if (window.switchView) window.switchView("ventes");
+    };
+  }
+}
+
+async function traiterInvitationDepuisUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("invite");
+  if (!token) return null;
+
+  const invSnap = await getDoc(doc(db, "invitations", token));
+  if (!invSnap.exists()) {
+    alert("Lien d'invitation invalide ou expire.");
+    return null;
+  }
+  const data = invSnap.data();
+  const estId = data.estId;
+  const nomGerant = data.nomGerant;
+  const telephone = data.telephone;
+
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { await signInAnonymously(auth); return; }
+
+      appState.establishmentId = estId;
+
+      // viaToken : preuve exigée par la règle Firestore (voir firestore.rules)
+      // pour empêcher quiconque de s'auto-déclarer gérant d'un établissement
+      // sans connaître un token d'invitation réellement émis pour celui-ci.
+      await setDoc(doc(db, "establishments", estId, "gerants", user.uid), {
+        nom: nomGerant, telephone: telephone || null, actif: true, dateActivation: new Date().toISOString(),
+        viaToken: token
+      }, { merge: true });
+
+      await setDoc(doc(db, "users", user.uid), {
+        nom: nomGerant, telephone: telephone || null, role: "GERANT",
+        accountType: "invite", validated: true, establishmentId: estId,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+
+      window.AuthState = window.AuthState || {};
+      window.AuthState.ready = true;
+      window.AuthState.role = "GERANT";
+      window.AuthState.accountType = "invite";
+      window.AuthState.validated = true;
+
+      localStorage.setItem("magerante_wasGerant", "1");
+
+      let nomEtablissement = "";
+      try {
+        const estSnap = await getDoc(doc(db, "establishments", estId));
+        if (estSnap.exists()) nomEtablissement = estSnap.data().name || "";
+      } catch (e) { console.warn("Lecture etablissement impossible :", e); }
+
+      afficherEcranBienvenue(nomGerant, nomEtablissement);
+      resolve({ estId, nomGerant, uid: user.uid });
+    });
+  });
+}
+
+// Reconnexion permanente d'un gerant deja invite, depuis n'importe quel
+// appareil : numero WhatsApp + code a 4 chiffres fournis par le proprietaire.
+const PIN_MAX_TENTATIVES = 5;
+const PIN_BLOCAGE_MS = 5 * 60 * 1000; // 5 minutes
+
+function cleTentatives(telClean) {
+  return "magerante_pin_tentatives_" + telClean;
+}
+
+function verifierVerrouillage(telClean) {
+  try {
+    const raw = localStorage.getItem(cleTentatives(telClean));
+    if (!raw) return null;
+    const { count, bloqueJusqu } = JSON.parse(raw);
+    if (bloqueJusqu && Date.now() < bloqueJusqu) {
+      const minutesRestantes = Math.ceil((bloqueJusqu - Date.now()) / 60000);
+      return `Trop de tentatives. Réessaie dans ${minutesRestantes} min.`;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function enregistrerEchec(telClean) {
+  try {
+    const raw = localStorage.getItem(cleTentatives(telClean));
+    const actuel = raw ? JSON.parse(raw) : { count: 0 };
+    const count = (actuel.count || 0) + 1;
+    const data = { count };
+    if (count >= PIN_MAX_TENTATIVES) {
+      data.bloqueJusqu = Date.now() + PIN_BLOCAGE_MS;
+      data.count = 0;
+    }
+    localStorage.setItem(cleTentatives(telClean), JSON.stringify(data));
+  } catch { /* localStorage indisponible : on laisse passer plutôt que de bloquer l'usage normal */ }
+}
+
+function reinitialiserTentatives(telClean) {
+  try { localStorage.removeItem(cleTentatives(telClean)); } catch { /* ignore */ }
+}
+
+// Le verrou anti-brute-force ci-dessus reste côté client (contournable en
+// vidant le localStorage) — pour un vrai débit limité côté serveur, il
+// faudrait une Cloud Function. Mais le code lui-même n'est plus lisible en
+// clair par le client : il vit dans gerant_codes (lecture interdite), vérifié
+// uniquement par la règle Firestore côté serveur au moment de l'écriture.
+async function connecterGerantParCode(telephone, code) {
+  const telClean = (telephone || "").replace(/\D/g, "");
+  const codeClean = (code || "").replace(/\D/g, "");
+  if (!telClean || !codeClean) {
+    return { success: false, message: "Merci de remplir ton numero et ton code." };
+  }
+
+  const messageVerrou = verifierVerrouillage(telClean);
+  if (messageVerrou) {
+    return { success: false, message: messageVerrou };
+  }
+
+  let loginSnap;
+  try {
+    loginSnap = await getDoc(doc(db, "gerant_logins", telClean));
+  } catch (e) {
+    return { success: false, message: "Erreur de connexion : " + (e.code || e.message) };
+  }
+  if (!loginSnap.exists()) {
+    enregistrerEchec(telClean);
+    return { success: false, message: "Aucun acces trouve pour ce numero." };
+  }
+  const loginData = loginSnap.data();
+  if (loginData.actif === false) {
+    return { success: false, message: "Cet acces a ete desactive. Contacte ton responsable." };
+  }
+
+  const estId = loginData.estId;
+  const nomGerant = loginData.nom || "Gerant";
+
+  const uid = await new Promise((resolve) => {
+    if (auth.currentUser?.uid) { resolve(auth.currentUser.uid); return; }
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) { unsub(); resolve(user.uid); }
+    });
+  });
+
+  // Le code n'est plus jamais lu par le client (gerant_logins ne le contient
+  // plus). On tente directement l'ecriture avec le code saisi : c'est la
+  // regle Firestore qui le verifie cote serveur via gerant_codes (illisible
+  // depuis le client) et accepte ou refuse l'operation en consequence.
+  try {
+    await setDoc(doc(db, "establishments", estId, "gerants", uid), {
+      nom: nomGerant, telephone: telClean, actif: true, dateActivation: new Date().toISOString(),
+      codeSaisi: codeClean
+    }, { merge: true });
+  } catch (e) {
+    enregistrerEchec(telClean);
+    return { success: false, message: "Code incorrect." };
+  }
+  reinitialiserTentatives(telClean);
+
+  appState.establishmentId = estId;
+
+  await setDoc(doc(db, "users", uid), {
+    nom: nomGerant, telephone: telClean, role: "GERANT",
+    accountType: "invite", validated: true, establishmentId: estId,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  window.AuthState = window.AuthState || {};
+  window.AuthState.ready = true;
+  window.AuthState.role = "GERANT";
+  window.AuthState.accountType = "invite";
+  window.AuthState.validated = true;
+
+  localStorage.setItem("magerante_wasGerant", "1");
+
+  let nomEtablissement = "";
+  try {
+    const estSnap = await getDoc(doc(db, "establishments", estId));
+    if (estSnap.exists()) nomEtablissement = estSnap.data().name || "";
+  } catch (e) { console.warn("Lecture etablissement impossible :", e); }
+
+  afficherEcranBienvenue(nomGerant, nomEtablissement);
+  return { success: true, estId, nomGerant };
+}
+
+window.InvitationModule = { creerInvitationGerant, traiterInvitationDepuisUrl, connecterGerantParCode };
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnMenuInvite = document.getElementById("menuInviteGerant");
+  const inviteGate = document.getElementById("inviteGate");
+  const inputNom = document.getElementById("inviteNomGerant");
+  const inputTel = document.getElementById("inviteTelGerant");
+  const inputCode = document.getElementById("inviteCodeGerant");
+  const btnGenerer = document.getElementById("btnGenererInvitation");
+  const linksZone = document.getElementById("inviteLinksZone");
+  const lWhatsapp = document.getElementById("inviteLienWhatsapp");
+  const lEmail = document.getElementById("inviteLienEmail");
+  const btnClose = document.getElementById("btnCloseInvite");
+
+  if (btnMenuInvite && inviteGate) {
+    btnMenuInvite.addEventListener("click", () => {
+      const sideMenu = document.getElementById("sideMenu");
+      if (sideMenu) sideMenu.hidden = true;
+      linksZone.hidden = true;
+      inputNom.value = "";
+      if (inputTel) inputTel.value = "";
+      if (inputCode) inputCode.value = "";
+      inviteGate.hidden = false;
+    });
+    btnClose.addEventListener("click", () => { inviteGate.hidden = true; });
+    inviteGate.addEventListener("click", (e) => {
+      if (e.target === inviteGate) inviteGate.hidden = true;
+    });
+    btnGenerer.addEventListener("click", async () => {
+      const nom = inputNom.value.trim();
+      const tel = inputTel ? inputTel.value.trim() : "";
+      const code = inputCode ? inputCode.value.trim() : "";
+      if (!nom) { alert("Indique le nom du gerant."); return; }
+      if (!tel) { alert("Indique le numero WhatsApp du gerant."); return; }
+      if (!code || !/^\d{4}$/.test(code)) { alert("Choisis un code a 4 chiffres pour ce gerant."); return; }
+      if (!appState.establishmentId) { alert("Etablissement non pret, reessaie."); return; }
+      btnGenerer.textContent = "Generation...";
+      const resultat = await creerInvitationGerant(appState.establishmentId, nom, tel, code);
+      lWhatsapp.href = resultat.lienWhatsapp;
+      lEmail.href = resultat.lienEmail;
+      linksZone.hidden = false;
+      btnGenerer.textContent = "Generer le lien";
+    });
+  }
+
+  // --- Ecran de connexion gerant (numero + code), reutilisable a chaque
+  // reconnexion, sur n'importe quel appareil ---
+  const gerantLoginGate = document.getElementById("gerantLoginGate");
+  const gerantLoginTel = document.getElementById("gerantLoginTelephone");
+  const gerantLoginCode = document.getElementById("gerantLoginCode");
+  const btnGerantLogin = document.getElementById("btnGerantLogin");
+  const gerantLoginError = document.getElementById("gerantLoginError");
+  const linkOpenGerantLogin = document.getElementById("linkOpenGerantLogin");
+  const btnCloseGerantLogin = document.getElementById("btnCloseGerantLogin");
+
+  function ouvrirEcranConnexionGerant() {
+    const authGate = document.getElementById("authGate");
+    if (authGate) authGate.hidden = true;
+    if (gerantLoginError) gerantLoginError.textContent = "";
+    if (gerantLoginGate) gerantLoginGate.hidden = false;
+  }
+  window.ouvrirEcranConnexionGerant = ouvrirEcranConnexionGerant;
+
+  if (linkOpenGerantLogin) {
+    linkOpenGerantLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      ouvrirEcranConnexionGerant();
+    });
+  }
+  if (btnCloseGerantLogin && gerantLoginGate) {
+    btnCloseGerantLogin.addEventListener("click", () => { gerantLoginGate.hidden = true; });
+  }
+  if (btnGerantLogin) {
+    btnGerantLogin.addEventListener("click", async () => {
+      const tel = gerantLoginTel ? gerantLoginTel.value.trim() : "";
+      const code = gerantLoginCode ? gerantLoginCode.value.trim() : "";
+      if (gerantLoginError) gerantLoginError.textContent = "";
+      btnGerantLogin.disabled = true;
+      btnGerantLogin.textContent = "Connexion...";
+      const resultat = await connecterGerantParCode(tel, code);
+      btnGerantLogin.disabled = false;
+      btnGerantLogin.textContent = "Se connecter";
+      if (!resultat.success) {
+        if (gerantLoginError) gerantLoginError.textContent = resultat.message;
+        return;
+      }
+    });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("invite")) {
+    traiterInvitationDepuisUrl();
+  }
+});
+// mouvements.js — Enregistrement des mouvements de caisse du gerant
+// (achat, depense, recette, entree-stock) + journal d'audit silencieux
+// consultable par le proprietaire, independamment de la cloture.
+import {
+  auth, db, collection, addDoc, serverTimestamp
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+function mouvementsRef() {
+  return collection(db, "establishments", appState.establishmentId, "mouvements");
+}
+
+function journalRef() {
+  return collection(db, "establishments", appState.establishmentId, "journal");
+}
+
+export async function enregistrerMouvement(type, montant) {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Initialisation en cours, réessaie dans un instant." };
+  }
+  if (!(montant > 0)) {
+    return { success: false, message: "Montant invalide." };
+  }
+  const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+  const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
+  const payload = { type, montant, date: serverTimestamp(), auteurId, auteurNom };
+  try {
+    await addDoc(mouvementsRef(), payload);
+    await addDoc(journalRef(), { ...payload, source: "mouvement" });
+    return { success: true };
+  } catch (err) {
+    console.warn("Enregistrement mouvement impossible :", err);
+    return { success: false, message: "Erreur d'enregistrement, réessaie." };
+  }
+}
+
+window.MouvementsModule = { enregistrerMouvement };
+// Utilitaire generique : ajoute des fleches de scroll haut/bas dynamiques
+// autour de n'importe quel element scrollable, sans etre efface par les
+// futurs remplacements de innerHTML de cet element.
+function attachScrollArrows(el) {
+  if (!el || el.dataset.scrollArrowsAttached === "true") return;
+  el.dataset.scrollArrowsAttached = "true";
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "scroll-arrows-wrap";
+  el.parentNode.insertBefore(wrapper, el);
+  wrapper.appendChild(el);
+
+  const upBtn = document.createElement("button");
+  upBtn.type = "button";
+  upBtn.className = "scroll-arrow scroll-arrow-up";
+  upBtn.innerHTML = "▲";
+  upBtn.setAttribute("aria-label", "Défiler vers le haut");
+  upBtn.hidden = true;
+
+  const downBtn = document.createElement("button");
+  downBtn.type = "button";
+  downBtn.className = "scroll-arrow scroll-arrow-down";
+  downBtn.innerHTML = "▼";
+  downBtn.setAttribute("aria-label", "Défiler vers le bas");
+  downBtn.hidden = true;
+
+  wrapper.appendChild(upBtn);
+  wrapper.appendChild(downBtn);
+
+  function updateArrows() {
+    const canUp = el.scrollTop > 4;
+    const canDown = el.scrollTop < el.scrollHeight - el.clientHeight - 4;
+    upBtn.hidden = !canUp;
+    downBtn.hidden = !canDown;
+  }
+
+  upBtn.addEventListener("click", () => {
+    el.scrollBy({ top: -Math.round(el.clientHeight * 0.6), behavior: "smooth" });
+  });
+  downBtn.addEventListener("click", () => {
+    el.scrollBy({ top: Math.round(el.clientHeight * 0.6), behavior: "smooth" });
+  });
+
+  el.addEventListener("scroll", updateArrows);
+  const mo = new MutationObserver(() => requestAnimationFrame(updateArrows));
+  mo.observe(el, { childList: true, subtree: false });
+  window.addEventListener("resize", updateArrows);
+  requestAnimationFrame(updateArrows);
+}
+
+window.ScrollArrows = { attachScrollArrows };
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
+const serviceAccount = require("./serviceAccountKey.json");
+initializeApp({ credential: cert(serviceAccount) });
+const db = getFirestore();
+const auth = getAuth();
+
+const ETABLISSEMENTS = [
+  {
+    email: "bar.glass@demo.magerante.ga", password: "Demo1234!",
+    nom: "Établissement", prenom: "Test", telephone: "074123456",
+    name: "Le Régal de Glass", type: "bar", localisation: "Quartier Glass, Libreville",
+    produits: [
+      { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 400, stock: 120 },
+      { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 60 },
+      { nom: "Guinness 33cl", categorie: "Bar", prixAchat: 500, prixVente: 700, stock: 48 },
+      { nom: "Whisky Label 5 (verre)", categorie: "Bar", prixAchat: 800, prixVente: 1500, stock: 30 },
+      { nom: "Sucrerie Coca-Cola 33cl", categorie: "Bar", prixAchat: 250, prixVente: 400, stock: 90 },
+      { nom: "Eau minérale 1.5L", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+    ]
+  },
+  {
+    email: "maquis.nombakele@demo.magerante.ga", password: "Demo1234!",
+    nom: "Établissement", prenom: "Test", telephone: "066234567",
+    name: "Maquis Chez Nadège", type: "restaurant", localisation: "Nombakélé, Libreville",
+    produits: [
+      { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 2500, stock: 25 },
+      { nom: "Poisson salé sauce", categorie: "Snack", prixAchat: 1800, prixVente: 3000, stock: 20 },
+      { nom: "Riz gras (assiette)", categorie: "Snack", prixAchat: 800, prixVente: 1500, stock: 30 },
+      { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 700, stock: 70 },
+      { nom: "Sucrerie Fanta 33cl", categorie: "Bar", prixAchat: 250, prixVente: 400, stock: 80 },
+    ]
+  },
+  {
+    email: "club.louis@demo.magerante.ga", password: "Demo1234!",
+    nom: "Établissement", prenom: "Test", telephone: "077345678",
+    name: "VIP Lounge Louis", type: "club", localisation: "Quartier Louis, Libreville",
+    produits: [
+      { nom: "Bouteille Champagne Moët", categorie: "Club", prixAchat: 45000, prixVente: 75000, stock: 8 },
+      { nom: "Bouteille Whisky Chivas 12", categorie: "Club", prixAchat: 25000, prixVente: 45000, stock: 12 },
+      { nom: "Bouteille Vodka Ciroc", categorie: "Club", prixAchat: 30000, prixVente: 50000, stock: 10 },
+      { nom: "Cigarettes Marlboro (paquet)", categorie: "Snack", prixAchat: 1000, prixVente: 1500, stock: 40 },
+      { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
+      { nom: "Glaçons (sachet)", categorie: "Snack", prixAchat: 200, prixVente: 500, stock: 50 },
+    ]
+  },
+  {
+    email: "depot.akebe@demo.magerante.ga", password: "Demo1234!",
+    nom: "Établissement", prenom: "Test", telephone: "062456789",
+    name: "Dépôt Boissons Akébé", type: "autre", localisation: "Akébé, Libreville",
+    produits: [
+      { nom: "Casier Régab 33cl (12)", categorie: "Bar", prixAchat: 3200, prixVente: 4200, stock: 40 },
+      { nom: "Casier Castel Beer (12)", categorie: "Bar", prixAchat: 3300, prixVente: 4400, stock: 35 },
+      { nom: "Carton Coca-Cola (24)", categorie: "Bar", prixAchat: 5500, prixVente: 7000, stock: 20 },
+      { nom: "Bidon eau 5L", categorie: "Bar", prixAchat: 800, prixVente: 1200, stock: 60 },
+    ]
+  },
+  {
+    email: "snack.pk8@demo.magerante.ga", password: "Demo1234!",
+    nom: "Établissement", prenom: "Test", telephone: "065567890",
+    name: "Snack Bar PK8", type: "snack", localisation: "PK8, Libreville",
+    produits: [
+      { nom: "Beignets (sachet)", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
+      { nom: "Sandwich poulet", categorie: "Snack", prixAchat: 700, prixVente: 1200, stock: 25 },
+      { nom: "Jus de bissap 50cl", categorie: "Snack", prixAchat: 400, prixVente: 800, stock: 40 },
+      { nom: "Brochettes de bœuf (unité)", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 60 },
+      { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 450, stock: 80 },
+    ]
+  },
+];
+
+async function seed() {
+  for (const e of ETABLISSEMENTS) {
+    let uid;
+    try {
+      const user = await auth.createUser({
+        email: e.email, password: e.password,
+        displayName: `${e.prenom} ${e.nom}`,
+      });
+      uid = user.uid;
+      console.log(`✅ Compte créé : ${e.email} (${uid})`);
+    } catch (err) {
+      if (err.code === "auth/email-already-exists") {
+        const existing = await auth.getUserByEmail(e.email);
+        uid = existing.uid;
+        console.log(`↺ Compte déjà existant : ${e.email} (${uid})`);
+      } else { throw err; }
+    }
+
+    await db.doc(`users/${uid}`).set({
+      nom: e.nom, prenom: e.prenom, telephone: e.telephone, email: e.email,
+      role: "PROPRIETAIRE", accountType: "enregistre", validated: true,
+      establishmentId: uid,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    await db.doc(`establishments/${uid}`).set({
+      name: e.name, type: e.type, localisation: e.localisation,
+      status: "actif", ownerId: uid,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    const batch = db.batch();
+    const ref = db.collection(`establishments/${uid}/produits`);
+    e.produits.forEach((p) => {
+      const docRef = ref.doc();
+      batch.set(docRef, { ...p, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    });
+    await batch.commit();
+    console.log(`   → ${e.produits.length} produits ajoutés pour "${e.name}"`);
+  }
+  console.log("\nTerminé. Identifiants de connexion (mot de passe identique pour tous : Demo1234!) :");
+  ETABLISSEMENTS.forEach(e => console.log(`  ${e.name} → ${e.email}`));
+}
+
+seed().then(() => process.exit(0)).catch((err) => { console.error(err); process.exit(1); });
+// state.js — état partagé minimal entre les modules (auth, inventaire, futurs modules)
+export const appState = {
+  establishmentId: null
+};
+const CACHE_NAME = "magerante-v40"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
+const CORE_ASSETS = [
+  "./index.html",
+  "./dashboard.html",
+  "./style.css",
+  "./app.js",
+  "./auth.js",
+  "./firebase-config.js",
+  "./inventaire.js",
+  "./invitation.js",
+  "./cloture.js",
+  "./ventes.js",
+  "./mouvements.js",
+  "./dashboard.js",
+  "./manifest.json",
+  "./splash.png"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// STALE-WHILE-REVALIDATE : répond immédiatement avec le cache (façon WhatsApp),
+// puis va chercher la dernière version en fond pour la prochaine ouverture.
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  // Ne jamais mettre en cache les requêtes hors origine (Firebase Auth,
+  // Firestore, Google APIs, gstatic...) : ce sont des échanges temps réel /
+  // authentifiés qui ne doivent jamais être servis depuis un cache local.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((response) => {
+            cache.put(event.request, response.clone());
+            return response;
+          })
+          .catch(() => cached);
+        return cached || fetchPromise;
+      })
+    )
+  );
+});
+// ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
+// (deduit automatiquement le stock quand une vente est liee a un produit).
+import {
+  auth, db, doc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, increment, runTransaction
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+function ventesRef() {
+  return collection(db, "establishments", appState.establishmentId, "ventes");
+}
+
+function journalRef() {
+  return collection(db, "establishments", appState.establishmentId, "journal");
+}
+function produitsRef() {
+  return collection(db, "establishments", appState.establishmentId, "produits");
+}
+
+export function ouvrirModaleVente(montantInitial) {
+  if (!appState.establishmentId) {
+    alert("Initialisation en cours, réessaie dans un instant.");
+    return;
+  }
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "inv-modal-backdrop";
+  backdrop.id = "venteModalBackdrop";
+  backdrop.innerHTML = `
+    <div class="inv-modal">
+      <h2>Nouvelle vente</h2>
+      <p class="inv-error" id="venteModalError"></p>
+
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button type="button" id="venteBtnModeLibre" style="flex:1; padding:10px; border-radius:10px; border:1px solid #2e7d32; background:#2e7d32; color:white; font-weight:bold; font-size:13px;">Montant libre</button>
+        <button type="button" id="venteBtnModeProduit" style="flex:1; padding:10px; border-radius:10px; border:1px solid #2e7d32; background:white; color:#2e7d32; font-weight:bold; font-size:13px;">Produit inventaire</button>
+      </div>
+
+      <div id="venteLibreZone" class="inv-field">
+        <label>Montant de la vente (FCFA)</label>
+        <input type="number" id="venteMontantLibre" value="${montantInitial || ""}" placeholder="0" inputmode="decimal">
+      </div>
+
+      <div id="venteProduitZone" class="inv-field" hidden>
+        <label>Produit</label>
+        <select id="venteProduitSelect"><option value="">Chargement...</option></select>
+        <label style="margin-top:10px; display:block;">Quantité</label>
+        <input type="number" id="venteQuantite" value="1" min="1" inputmode="numeric">
+        <p id="venteTotalPreview" style="font-size:13px; color:#555; margin-top:8px;"></p>
+      </div>
+
+      <div class="inv-modal-actions">
+        <button class="inv-btn-secondary" id="venteCancelBtn">Annuler</button>
+        <button class="inv-btn-primary" id="venteSaveBtn">Enregistrer la vente</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
+  document.getElementById("venteCancelBtn").addEventListener("click", closeModal);
+
+  let mode = "libre";
+  let produitsCache = [];
+
+  const btnLibre = document.getElementById("venteBtnModeLibre");
+  const btnProduit = document.getElementById("venteBtnModeProduit");
+  const libreZone = document.getElementById("venteLibreZone");
+  const produitZone = document.getElementById("venteProduitZone");
+
+  function setMode(newMode) {
+    mode = newMode;
+    const actif = "background:#2e7d32; color:white;";
+    const inactif = "background:white; color:#2e7d32;";
+    btnLibre.style.cssText = "flex:1; padding:10px; border-radius:10px; border:1px solid #2e7d32; font-weight:bold; font-size:13px;" + (mode === "libre" ? actif : inactif);
+    btnProduit.style.cssText = "flex:1; padding:10px; border-radius:10px; border:1px solid #2e7d32; font-weight:bold; font-size:13px;" + (mode === "produit" ? actif : inactif);
+    libreZone.hidden = mode !== "libre";
+    produitZone.hidden = mode !== "produit";
+    if (mode === "produit" && produitsCache.length === 0) chargerProduits();
+  }
+  btnLibre.addEventListener("click", () => setMode("libre"));
+  btnProduit.addEventListener("click", () => setMode("produit"));
+
+  async function chargerProduits() {
+    const select = document.getElementById("venteProduitSelect");
+    try {
+      const snap = await getDocs(query(produitsRef(), orderBy("nom")));
+      produitsCache = [];
+      snap.forEach((d) => produitsCache.push({ id: d.id, ...d.data() }));
+      if (produitsCache.length === 0) {
+        select.innerHTML = `<option value="">Aucun produit dans l'inventaire</option>`;
+        return;
+      }
+      select.innerHTML = produitsCache.map((p) =>
+        `<option value="${p.id}">${escapeHtml(p.nom)} — ${Number(p.prixVente || 0).toLocaleString("fr-FR")} FCFA (${p.stock} en stock)</option>`
+      ).join("");
+      updateTotalPreview();
+    } catch (err) {
+      select.innerHTML = `<option value="">Erreur : ${escapeHtml(err.message)}</option>`;
+    }
+  }
+
+  function updateTotalPreview() {
+    const select = document.getElementById("venteProduitSelect");
+    const qteInput = document.getElementById("venteQuantite");
+    const preview = document.getElementById("venteTotalPreview");
+    const produit = produitsCache.find((p) => p.id === select.value);
+    if (!produit) { preview.textContent = ""; return; }
+    const qte = parseInt(qteInput.value, 10) || 0;
+    const total = Number(produit.prixVente || 0) * qte;
+    preview.textContent = "Total : " + total.toLocaleString("fr-FR") + " FCFA" +
+      (qte > produit.stock ? " — stock insuffisant (" + produit.stock + " disponible)" : "");
+    preview.style.color = qte > produit.stock ? "#b00020" : "#555";
+  }
+  backdrop.addEventListener("input", (e) => {
+    if (e.target.id === "venteQuantite" || e.target.id === "venteProduitSelect") updateTotalPreview();
+  });
+  backdrop.addEventListener("change", (e) => {
+    if (e.target.id === "venteProduitSelect") updateTotalPreview();
+  });
+
+  document.getElementById("venteSaveBtn").addEventListener("click", async () => {
+    const errorEl = document.getElementById("venteModalError");
+    errorEl.textContent = "";
+    const saveBtn = document.getElementById("venteSaveBtn");
+
+    if (mode === "libre") {
+      const montant = parseFloat(document.getElementById("venteMontantLibre").value);
+      if (isNaN(montant) || montant <= 0) { errorEl.textContent = "Montant invalide."; return; }
+      saveBtn.disabled = true; saveBtn.textContent = "Enregistrement...";
+      try {
+        const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+        const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
+        await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId });
+        addDoc(journalRef(), { type: "vente", sousType: "libre", montant, date: serverTimestamp(), auteurId, auteurNom, source: "vente" }).catch(() => {});
+        closeModal();
+      } catch (err) {
+        errorEl.textContent = "Erreur : " + err.message;
+        saveBtn.disabled = false; saveBtn.textContent = "Enregistrer la vente";
+      }
+    } else {
+      const select = document.getElementById("venteProduitSelect");
+      const produit = produitsCache.find((p) => p.id === select.value);
+      const qte = parseInt(document.getElementById("venteQuantite").value, 10);
+      if (!produit) { errorEl.textContent = "Choisis un produit."; return; }
+      if (isNaN(qte) || qte <= 0) { errorEl.textContent = "Quantité invalide."; return; }
+      if (qte > produit.stock) { errorEl.textContent = "Stock insuffisant (" + produit.stock + " disponible)."; return; }
+      const montant = Number(produit.prixVente || 0) * qte;
+      saveBtn.disabled = true; saveBtn.textContent = "Enregistrement...";
+      try {
+        const auteurId2 = auth.currentUser ? auth.currentUser.uid : null;
+        const auteurNom2 = (window.AuthState && window.AuthState.nomGerant) || null;
+        const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produit.id);
+        const venteDocRef = doc(ventesRef());
+
+        // Transaction atomique : on relit le stock réel au moment de l'écriture
+        // (pas le cache client, qui peut être périmé si un autre gérant a vendu
+        // entre-temps) et on refuse si ce n'est plus suffisant. Vente et
+        // décrément de stock réussissent ou échouent ensemble — jamais l'un
+        // sans l'autre.
+        await runTransaction(db, async (tx) => {
+          const produitSnap = await tx.get(produitDocRef);
+          const stockActuel = produitSnap.exists() ? Number(produitSnap.data().stock || 0) : 0;
+          if (qte > stockActuel) {
+            throw new Error("Stock insuffisant (" + stockActuel + " disponible désormais).");
+          }
+          tx.set(venteDocRef, {
+            montant, type: "produit", produitId: produit.id, produitNom: produit.nom,
+            quantite: qte, date: serverTimestamp(), auteurId: auteurId2
+          });
+          tx.update(produitDocRef, { stock: increment(-qte) });
+        });
+
+        addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
+        closeModal();
+      } catch (err) {
+        errorEl.textContent = "Erreur : " + err.message;
+        saveBtn.disabled = false; saveBtn.textContent = "Enregistrer la vente";
+      }
+    }
+  });
+}
+
+export async function enregistrerVenteLigne(produitId, quantite) {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Initialisation en cours, réessaie dans un instant." };
+  }
+  if (!produitId || !(quantite > 0)) {
+    return { success: false, message: "Ligne invalide." };
+  }
+  try {
+    const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+    const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
+    const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produitId);
+    const venteDocRef = doc(ventesRef());
+    let produitNom = "";
+    let montant = 0;
+    await runTransaction(db, async (tx) => {
+      const produitSnap = await tx.get(produitDocRef);
+      if (!produitSnap.exists()) {
+        throw new Error("Produit introuvable (a peut-être été supprimé).");
+      }
+      const data = produitSnap.data();
+      const stockActuel = Number(data.stock || 0);
+      if (quantite > stockActuel) {
+        throw new Error("Stock insuffisant pour " + (data.nom || "ce produit") + " (" + stockActuel + " disponible).");
+      }
+      produitNom = data.nom || "";
+      montant = Number(data.prixVente || 0) * quantite;
+      tx.set(venteDocRef, {
+        montant, type: "produit", produitId, produitNom,
+        quantite, date: serverTimestamp(), auteurId
+      });
+      tx.update(produitDocRef, { stock: increment(-quantite) });
+    });
+    addDoc(journalRef(), {
+      type: "vente", sousType: "produit", produitNom, quantite, montant,
+      date: serverTimestamp(), auteurId, auteurNom, source: "facture"
+    }).catch(() => {});
+    return { success: true, montant, produitNom };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+}
+
+function closeModal() {
+  const backdrop = document.getElementById("venteModalBackdrop");
+  if (backdrop) backdrop.remove();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+window.VentesModule = { ouvrirModaleVente, enregistrerVenteLigne };

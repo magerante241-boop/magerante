@@ -18,7 +18,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow list: if isAdmin();
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow delete: if false;
     }
@@ -26,30 +26,57 @@ service cloud.firestore {
     match /establishments/{estId} {
       allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
       allow list: if isAdmin();
-      allow create: if isSignedIn() && request.auth.uid == estId;
-      allow update: if isSignedIn() && request.auth.uid == estId;
+      allow create: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+      allow update: if isSignedIn() && (request.auth.uid == estId || isAdmin());
       allow delete: if false;
 
       match /produits/{prodId} {
-        allow read: if isSignedIn();
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow write: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
       }
 
       match /gerants/{gerantUid} {
         allow read, delete: if isSignedIn() && request.auth.uid == estId;
-        allow create: if isSignedIn() && (request.auth.uid == estId || request.auth.uid == gerantUid);
         allow read, update: if isSignedIn() && request.auth.uid == gerantUid;
+
+        // CORRIGÉ : avant, "auth.uid == gerantUid" seul suffisait — n'importe
+        // quel utilisateur pouvait s'auto-déclarer gérant de N'IMPORTE QUEL
+        // établissement en connaissant juste son estId, sans jamais avoir vu
+        // le lien d'invitation ni le code PIN. La création exige désormais
+        // une preuve vérifiée côté serveur via get() :
+        //   - soit le token du lien d'invitation (établi pour cet estId),
+        //   - soit le code PIN, comparé à gerant_codes (jamais lisible par
+        //     le client, voir plus bas).
+        allow create: if isSignedIn() && (
+          request.auth.uid == estId
+          ||
+          (
+            request.auth.uid == gerantUid &&
+            (
+              (
+                request.resource.data.viaToken is string &&
+                get(/databases/$(database)/documents/invitations/$(request.resource.data.viaToken)).data.estId == estId
+              )
+              ||
+              (
+                request.resource.data.codeSaisi is string &&
+                get(/databases/$(database)/documents/gerant_codes/$(request.resource.data.telephone)).data.estId == estId &&
+                get(/databases/$(database)/documents/gerant_codes/$(request.resource.data.telephone)).data.code == request.resource.data.codeSaisi
+              )
+            )
+          )
+        );
       }
 
       match /ventes/{venteId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() &&
-              (request.auth.uid == estId || estGerantDe(estId));
+              (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
       match /mouvements/{mvtId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
-        allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId));
+        allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
         allow update, delete: if false;
       }
 
@@ -73,15 +100,29 @@ service cloud.firestore {
     }
 
     match /invitations/{token} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.estId == request.auth.uid;
       allow update, delete: if false;
     }
 
+    // CORRIGÉ : ce document ne contient plus le code PIN (déplacé vers
+    // gerant_codes ci-dessous) — juste estId/nom/actif, nécessaires pour
+    // que l'écran de connexion gérant sache où rediriger. Le laisser lisible
+    // par tout signé (y compris anonyme) n'est plus un risque puisqu'il n'y
+    // a plus aucun secret dedans.
     match /gerant_logins/{telephone} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.estId;
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
+    }
+
+    // NOUVEAU : le code PIN vit ici, séparé de gerant_logins. Lecture
+    // interdite en toute circonstance — seule la règle de gerants/{gerantUid}
+    // ci-dessus peut le consulter, via get(), pour valider une tentative de
+    // connexion. Le client ne peut jamais récupérer sa valeur.
+    match /gerant_codes/{telephone} {
+      allow read: if false;
+      allow write: if isSignedIn() && request.auth.uid == request.resource.data.estId;
     }
 
     match /{document=**} {
