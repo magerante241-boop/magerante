@@ -809,3 +809,95 @@ button[data-marque="Ricard"] { color: #2b1c00; }
   max-height: 320px;
   overflow-y: auto;
 }
+
+/* --- Mode Facturier --- */
+.btn-toggle-facturier {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  padding: 8px;
+  border: 1px solid #2e7d32;
+  border-radius: 10px;
+  background: white;
+  color: #2e7d32;
+  font-weight: bold;
+  font-size: 13px;
+}
+.btn-toggle-facturier.active {
+  background: #2e7d32;
+  color: white;
+}
+.facture-panel {
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fafafa;
+}
+.facture-lignes {
+  max-height: 180px;
+  overflow-y: auto;
+}
+.facture-ligne {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+.facture-ligne-nom {
+  flex: 1 1 auto;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facture-ligne-detail {
+  color: #666;
+  white-space: nowrap;
+}
+.facture-ligne-total {
+  font-weight: bold;
+  white-space: nowrap;
+}
+.facture-ligne-suppr {
+  background: #b00020;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.facture-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 4px;
+  border-top: 2px solid #2e7d32;
+  margin-top: 4px;
+}
+.facture-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.btn-facture-annuler, .btn-facture-valider {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-weight: bold;
+  font-size: 13px;
+}
+.btn-facture-annuler {
+  background: #eee;
+  color: #b00020;
+}
+.btn-facture-valider {
+  background: #2e7d32;
+  color: white;
+}

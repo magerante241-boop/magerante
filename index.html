@@ -178,6 +178,7 @@
           <span class="coin-value">—</span>
         </div>
       </div>
+      <button id="btnToggleFacturier" class="btn-toggle-facturier">🧾 Mode Facturier</button>
       <div class="marque-grid" id="marqueGrid">
         <button class="marque-cell" data-marque="Régab">regab</button>
         <button class="marque-cell" data-marque="33 Export">33 export</button>
@@ -197,6 +198,17 @@
         <div class="marque-tailles" id="marqueTailles" hidden></div>
       </div>
     <div class="calc-produits-liste" id="calcProduitsListe" hidden></div>
+    <div class="facture-panel" id="facturePanel" hidden>
+      <div class="facture-lignes" id="factureLignes"></div>
+      <div class="facture-total">
+        <span>Total :</span>
+        <span id="factureTotalValue">0 FCFA</span>
+      </div>
+      <div class="facture-actions">
+        <button id="btnFactureAnnuler" class="btn-facture-annuler">Annuler facture</button>
+        <button id="btnFactureValider" class="btn-facture-valider">✅ Valider la facture</button>
+      </div>
+    </div>
     <div class="calc-actions">
       <button data-action="vente">🛒 Nouvelle vente</button>
     </div>

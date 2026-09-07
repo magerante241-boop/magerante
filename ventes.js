@@ -179,6 +179,48 @@ export function ouvrirModaleVente(montantInitial) {
   });
 }
 
+export async function enregistrerVenteLigne(produitId, quantite) {
+  if (!appState.establishmentId) {
+    return { success: false, message: "Initialisation en cours, réessaie dans un instant." };
+  }
+  if (!produitId || !(quantite > 0)) {
+    return { success: false, message: "Ligne invalide." };
+  }
+  try {
+    const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+    const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
+    const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produitId);
+    const venteDocRef = doc(ventesRef());
+    let produitNom = "";
+    let montant = 0;
+    await runTransaction(db, async (tx) => {
+      const produitSnap = await tx.get(produitDocRef);
+      if (!produitSnap.exists()) {
+        throw new Error("Produit introuvable (a peut-être été supprimé).");
+      }
+      const data = produitSnap.data();
+      const stockActuel = Number(data.stock || 0);
+      if (quantite > stockActuel) {
+        throw new Error("Stock insuffisant pour " + (data.nom || "ce produit") + " (" + stockActuel + " disponible).");
+      }
+      produitNom = data.nom || "";
+      montant = Number(data.prixVente || 0) * quantite;
+      tx.set(venteDocRef, {
+        montant, type: "produit", produitId, produitNom,
+        quantite, date: serverTimestamp(), auteurId
+      });
+      tx.update(produitDocRef, { stock: increment(-quantite) });
+    });
+    addDoc(journalRef(), {
+      type: "vente", sousType: "produit", produitNom, quantite, montant,
+      date: serverTimestamp(), auteurId, auteurNom, source: "facture"
+    }).catch(() => {});
+    return { success: true, montant, produitNom };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+}
+
 function closeModal() {
   const backdrop = document.getElementById("venteModalBackdrop");
   if (backdrop) backdrop.remove();
@@ -188,4 +230,4 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-window.VentesModule = { ouvrirModaleVente };
+window.VentesModule = { ouvrirModaleVente, enregistrerVenteLigne };
