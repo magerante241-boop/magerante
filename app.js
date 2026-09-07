@@ -31,6 +31,7 @@ function switchView(view) {
 
   // On quitte proprement le module précédent s'il en avait un (désabonnement Firestore)
   if (window.InventaireModule) window.InventaireModule.cleanup();
+  if (window.VentesModule && window.VentesModule.cleanup) window.VentesModule.cleanup();
 
   const facturePanelEl = document.getElementById("facturePanel");
 
@@ -45,6 +46,15 @@ function switchView(view) {
     if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.InventaireModule) {
       window.InventaireModule.render(viewContainer);
+    } else {
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
+    }
+  } else if (view === "ventes") {
+    calcZone.hidden = true;
+    viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
+    if (window.VentesModule && window.VentesModule.render) {
+      window.VentesModule.render(viewContainer);
     } else {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
