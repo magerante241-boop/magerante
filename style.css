@@ -1153,3 +1153,8 @@ window.showToast = function (message, duration = 2200) {
 .bottom-nav-icon { font-size: 18px; }
 .bottom-nav-item:active { color: var(--primary); }
 body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
+
+.facture-ligne.selected {
+  border: 2px solid var(--accent, #b8902e);
+  background: var(--surface2, #f0e8d8);
+}

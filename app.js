@@ -204,20 +204,43 @@ document.getElementById("numpad").addEventListener("click", (e) => {
   } else if (key === "⌫") {
     calcExpr = calcExpr.slice(0, -1);
   } else if (key === "=") {
-    if (calcExpr.trim() !== "") {
-      let valeur = 0;
-      try {
-        const safeExpr = calcExpr
-          .replace(/\u00d7/g, "*")
-          .replace(/\u00f7/g, "/")
-          .replace(/,/g, ".");
-        valeur = Function(`"use strict"; return (${safeExpr})`)();
-      } catch {
-        valeur = 0;
+    const expr = calcExpr.trim();
+    if (expr !== "") {
+      const matchModif = expr.match(/^([×÷])\s*([0-9]+(?:[.,][0-9]+)?)$/);
+      if (matchModif) {
+        const operateur = matchModif[1];
+        const operande = Number(matchModif[2].replace(",", ".")) || 0;
+        if (modeFacturier) {
+          if (ligneFactureSelectionnee !== null && lignesFacture[ligneFactureSelectionnee]) {
+            const ligne = lignesFacture[ligneFactureSelectionnee];
+            if (operateur === "×") ligne.quantite *= operande;
+            else if (operande !== 0) ligne.quantite /= operande;
+            ligne.totalLigne = ligne.quantite * ligne.prixUnitaire;
+            renderFacture();
+          } else {
+            alert("Sélectionne une ligne de facture avant de la modifier.");
+          }
+        } else {
+          if (operateur === "×") totalCumule *= operande;
+          else if (operande !== 0) totalCumule /= operande;
+        }
+        derniereLigneTexte = "";
+        calcExpr = "";
+      } else {
+        let valeur = 0;
+        try {
+          const safeExpr = expr
+            .replace(/\u00d7/g, "*")
+            .replace(/\u00f7/g, "/")
+            .replace(/,/g, ".");
+          valeur = Function("\"use strict\"; return (" + safeExpr + ")")();
+        } catch {
+          valeur = 0;
+        }
+        if (isFinite(valeur)) totalCumule += valeur;
+        derniereLigneTexte = expr;
+        calcExpr = "";
       }
-      if (isFinite(valeur)) totalCumule += valeur;
-      derniereLigneTexte = calcExpr;
-      calcExpr = "";
     }
   } else {
     const chiffresActuels = (calcExpr.match(/[0-9]/g) || []).length;
@@ -681,6 +704,7 @@ document.getElementById("menuSupprimerDemo").addEventListener("click", async () 
 // --- Mode Facturier (lignes multiples) ---
 let modeFacturier = false;
 let lignesFacture = [];
+let ligneFactureSelectionnee = null;
 
 function ajouterLigneFacture(p) {
   if (!p || !p.id) {
@@ -710,7 +734,7 @@ function renderFacture() {
     factureLignesEl.innerHTML = `<p class="placeholder-msg">Aucune ligne. Tape une quantité puis choisis une marque.</p>`;
   } else {
     factureLignesEl.innerHTML = lignesFacture.map((l, i) => `
-      <div class="facture-ligne" data-index="${i}">
+      <div class="facture-ligne${i === ligneFactureSelectionnee ? " selected" : ""}" data-index="${i}">
         <span class="facture-ligne-nom">${l.nom}</span>
         <span class="facture-ligne-detail">${l.quantite} × ${l.prixUnitaire.toLocaleString("fr-FR")} FCFA</span>
         <span class="facture-ligne-total">${l.totalLigne.toLocaleString("fr-FR")} FCFA</span>
@@ -746,10 +770,20 @@ const factureLignesContainer = document.getElementById("factureLignes");
 if (factureLignesContainer) {
   factureLignesContainer.addEventListener("click", (e) => {
     const btn = e.target.closest(".facture-ligne-suppr");
-    if (!btn) return;
-    const idx = Number(btn.dataset.index);
-    lignesFacture.splice(idx, 1);
-    renderFacture();
+    if (btn) {
+      const idx = Number(btn.dataset.index);
+      lignesFacture.splice(idx, 1);
+      if (ligneFactureSelectionnee === idx) ligneFactureSelectionnee = null;
+      else if (ligneFactureSelectionnee !== null && idx < ligneFactureSelectionnee) ligneFactureSelectionnee -= 1;
+      renderFacture();
+      return;
+    }
+    const ligneEl = e.target.closest(".facture-ligne");
+    if (ligneEl) {
+      const idx = Number(ligneEl.dataset.index);
+      ligneFactureSelectionnee = (ligneFactureSelectionnee === idx) ? null : idx;
+      renderFacture();
+    }
   });
 }
 
