@@ -84,6 +84,14 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 
 // --- Calculatrice de gestion (logique de base) ---
 let calcExpr = "";
+
+// Applique le prix d'une marque sélectionnée : si une quantité est déjà tapée,
+// on multiplie (quantité × prix) au lieu d'écraser la saisie.
+function appliquerPrixMarque(prix) {
+  const q = calcExpr.trim();
+  const estQuantiteValide = q !== "" && /^[0-9]+([.,][0-9]+)?$/.test(q) && Number(q.replace(",", ".")) > 0;
+  calcExpr = estQuantiteValide ? (q + "×" + prix) : String(prix);
+}
 const exprEl = document.getElementById("calcExpression");
 const resultEl = document.getElementById("calcResult");
 let calcValeurNumerique = 0;
@@ -314,7 +322,7 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
           return;
         }
         if (modeFacturier) { ajouterLigneFacture(p); return; }
-        calcExpr = String(p.prixVente);
+        appliquerPrixMarque(p.prixVente);
         produitSelectionne = {
           nom: p.nom,
           prixVente: Number(p.prixVente) || 0,
@@ -351,7 +359,7 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
     item.addEventListener("click", () => {
       const pf1 = tousLesProduits.find((x) => x.nom === item.dataset.nom);
       if (modeFacturier) { ajouterLigneFacture(pf1); return; }
-      calcExpr = item.dataset.prix;
+      appliquerPrixMarque(item.dataset.prix);
       produitSelectionne = {
         nom: item.dataset.nom,
         prixVente: Number(item.dataset.prix) || 0,
@@ -453,7 +461,7 @@ function afficherResultatsRecherche() {
     item.addEventListener("click", () => {
       const pf2 = tousProduits.find((x) => x.nom === item.dataset.nom);
       if (modeFacturier) { ajouterLigneFacture(pf2); return; }
-      calcExpr = item.dataset.prix;
+      appliquerPrixMarque(item.dataset.prix);
       produitSelectionne = {
         nom: item.dataset.nom,
         prixVente: Number(item.dataset.prix) || 0,
@@ -538,7 +546,7 @@ if (btnAbcEntree) {
     if (resultats.length === 1) {
       const p = resultats[0];
       if (modeFacturier) { ajouterLigneFacture(p); return; }
-      calcExpr = String(p.prixVente);
+      appliquerPrixMarque(p.prixVente);
       produitSelectionne = {
         nom: p.nom,
         prixVente: Number(p.prixVente) || 0,
