@@ -4,6 +4,7 @@ import {
   auth, db, doc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, increment, runTransaction
 } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { creerNotification } from "./notifications.js";
 
 function ventesRef() {
   return collection(db, "establishments", appState.establishmentId, "ventes");
@@ -131,6 +132,7 @@ export function ouvrirModaleVente(montantInitial) {
         const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
         await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId });
         addDoc(journalRef(), { type: "vente", sousType: "libre", montant, date: serverTimestamp(), auteurId, auteurNom, source: "vente" }).catch(() => {});
+        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `Vente de ${montant.toLocaleString("fr-FR")} FCFA enregistrée${auteurNom ? " par " + auteurNom : ""}.` });
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -170,6 +172,7 @@ export function ouvrirModaleVente(montantInitial) {
         });
 
         addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
+        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `${qte} x ${produit.nom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom2 ? " par " + auteurNom2 : ""}.` });
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -215,6 +218,7 @@ export async function enregistrerVenteLigne(produitId, quantite) {
       type: "vente", sousType: "produit", produitNom, quantite, montant,
       date: serverTimestamp(), auteurId, auteurNom, source: "facture"
     }).catch(() => {});
+    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.` });
     return { success: true, montant, produitNom };
   } catch (err) {
     return { success: false, message: err.message };
