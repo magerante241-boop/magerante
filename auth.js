@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail, signOut
 } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { genererProduitsDemo } from "./demo.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
 window.ADMIN_EMAIL = ADMIN_EMAIL;
@@ -437,6 +438,11 @@ onAuthStateChanged(auth, async (user) => {
     try {
       await creerEtablissementParDefaut(user.uid);
       await ouvrirApplication(user.uid);
+      try {
+        await genererProduitsDemo();
+      } catch (errDemo) {
+        console.warn("Génération auto des produits démo impossible :", errDemo);
+      }
     } catch (err) {
       console.warn("Création automatique de l'établissement impossible :", err);
       window.AuthState.hasEstablishment = false;
