@@ -183,7 +183,21 @@ document.getElementById("numpad").addEventListener("click", (e) => {
   } else if (key === "⌫") {
     calcExpr = calcExpr.slice(0, -1);
   } else if (key === "=") {
-    // Le calcul est déjà recalculé en direct dans renderCalc()
+    if (calcExpr.trim() !== "") {
+      let valeur = 0;
+      try {
+        const safeExpr = calcExpr
+          .replace(/\u00d7/g, "*")
+          .replace(/\u00f7/g, "/")
+          .replace(/,/g, ".");
+        valeur = Function(`"use strict"; return (${safeExpr})`)();
+      } catch {
+        valeur = 0;
+      }
+      if (isFinite(valeur)) totalCumule += valeur;
+      derniereLigneTexte = calcExpr;
+      calcExpr = "";
+    }
   } else {
     const chiffresActuels = (calcExpr.match(/[0-9]/g) || []).length;
     if (/[0-9]/.test(key) && chiffresActuels >= 10) {
