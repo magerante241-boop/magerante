@@ -307,6 +307,7 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
           alert("Ce produit n'est pas encore configuré dans l'inventaire.");
           return;
         }
+        if (modeFacturier) { ajouterLigneFacture(p); return; }
         calcExpr = String(p.prixVente);
         produitSelectionne = {
           nom: p.nom,
@@ -342,6 +343,8 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
   `).join("");
   calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
     item.addEventListener("click", () => {
+      const pf1 = tousLesProduits.find((x) => x.nom === item.dataset.nom);
+      if (modeFacturier) { ajouterLigneFacture(pf1); return; }
       calcExpr = item.dataset.prix;
       produitSelectionne = {
         nom: item.dataset.nom,
@@ -442,6 +445,8 @@ function afficherResultatsRecherche() {
   calcProduitsListe.hidden = false;
   calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
     item.addEventListener("click", () => {
+      const pf2 = tousProduits.find((x) => x.nom === item.dataset.nom);
+      if (modeFacturier) { ajouterLigneFacture(pf2); return; }
       calcExpr = item.dataset.prix;
       produitSelectionne = {
         nom: item.dataset.nom,
@@ -526,6 +531,7 @@ if (btnAbcEntree) {
     const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
     if (resultats.length === 1) {
       const p = resultats[0];
+      if (modeFacturier) { ajouterLigneFacture(p); return; }
       calcExpr = String(p.prixVente);
       produitSelectionne = {
         nom: p.nom,
@@ -613,3 +619,120 @@ document.getElementById("menuSupprimerDemo").addEventListener("click", async () 
     alert("Erreur lors de la suppression : " + err.message);
   }
 });
+
+
+// --- Mode Facturier (lignes multiples) ---
+let modeFacturier = false;
+let lignesFacture = [];
+
+function ajouterLigneFacture(p) {
+  if (!p || !p.id) {
+    alert("Ce produit n'est pas configuré correctement (id manquant).");
+    return;
+  }
+  const quantite = calcValeurNumerique > 0 ? calcValeurNumerique : 1;
+  const prixUnitaire = Number(p.prixVente) || 0;
+  lignesFacture.push({
+    produitId: p.id,
+    nom: p.nom,
+    prixUnitaire,
+    quantite,
+    totalLigne: quantite * prixUnitaire,
+  });
+  calcExpr = "";
+  produitSelectionne = null;
+  renderCalc();
+  renderFacture();
+}
+
+function renderFacture() {
+  const factureLignesEl = document.getElementById("factureLignes");
+  const factureTotalEl = document.getElementById("factureTotalValue");
+  if (!factureLignesEl || !factureTotalEl) return;
+  if (lignesFacture.length === 0) {
+    factureLignesEl.innerHTML = `<p class="placeholder-msg">Aucune ligne. Tape une quantité puis choisis une marque.</p>`;
+  } else {
+    factureLignesEl.innerHTML = lignesFacture.map((l, i) => `
+      <div class="facture-ligne" data-index="${i}">
+        <span class="facture-ligne-nom">${l.nom}</span>
+        <span class="facture-ligne-detail">${l.quantite} × ${l.prixUnitaire.toLocaleString("fr-FR")} FCFA</span>
+        <span class="facture-ligne-total">${l.totalLigne.toLocaleString("fr-FR")} FCFA</span>
+        <button class="facture-ligne-suppr" data-index="${i}">✕</button>
+      </div>
+    `).join("");
+  }
+  const total = lignesFacture.reduce((acc, l) => acc + l.totalLigne, 0);
+  factureTotalEl.textContent = total.toLocaleString("fr-FR") + " FCFA";
+}
+
+const btnToggleFacturier = document.getElementById("btnToggleFacturier");
+const facturePanel = document.getElementById("facturePanel");
+const calcActionsEl = document.querySelector(".calc-actions");
+if (btnToggleFacturier) {
+  btnToggleFacturier.addEventListener("click", () => {
+    modeFacturier = !modeFacturier;
+    btnToggleFacturier.classList.toggle("active", modeFacturier);
+    btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
+    if (facturePanel) facturePanel.hidden = !modeFacturier;
+    if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
+    calcExpr = "";
+    produitSelectionne = null;
+    renderCalc();
+    renderFacture();
+  });
+}
+
+const factureLignesContainer = document.getElementById("factureLignes");
+if (factureLignesContainer) {
+  factureLignesContainer.addEventListener("click", (e) => {
+    const btn = e.target.closest(".facture-ligne-suppr");
+    if (!btn) return;
+    const idx = Number(btn.dataset.index);
+    lignesFacture.splice(idx, 1);
+    renderFacture();
+  });
+}
+
+const btnFactureAnnuler = document.getElementById("btnFactureAnnuler");
+if (btnFactureAnnuler) {
+  btnFactureAnnuler.addEventListener("click", () => {
+    if (lignesFacture.length && !confirm("Annuler toute la facture en cours ?")) return;
+    lignesFacture = [];
+    renderFacture();
+  });
+}
+
+const btnFactureValider = document.getElementById("btnFactureValider");
+if (btnFactureValider) {
+  btnFactureValider.addEventListener("click", async () => {
+    if (!lignesFacture.length) {
+      alert("Ajoute au moins une ligne avant de valider.");
+      return;
+    }
+    if (!window.VentesModule || !window.VentesModule.enregistrerVenteLigne) {
+      alert("Module Ventes en cours de chargement, réessaie dans un instant.");
+      return;
+    }
+    btnFactureValider.disabled = true;
+    btnFactureValider.textContent = "Enregistrement...";
+    const lignesAValider = [...lignesFacture];
+    const erreurs = [];
+    for (const ligne of lignesAValider) {
+      const res = await window.VentesModule.enregistrerVenteLigne(ligne.produitId, ligne.quantite);
+      if (!res.success) {
+        erreurs.push(ligne.nom + " : " + res.message);
+      } else {
+        const idx = lignesFacture.findIndex((l) => l === ligne);
+        if (idx !== -1) lignesFacture.splice(idx, 1);
+      }
+    }
+    btnFactureValider.disabled = false;
+    btnFactureValider.textContent = "✅ Valider la facture";
+    renderFacture();
+    if (erreurs.length) {
+      alert("Facture partiellement enregistrée. Erreurs :\n" + erreurs.join("\n"));
+    } else {
+      alert("Facture enregistrée avec succès !");
+    }
+  });
+}
