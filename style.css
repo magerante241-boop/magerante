@@ -630,7 +630,7 @@ body{
 
 /* === Chantier 6 (suite) : grille de marques jusqu'aux bords + suppression calc-actions === */
 .calc-zone {
-  padding: 6px 4px 4px;
+  padding: 6px 14px 4px;
 }
 
 #marqueGrid {
