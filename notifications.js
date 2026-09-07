@@ -1,0 +1,123 @@
+// notifications.js — Système de notifications temps réel
+import {
+  db, doc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, writeBatch
+} from "./firebase-config.js";
+import { appState } from "./state.js";
+
+let unsubscribeNotifs = null;
+let notifsCache = [];
+let premierChargement = true;
+
+function notifsRef() {
+  return collection(db, "establishments", appState.establishmentId, "notifications");
+}
+
+// Appelée depuis n'importe quel module pour créer une notification
+export async function creerNotification({ type, titre, message }) {
+  if (!appState.establishmentId) return;
+  try {
+    await addDoc(notifsRef(), {
+      type, titre, message, lu: false, createdAt: serverTimestamp()
+    });
+  } catch (err) {
+    console.warn("Notification non créée :", err.message);
+  }
+}
+
+function iconePourType(type) {
+  const icones = { stock_bas: "📦", vente: "🛒", gerant: "👤", cloture: "🧾", invitation: "📨", info: "ℹ️" };
+  return icones[type] || "🔔";
+}
+
+function formatDate(ts) {
+  if (!ts || !ts.toDate) return "à l'instant";
+  const d = ts.toDate();
+  const diffMin = Math.floor((Date.now() - d) / 60000);
+  if (diffMin < 1) return "à l'instant";
+  if (diffMin < 60) return `il y a ${diffMin} min`;
+  if (diffMin < 1440) return `il y a ${Math.floor(diffMin / 60)} h`;
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+}
+
+function renderPanel() {
+  const listEl = document.getElementById("notifList");
+  if (!listEl) return;
+  if (notifsCache.length === 0) {
+    listEl.innerHTML = `<p class="notif-empty">Aucune notification pour l'instant.</p>`;
+    return;
+  }
+  listEl.innerHTML = notifsCache.map(n => `
+    <div class="notif-item${n.lu ? "" : " non-lu"}">
+      <span class="notif-icone">${iconePourType(n.type)}</span>
+      <div class="notif-texte">
+        <span class="notif-titre">${escapeHtml(n.titre)}</span>
+        <span class="notif-msg">${escapeHtml(n.message)}</span>
+        <span class="notif-date">${formatDate(n.createdAt)}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateBadge() {
+  const badge = document.getElementById("notifBadge");
+  if (!badge) return;
+  const nonLus = notifsCache.filter(n => !n.lu).length;
+  if (nonLus > 0) { badge.textContent = nonLus > 9 ? "9+" : String(nonLus); badge.hidden = false; }
+  else { badge.hidden = true; }
+}
+
+function notifierSysteme(n) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try { new Notification(n.titre, { body: n.message, icon: "logo.png" }); } catch (e) {}
+}
+
+export function initNotifications() {
+  if (!appState.establishmentId || unsubscribeNotifs) return;
+  const q = query(notifsRef(), orderBy("createdAt", "desc"));
+  unsubscribeNotifs = onSnapshot(q, (snap) => {
+    notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
+    renderPanel();
+    updateBadge();
+    if (!premierChargement) {
+      snap.docChanges().forEach(c => { if (c.type === "added") notifierSysteme({ id: c.doc.id, ...c.doc.data() }); });
+    }
+    premierChargement = false;
+  }, (err) => console.warn("Notifications :", err.message));
+}
+
+export async function marquerToutLu() {
+  const nonLus = notifsCache.filter(n => !n.lu);
+  if (nonLus.length === 0) return;
+  const batch = writeBatch(db);
+  nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
+  await batch.commit();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnNotifications");
+  const panel = document.getElementById("notifPanel");
+  const overlay = document.getElementById("notifPanelOverlay");
+  const closeBtn = document.getElementById("btnCloseNotifPanel");
+  const markBtn = document.getElementById("btnMarquerToutLu");
+  const permBtn = document.getElementById("btnActiverNotifsSysteme");
+
+  if (btn && panel) btn.addEventListener("click", () => {
+    panel.hidden = false;
+    if ("Notification" in window && Notification.permission === "default" && permBtn) permBtn.hidden = false;
+  });
+  if (overlay) overlay.addEventListener("click", () => { panel.hidden = true; });
+  if (closeBtn) closeBtn.addEventListener("click", () => { panel.hidden = true; });
+  if (markBtn) markBtn.addEventListener("click", marquerToutLu);
+  if (permBtn) permBtn.addEventListener("click", async () => {
+    const res = await Notification.requestPermission();
+    if (res === "granted") permBtn.hidden = true;
+  });
+
+  const attendre = setInterval(() => {
+    if (appState.establishmentId) { clearInterval(attendre); initNotifications(); }
+  }, 500);
+});

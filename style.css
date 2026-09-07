@@ -1086,3 +1086,32 @@ window.showToast = function (message, duration = 2200) {
 @keyframes installFabIn{from{opacity:0;transform:translateY(-10px) scale(.85);}to{opacity:1;transform:translateY(0) scale(1);}}
 @keyframes installFabPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
 .side-menu-item.installee{opacity:.55;pointer-events:none;}
+
+/* ===== Badge notifications ===== */
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;
+  border-radius:8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
+#btnNotifications{position:relative;}
+
+/* ===== Panneau notifications ===== */
+.notif-panel{position:fixed;inset:0;z-index:200;}
+.notif-panel-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);}
+.notif-panel-box{
+  position:absolute;top:56px;right:8px;left:8px;max-width:380px;margin-left:auto;
+  background:#fff;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.25);
+  max-height:70vh;display:flex;flex-direction:column;overflow:hidden;
+}
+.notif-panel-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;font-weight:700;border-bottom:1px solid #eee;}
+.notif-perm-btn{margin:10px 12px 0;padding:8px 10px;border:none;border-radius:8px;background:#2e7d32;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;}
+.notif-list{overflow-y:auto;flex:1;}
+.notif-empty{padding:24px;text-align:center;color:#888;font-size:13px;}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid #f2f2f2;}
+.notif-item.non-lu{background:#f0fbf1;}
+.notif-icone{font-size:18px;}
+.notif-texte{display:flex;flex-direction:column;gap:2px;}
+.notif-titre{font-weight:700;font-size:13.5px;}
+.notif-msg{font-size:12.5px;color:#555;}
+.notif-date{font-size:11px;color:#999;}
+.notif-mark-btn{border:none;background:transparent;color:#2e7d32;font-size:12.5px;font-weight:600;padding:10px;cursor:pointer;}
