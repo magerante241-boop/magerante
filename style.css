@@ -668,7 +668,8 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 
 /* === Chantier 6 (suite) : suppression debordement haut + gain espace bas === */
 .calc-zone {
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .calc-display {
