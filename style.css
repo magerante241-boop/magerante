@@ -673,7 +673,7 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 }
 
 .calc-display {
-  min-height: 190px;
+  min-height: 140px;
 }
 
 /* ===== Grille de marques (Chantier 6 — calculatrice gérant) ===== */
