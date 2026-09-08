@@ -13,12 +13,13 @@ function notifsRef() {
 }
 
 // Appelée depuis n'importe quel module pour créer une notification
-export async function creerNotification({ type, titre, message }) {
+export async function creerNotification({ type, titre, message, factureNumero, cible }) {
   if (!appState.establishmentId) return;
   try {
-    await addDoc(notifsRef(), {
-      type, titre, message, lu: false, createdAt: serverTimestamp()
-    });
+    const payload = { type, titre, message, lu: false, createdAt: serverTimestamp() };
+    if (factureNumero) payload.factureNumero = factureNumero;
+    if (cible) payload.cible = cible;
+    await addDoc(notifsRef(), payload);
   } catch (err) {
     console.warn("Notification non créée :", err.message);
   }
@@ -47,7 +48,10 @@ function renderPanel() {
     return;
   }
   listEl.innerHTML = notifsCache.map(n => `
-    <div class="notif-item${n.lu ? "" : " non-lu"}">
+    <div class="notif-item${n.lu ? "" : " non-lu"}${n.cible ? " notif-item-cliquable" : ""}"
+         data-notif-id="${n.id}"
+         ${n.cible ? `data-cible="${n.cible}"` : ""}
+         ${n.factureNumero ? `data-facture-numero="${n.factureNumero}"` : ""}>
       <span class="notif-icone">${iconePourType(n.type)}</span>
       <div class="notif-texte">
         <span class="notif-titre">${escapeHtml(n.titre)}</span>
@@ -124,6 +128,7 @@ function escapeHtml(str) {
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnNotifications");
   const panel = document.getElementById("notifPanel");
+  const listEl2 = document.getElementById("notifList");
   const overlay = document.getElementById("notifPanelOverlay");
   const closeBtn = document.getElementById("btnCloseNotifPanel");
   const markBtn = document.getElementById("btnMarquerToutLu");
@@ -134,6 +139,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if ("Notification" in window && Notification.permission === "default" && permBtn) permBtn.hidden = false;
   });
   if (overlay) overlay.addEventListener("click", () => { panel.hidden = true; });
+  if (listEl2) listEl2.addEventListener("click", (e) => {
+    const item = e.target.closest(".notif-item[data-cible]");
+    if (!item) return;
+    const cible = item.dataset.cible;
+    const factureNumero = item.dataset.factureNumero;
+    panel.hidden = true;
+    if (window.switchView) window.switchView(cible);
+    if (factureNumero && window.FacturesModule && window.FacturesModule.ouvrirFacture) {
+      setTimeout(() => window.FacturesModule.ouvrirFacture(factureNumero), 300);
+    }
+  });
   if (closeBtn) closeBtn.addEventListener("click", () => { panel.hidden = true; });
   if (markBtn) markBtn.addEventListener("click", marquerToutLu);
   if (permBtn) permBtn.addEventListener("click", async () => {
@@ -145,3 +161,5 @@ document.addEventListener("DOMContentLoaded", () => {
     if (appState.establishmentId) { clearInterval(attendre); initNotifications(); }
   }, 500);
 });
+
+window.NotificationsModule = { creerNotification };
