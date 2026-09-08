@@ -302,10 +302,10 @@ body{
 .nav-btn[hidden]{ display:none !important; }
 .nav-btn{
   flex:1; background:none; border:none; color:var(--muted);
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  font-size:18px; padding:8px 0; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  font-size:15px; padding:4px 0; cursor:pointer;
 }
-.nav-btn span{font-size:10px;}
+.nav-btn span{font-size:9px;}
 .nav-btn.active{color:var(--primary);}
 
 /* MENU LATÉRAL */
