@@ -1146,6 +1146,7 @@ window.showToast = function (message, duration = 2200) {
 .notif-switch input:checked + .notif-switch-slider{background:#2e7d32;}
 .notif-switch input:checked + .notif-switch-slider::before{transform:translateX(15px);}
 .notif-switch-label{color:#333;}
+.notif-filtre-dot{position:absolute;top:2px;left:2px;width:8px;height:8px;background:#f59e0b;border-radius:50%;border:1.5px solid #fff;}
 
 /* Sections pliables (admin) */
 .collapsible-section summary.section-title {
