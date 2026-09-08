@@ -623,9 +623,9 @@ body{
 }
 
 .numpad button {
-  min-height: 48px;
-  padding: 6px 0;
-  font-size: 18px;
+  min-height: 40px;
+  padding: 4px 0;
+  font-size: 15px;
 }
 
 /* === Chantier 6 (suite) : grille de marques jusqu'aux bords + suppression calc-actions === */
@@ -906,10 +906,10 @@ button[data-marque="Ricard"] { color: #2b1c00; }
 /* Ajustement : facture-panel occupe la largeur max et colle au clavier */
 .facture-panel {
   margin: 4px 4px 2px;
-  padding: 6px;
+  padding: 4px;
 }
 .facture-lignes {
-  max-height: clamp(90px, 26vh, 260px);
+  max-height: clamp(70px, 16vh, 180px);
 }
 .facture-lignes .placeholder-msg {
   padding: 10px 8px;
