@@ -31,10 +31,22 @@ function typeActif(type) {
   return chargerPrefsTypes()[type] !== false;
 }
 
+function unFiltreEstActif() {
+  const prefs = chargerPrefsTypes();
+  return Object.values(prefs).some(v => v === false);
+}
+
+function updateFiltreDot() {
+  const dot = document.getElementById("notifFiltreDot");
+  if (!dot) return;
+  dot.hidden = !unFiltreEstActif();
+}
+
 function sauverPrefType(type, actif) {
   const prefs = chargerPrefsTypes();
   prefs[type] = actif;
   try { localStorage.setItem("notifPrefsTypes", JSON.stringify(prefs)); } catch (e) {}
+  updateFiltreDot();
 }
 
 function notifsRef() {
@@ -230,6 +242,8 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPanel();
     updateBadge();
   });
+
+  updateFiltreDot();
 
   if (btn && panel) btn.addEventListener("click", () => {
     panel.hidden = false;
