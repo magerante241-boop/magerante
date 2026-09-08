@@ -117,7 +117,11 @@ service cloud.firestore {
       // (marquage comme lu) ; la suppression sert uniquement au nettoyage
       // automatique des notifications de plus de 30 jours (voir notifications.js).
       match /notifications/{notifId} {
-        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow read: if isSignedIn() && (
+          request.auth.uid == estId ||
+          isAdmin() ||
+          (estGerantDe(estId) && resource.data.auteurId == request.auth.uid)
+        );
         allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
         allow update: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin())
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["lu"]);
