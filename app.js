@@ -707,6 +707,8 @@ document.getElementById("menuSupprimerDemo").addEventListener("click", async () 
 
 // --- Mode Facturier (lignes multiples) ---
 let modeFacturier = false;
+const marqueGridElInit = document.getElementById("marqueGrid");
+if (marqueGridElInit) marqueGridElInit.hidden = true;
 let lignesFacture = [];
 let ligneFactureSelectionnee = null;
 
@@ -762,6 +764,8 @@ if (btnToggleFacturier) {
     if (facturePanel) facturePanel.hidden = !modeFacturier;
     const calcDisplayEl = document.querySelector(".calc-display");
     if (calcDisplayEl) calcDisplayEl.hidden = modeFacturier;
+    const marqueGridEl = document.getElementById("marqueGrid");
+    if (marqueGridEl) marqueGridEl.hidden = !modeFacturier;
     if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
     // calc-display reste visible dans les deux modes : c'est la même calculatrice,
     // seule la formule change (ajout de ligne en mode facturier).
