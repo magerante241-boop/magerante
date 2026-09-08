@@ -1,12 +1,13 @@
 // notifications.js — Système de notifications temps réel
 import {
-  db, doc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
+  auth, db, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
 let unsubscribeNotifs = null;
 let notifsCache = [];
 let premierChargement = true;
+const nomAuteurCache = new Map();
 
 function notifsRef() {
   return collection(db, "establishments", appState.establishmentId, "notifications");
@@ -16,7 +17,8 @@ function notifsRef() {
 export async function creerNotification({ type, titre, message, factureNumero, cible }) {
   if (!appState.establishmentId) return;
   try {
-    const payload = { type, titre, message, lu: false, createdAt: serverTimestamp() };
+    const auteurId = auth.currentUser ? auth.currentUser.uid : null;
+    const payload = { type, titre, message, lu: false, createdAt: serverTimestamp(), auteurId };
     if (factureNumero) payload.factureNumero = factureNumero;
     if (cible) payload.cible = cible;
     await addDoc(notifsRef(), payload);
@@ -56,7 +58,7 @@ function renderPanel() {
       <div class="notif-texte">
         <span class="notif-titre">${escapeHtml(n.titre)}</span>
         <span class="notif-msg">${escapeHtml(n.message)}</span>
-        <span class="notif-date">${formatDate(n.createdAt)}</span>
+        <span class="notif-date">${formatDate(n.createdAt)}${n.auteurNom ? ` · par ${escapeHtml(n.auteurNom)}` : ""}</span>
       </div>
     </div>
   `).join("");
@@ -100,17 +102,48 @@ async function nettoyerVieillesNotifications() {
 
 export function initNotifications() {
   if (!appState.establishmentId || unsubscribeNotifs) return;
-  nettoyerVieillesNotifications();
-  const q = query(notifsRef(), orderBy("createdAt", "desc"));
+  const uid = auth.currentUser ? auth.currentUser.uid : null;
+  const estProprietaire = !!uid && uid === appState.establishmentId;
+  if (estProprietaire) nettoyerVieillesNotifications();
+  const q = estProprietaire
+    ? query(notifsRef(), orderBy("createdAt", "desc"))
+    : query(notifsRef(), where("auteurId", "==", uid), orderBy("createdAt", "desc"));
   unsubscribeNotifs = onSnapshot(q, (snap) => {
     notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
     renderPanel();
     updateBadge();
+    resolverAuteurs();
     if (!premierChargement) {
       snap.docChanges().forEach(c => { if (c.type === "added") notifierSysteme({ id: c.doc.id, ...c.doc.data() }); });
     }
     premierChargement = false;
   }, (err) => console.warn("Notifications :", err.message));
+}
+
+async function resolverAuteurs() {
+  const aResoudre = notifsCache.filter(n => n.auteurId && !nomAuteurCache.has(n.auteurId));
+  if (aResoudre.length > 0) {
+    await Promise.all(aResoudre.map(async n => {
+      if (n.auteurId === appState.establishmentId) {
+        nomAuteurCache.set(n.auteurId, "Propriétaire");
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, "establishments", appState.establishmentId, "gerants", n.auteurId));
+        nomAuteurCache.set(n.auteurId, snap.exists() ? (snap.data().nom || "Gérant") : "Gérant");
+      } catch (e) {
+        nomAuteurCache.set(n.auteurId, "Gérant");
+      }
+    }));
+  }
+  let changement = false;
+  notifsCache.forEach(n => {
+    if (n.auteurId && nomAuteurCache.has(n.auteurId) && n.auteurNom !== nomAuteurCache.get(n.auteurId)) {
+      n.auteurNom = nomAuteurCache.get(n.auteurId);
+      changement = true;
+    }
+  });
+  if (changement) renderPanel();
 }
 
 export async function marquerToutLu() {
