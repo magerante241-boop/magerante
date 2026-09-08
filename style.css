@@ -623,9 +623,9 @@ body{
 }
 
 .numpad button {
-  min-height: 40px;
-  padding: 4px 0;
-  font-size: 15px;
+  min-height: 34px;
+  padding: 3px 0;
+  font-size: 14px;
 }
 
 /* === Chantier 6 (suite) : grille de marques jusqu'aux bords + suppression calc-actions === */
@@ -909,7 +909,7 @@ button[data-marque="Ricard"] { color: #2b1c00; }
   padding: 4px;
 }
 .facture-lignes {
-  max-height: clamp(70px, 16vh, 180px);
+  max-height: clamp(50px, 10vh, 110px);
 }
 .facture-lignes .placeholder-msg {
   padding: 10px 8px;
@@ -1179,4 +1179,15 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 /* Chantier affichage dynamique : permettre au flex de se rétrécir */
 .calc-zone {
   min-height: 0;
+}
+
+/* Chantier priorité grille marques */
+#marqueGrid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: flex-start;
+}
+#btnToggleFacturier {
+  flex-shrink: 0;
 }
