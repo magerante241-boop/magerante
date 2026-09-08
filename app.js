@@ -337,6 +337,7 @@ const MARQUES_TAILLES = {
 };
 
 const marqueTaillesEl = document.getElementById("marqueTailles");
+let marqueTaillesTimer = null;
 // NB : on n'attache PAS les flèches de scroll ici. attachScrollArrows() déplace
 // l'élément dans un wrapper `position: relative`, ce qui change son offsetParent
 // et casse le positionnement dynamique (top/left calculés par rapport à
@@ -366,6 +367,8 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
     fermerListeProduits();
     marqueTaillesEl.innerHTML = `<p class="placeholder-msg">Chargement...</p>`;
     marqueTaillesEl.hidden = false;
+    if (marqueTaillesTimer) clearTimeout(marqueTaillesTimer);
+    marqueTaillesTimer = setTimeout(() => { marqueTaillesEl.hidden = true; marqueTaillesTimer = null; }, 5000);
     marqueTaillesEl.style.top = (btn.offsetTop + btn.offsetHeight + 4) + "px";
     marqueTaillesEl.style.left = "0px";
     marqueTaillesEl.dataset.openFor = marque;
@@ -396,6 +399,7 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
           stock: Number(p.stock) || 0,
         };
         renderCalc();
+        if (marqueTaillesTimer) { clearTimeout(marqueTaillesTimer); marqueTaillesTimer = null; }
         marqueTaillesEl.hidden = true;
       });
     });
