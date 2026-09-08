@@ -1135,6 +1135,17 @@ window.showToast = function (message, duration = 2200) {
 .notif-msg{font-size:12.5px;color:#555;}
 .notif-date{font-size:11px;color:#999;}
 .notif-mark-btn{border:none;background:transparent;color:#2e7d32;font-size:12.5px;font-weight:600;padding:10px;cursor:pointer;}
+.notif-header-actions{display:flex;align-items:center;gap:4px;}
+.notif-filtres{border-bottom:1px solid #eee;padding:10px 14px;background:#fafafa;}
+.notif-filtres-titre{font-size:11.5px;font-weight:700;color:#666;margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px;}
+.notif-filtres-liste{display:flex;flex-direction:column;gap:8px;}
+.notif-switch{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;}
+.notif-switch input{position:absolute;opacity:0;width:0;height:0;}
+.notif-switch-slider{position:relative;width:34px;height:19px;background:#ccc;border-radius:999px;transition:background .15s;flex-shrink:0;}
+.notif-switch-slider::before{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .15s;}
+.notif-switch input:checked + .notif-switch-slider{background:#2e7d32;}
+.notif-switch input:checked + .notif-switch-slider::before{transform:translateX(15px);}
+.notif-switch-label{color:#333;}
 
 /* Sections pliables (admin) */
 .collapsible-section summary.section-title {

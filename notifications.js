@@ -9,6 +9,34 @@ let notifsCache = [];
 let premierChargement = true;
 const nomAuteurCache = new Map();
 
+const TYPES_NOTIF = [
+  { type: "stock_bas", label: "Stock bas", icone: "📦" },
+  { type: "vente", label: "Vente", icone: "🛒" },
+  { type: "gerant", label: "Gérant", icone: "👤" },
+  { type: "cloture", label: "Clôture", icone: "🧾" },
+  { type: "invitation", label: "Invitation", icone: "📨" },
+  { type: "info", label: "Info", icone: "ℹ️" }
+];
+
+function chargerPrefsTypes() {
+  try {
+    const raw = localStorage.getItem("notifPrefsTypes");
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function typeActif(type) {
+  return chargerPrefsTypes()[type] !== false;
+}
+
+function sauverPrefType(type, actif) {
+  const prefs = chargerPrefsTypes();
+  prefs[type] = actif;
+  try { localStorage.setItem("notifPrefsTypes", JSON.stringify(prefs)); } catch (e) {}
+}
+
 function notifsRef() {
   return collection(db, "establishments", appState.establishmentId, "notifications");
 }
@@ -47,11 +75,14 @@ function formatDate(ts) {
 function renderPanel() {
   const listEl = document.getElementById("notifList");
   if (!listEl) return;
-  if (notifsCache.length === 0) {
-    listEl.innerHTML = `<p class="notif-empty">Aucune notification pour l'instant.</p>`;
+  const visibles = notifsCache.filter(n => typeActif(n.type));
+  if (visibles.length === 0) {
+    listEl.innerHTML = notifsCache.length === 0
+      ? `<p class="notif-empty">Aucune notification pour l'instant.</p>`
+      : `<p class="notif-empty">Aucune notification pour les types affichés.</p>`;
     return;
   }
-  listEl.innerHTML = notifsCache.map(n => `
+  listEl.innerHTML = visibles.map(n => `
     <div class="notif-item${n.lu ? "" : " non-lu"}${n.cible ? " notif-item-cliquable" : ""}"
          data-notif-id="${n.id}"
          ${n.cible ? `data-cible="${n.cible}"` : ""}
@@ -69,7 +100,7 @@ function renderPanel() {
 function updateBadge() {
   const badge = document.getElementById("notifBadge");
   if (!badge) return;
-  const nonLus = notifsCache.filter(n => !n.lu).length;
+  const nonLus = notifsCache.filter(n => !n.lu && typeActif(n.type)).length;
   if (nonLus > 0) { badge.textContent = nonLus > 9 ? "9+" : String(nonLus); badge.hidden = false; }
   else { badge.hidden = true; }
 }
@@ -164,6 +195,18 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+function renderFiltres() {
+  const zone = document.getElementById("notifFiltresListe");
+  if (!zone) return;
+  zone.innerHTML = TYPES_NOTIF.map(t => `
+    <label class="notif-switch">
+      <input type="checkbox" data-type="${t.type}" ${typeActif(t.type) ? "checked" : ""}>
+      <span class="notif-switch-slider"></span>
+      <span class="notif-switch-label">${t.icone} ${t.label}</span>
+    </label>
+  `).join("");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnNotifications");
   const panel = document.getElementById("notifPanel");
@@ -172,6 +215,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeBtn = document.getElementById("btnCloseNotifPanel");
   const markBtn = document.getElementById("btnMarquerToutLu");
   const permBtn = document.getElementById("btnActiverNotifsSysteme");
+  const filtresBtn = document.getElementById("btnNotifFiltres");
+  const filtresPanel = document.getElementById("notifFiltres");
+  const filtresListe = document.getElementById("notifFiltresListe");
+
+  if (filtresBtn && filtresPanel) filtresBtn.addEventListener("click", () => {
+    filtresPanel.hidden = !filtresPanel.hidden;
+    if (!filtresPanel.hidden) renderFiltres();
+  });
+  if (filtresListe) filtresListe.addEventListener("change", (e) => {
+    const input = e.target.closest('input[data-type]');
+    if (!input) return;
+    sauverPrefType(input.dataset.type, input.checked);
+    renderPanel();
+    updateBadge();
+  });
 
   if (btn && panel) btn.addEventListener("click", () => {
     panel.hidden = false;

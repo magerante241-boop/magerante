@@ -281,7 +281,14 @@
     <div class="notif-panel-box">
       <div class="notif-panel-header">
         <span>Notifications</span>
-        <button class="icon-btn" id="btnCloseNotifPanel" aria-label="Fermer">✕</button>
+        <div class="notif-header-actions">
+          <button class="icon-btn" id="btnNotifFiltres" aria-label="Filtrer les notifications">⚙️</button>
+          <button class="icon-btn" id="btnCloseNotifPanel" aria-label="Fermer">✕</button>
+        </div>
+      </div>
+      <div class="notif-filtres" id="notifFiltres" hidden>
+        <p class="notif-filtres-titre">Types de notifications affichés</p>
+        <div class="notif-filtres-liste" id="notifFiltresListe"></div>
       </div>
       <button class="notif-perm-btn" id="btnActiverNotifsSysteme" hidden>🔔 Activer les alertes sur ce téléphone</button>
       <div class="notif-list" id="notifList"><p class="notif-empty">Chargement...</p></div>
