@@ -18,7 +18,9 @@ export async function creerNotification({ type, titre, message, factureNumero, c
   if (!appState.establishmentId) return;
   try {
     const auteurId = auth.currentUser ? auth.currentUser.uid : null;
-    const payload = { type, titre, message, lu: false, createdAt: serverTimestamp(), auteurId };
+    const auteurRole = (window.AuthState && window.AuthState.role) || null;
+    const auteurAccountType = (window.AuthState && window.AuthState.accountType) || null;
+    const payload = { type, titre, message, lu: false, createdAt: serverTimestamp(), auteurId, auteurRole, auteurAccountType };
     if (factureNumero) payload.factureNumero = factureNumero;
     if (cible) payload.cible = cible;
     await addDoc(notifsRef(), payload);
@@ -124,16 +126,20 @@ async function resolverAuteurs() {
   const aResoudre = notifsCache.filter(n => n.auteurId && !nomAuteurCache.has(n.auteurId));
   if (aResoudre.length > 0) {
     await Promise.all(aResoudre.map(async n => {
-      if (n.auteurId === appState.establishmentId) {
-        nomAuteurCache.set(n.auteurId, "Propriétaire");
+      if (n.auteurAccountType === "anonyme") {
+        nomAuteurCache.set(n.auteurId, "Visiteur");
         return;
       }
-      try {
-        const snap = await getDoc(doc(db, "establishments", appState.establishmentId, "gerants", n.auteurId));
-        nomAuteurCache.set(n.auteurId, snap.exists() ? (snap.data().nom || "Gérant") : "Gérant");
-      } catch (e) {
-        nomAuteurCache.set(n.auteurId, "Gérant");
+      if (n.auteurRole === "GERANT" || (!n.auteurRole && n.auteurId !== appState.establishmentId)) {
+        try {
+          const snap = await getDoc(doc(db, "establishments", appState.establishmentId, "gerants", n.auteurId));
+          nomAuteurCache.set(n.auteurId, snap.exists() ? (snap.data().nom || "Gérant") : "Gérant");
+        } catch (e) {
+          nomAuteurCache.set(n.auteurId, "Gérant");
+        }
+        return;
       }
+      nomAuteurCache.set(n.auteurId, "Propriétaire");
     }));
   }
   let changement = false;

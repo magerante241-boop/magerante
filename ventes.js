@@ -218,7 +218,7 @@ export async function enregistrerVenteLigne(produitId, quantite) {
       type: "vente", sousType: "produit", produitNom, quantite, montant,
       date: serverTimestamp(), auteurId, auteurNom, source: "facture"
     }).catch(() => {});
-    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.` });
+    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "ventes" });
     return { success: true, montant, produitNom };
   } catch (err) {
     return { success: false, message: err.message };
