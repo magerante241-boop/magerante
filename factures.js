@@ -126,7 +126,7 @@ function afficherFacturesFiltrees() {
       `${l.quantite} × ${escapeHtml(l.nom)} — ${Number(l.totalLigne || 0).toLocaleString("fr-FR")} FCFA`
     ).join("<br>");
     return `
-      <details class="collapsible-section">
+      <details class="collapsible-section" id="facture-${f.numero}">
         <summary style="display:flex; justify-content:space-between; padding:10px 14px; cursor:pointer;">
           <span>Facture #${f.numero || "—"} — ${dateStr}</span>
           <strong>${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
@@ -137,6 +137,19 @@ function afficherFacturesFiltrees() {
   }).join("");
 }
 
+export function ouvrirFacture(numero) {
+  filtrePeriodeFactureActuel = "tout";
+  afficherFacturesFiltrees();
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const el = document.getElementById(`facture-${numero}`);
+      if (!el) return;
+      el.setAttribute("open", "");
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+  });
+}
+
 export function cleanup() {
   if (unsubscribeFactures) { unsubscribeFactures(); unsubscribeFactures = null; }
 }
@@ -145,4 +158,4 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-window.FacturesModule = { render, cleanup, enregistrerFacture };
+window.FacturesModule = { render, cleanup, enregistrerFacture, ouvrirFacture };

@@ -837,7 +837,16 @@ if (btnFactureValider) {
     }
     if (lignesValidees.length > 0 && window.FacturesModule && window.FacturesModule.enregistrerFacture) {
       const totalValide = lignesValidees.reduce((acc, l) => acc + l.totalLigne, 0);
-      await window.FacturesModule.enregistrerFacture(lignesValidees, totalValide);
+      const resFacture = await window.FacturesModule.enregistrerFacture(lignesValidees, totalValide);
+      if (resFacture && resFacture.success && window.NotificationsModule && window.NotificationsModule.creerNotification) {
+        window.NotificationsModule.creerNotification({
+          type: "vente",
+          titre: "Nouvelle facture",
+          message: `${lignesValidees.length} ligne${lignesValidees.length > 1 ? "s" : ""} — ${totalValide.toLocaleString("fr-FR")} FCFA`,
+          factureNumero: resFacture.numero,
+          cible: "factures"
+        });
+      }
     }
     btnFactureValider.disabled = false;
     btnFactureValider.textContent = "✅ Valider la facture";
