@@ -707,8 +707,7 @@ document.getElementById("menuSupprimerDemo").addEventListener("click", async () 
 
 // --- Mode Facturier (lignes multiples) ---
 let modeFacturier = false;
-const marqueGridElInit = document.getElementById("marqueGrid");
-if (marqueGridElInit) marqueGridElInit.hidden = true;
+
 let lignesFacture = [];
 let ligneFactureSelectionnee = null;
 
@@ -755,26 +754,30 @@ function renderFacture() {
 const btnToggleFacturier = document.getElementById("btnToggleFacturier");
 const facturePanel = document.getElementById("facturePanel");
 const calcActionsEl = document.querySelector(".calc-actions");
-if (btnToggleFacturier) {
-  btnToggleFacturier.addEventListener("click", () => {
-    modeFacturier = !modeFacturier;
-    window.modeFacturierActif = modeFacturier;
+function appliquerModeFacturier(actif) {
+  modeFacturier = actif;
+  window.modeFacturierActif = modeFacturier;
+  if (btnToggleFacturier) {
     btnToggleFacturier.classList.toggle("active", modeFacturier);
     btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
-    if (facturePanel) facturePanel.hidden = !modeFacturier;
-    const calcDisplayEl = document.querySelector(".calc-display");
-    if (calcDisplayEl) calcDisplayEl.hidden = modeFacturier;
-    const marqueGridEl = document.getElementById("marqueGrid");
-    if (marqueGridEl) marqueGridEl.hidden = !modeFacturier;
-    if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
-    // calc-display reste visible dans les deux modes : c'est la même calculatrice,
-    // seule la formule change (ajout de ligne en mode facturier).
-    calcExpr = "";
-    produitSelectionne = null;
-    renderCalc();
-    renderFacture();
+  }
+  if (facturePanel) facturePanel.hidden = !modeFacturier;
+  const calcDisplayEl = document.querySelector(".calc-display");
+  if (calcDisplayEl) calcDisplayEl.hidden = modeFacturier;
+  const marqueGridEl = document.getElementById("marqueGrid");
+  if (marqueGridEl) marqueGridEl.hidden = !modeFacturier;
+  if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
+  calcExpr = "";
+  produitSelectionne = null;
+  renderCalc();
+  renderFacture();
+}
+if (btnToggleFacturier) {
+  btnToggleFacturier.addEventListener("click", () => {
+    appliquerModeFacturier(!modeFacturier);
   });
 }
+appliquerModeFacturier(true);
 
 const factureLignesContainer = document.getElementById("factureLignes");
 if (factureLignesContainer) {
