@@ -298,14 +298,15 @@ body{
   flex-shrink:0;
   background:var(--surface); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
   display:flex; z-index:10;
+  max-height: 52px;
 }
 .nav-btn[hidden]{ display:none !important; }
 .nav-btn{
   flex:1; background:none; border:none; color:var(--muted);
   display:flex; flex-direction:column; align-items:center; gap:1px;
-  font-size:15px; padding:4px 0; cursor:pointer;
+  font-size:13px; padding:2px 0; cursor:pointer;
 }
-.nav-btn span{font-size:9px;}
+.nav-btn span{font-size:8px;}
 .nav-btn.active{color:var(--primary);}
 
 /* MENU LATÉRAL */
