@@ -1234,3 +1234,9 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 .nav-btn[data-view="ventes"] .nav-icon { background: linear-gradient(135deg,#ab47bc,#7b1fa2); }
 .nav-btn[data-view="plus"] .nav-icon { background: linear-gradient(135deg,#bda15c,#8d6e28); }
 .nav-btn.active .nav-icon { box-shadow: 0 3px 10px rgba(0,0,0,0.28); transform: scale(1.08); }
+
+/* Fix : #bottomNav (nav principale) ne doit pas hériter du position:fixed prévu pour #adminBottomNav via .bottom-nav */
+#bottomNav {
+  position: static;
+  flex-shrink: 0;
+}
