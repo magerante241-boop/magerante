@@ -735,6 +735,9 @@ function renderFacture() {
   const factureLignesEl = document.getElementById("factureLignes");
   const factureTotalEl = document.getElementById("factureTotalValue");
   if (!factureLignesEl || !factureTotalEl) return;
+  const nbLignes = lignesFacture.length;
+  factureLignesEl.dataset.count = Math.min(nbLignes, 5);
+  factureLignesEl.classList.toggle("many", nbLignes > 5);
   if (lignesFacture.length === 0) {
     factureLignesEl.innerHTML = `<p class="placeholder-msg">Aucune ligne. Tape une quantité puis choisis une marque.</p>`;
   } else {

@@ -1206,3 +1206,10 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 #btnToggleFacturier {
   flex-shrink: 0;
 }
+
+/* Chantier : compactage des lignes de facture au-delà de 5 */
+.facture-lignes[data-count="3"] .facture-ligne { font-size: 12px; padding: 5px 4px; }
+.facture-lignes[data-count="4"] .facture-ligne { font-size: 11px; padding: 4px 3px; }
+.facture-lignes[data-count="5"] .facture-ligne { font-size: 10px; padding: 3px 3px; }
+.facture-lignes.many .facture-ligne { display: none; }
+.facture-lignes.many .facture-ligne:last-of-type { display: flex; }
