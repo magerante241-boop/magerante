@@ -22,7 +22,7 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:var(--font-main);
-  min-height:100vh;
+  height:100vh; height:100dvh; overflow:hidden;
   display:flex;
   flex-direction:column;
   overscroll-behavior:none;
@@ -296,7 +296,7 @@ body{
 #appRoot{ display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; }
 .bottom-nav{
   flex-shrink:0;
-  background:var(--surface); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
+  background:linear-gradient(135deg,#2e7d32,#1b5e20); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
   display:flex; z-index:10;
   max-height: 58px;
 }
