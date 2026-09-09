@@ -1220,3 +1220,17 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 .facture-lignes[data-count="4"] { max-height: 128px; }
 .facture-lignes[data-count="5"] { max-height: 150px; }
 .facture-lignes.many { max-height: 40px; }
+
+/* Chantier : bulles colorées modernes pour les icônes de la nav du bas */
+.nav-btn .nav-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 12px;
+  font-size: 16px; margin-bottom: 1px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.nav-btn[data-view="calc"] .nav-icon { background: linear-gradient(135deg,#4caf50,#2e7d32); }
+.nav-btn[data-view="inventaire"] .nav-icon { background: linear-gradient(135deg,#42a5f5,#1565c0); }
+.nav-btn[data-view="factures"] .nav-icon { background: linear-gradient(135deg,#ffa726,#ef6c00); }
+.nav-btn[data-view="ventes"] .nav-icon { background: linear-gradient(135deg,#ab47bc,#7b1fa2); }
+.nav-btn[data-view="plus"] .nav-icon { background: linear-gradient(135deg,#bda15c,#8d6e28); }
+.nav-btn.active .nav-icon { box-shadow: 0 3px 10px rgba(0,0,0,0.28); transform: scale(1.08); }
