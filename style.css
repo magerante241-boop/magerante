@@ -1240,3 +1240,14 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
   position: static;
   flex-shrink: 0;
 }
+
+
+/* Mode facturier : la page s'allonge au lieu d'écraser les tuiles marques */
+body.mode-facturier-actif,
+body.mode-facturier-actif #appRoot {
+  height: auto;
+  min-height: 100dvh;
+}
+#marqueGrid {
+  min-height: 130px;
+}

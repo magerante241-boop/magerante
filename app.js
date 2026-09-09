@@ -770,6 +770,7 @@ function appliquerModeFacturier(actif) {
   const marqueGridEl = document.getElementById("marqueGrid");
   if (marqueGridEl) marqueGridEl.hidden = !modeFacturier;
   if (calcActionsEl) calcActionsEl.hidden = modeFacturier;
+  document.body.classList.toggle("mode-facturier-actif", modeFacturier);
   calcExpr = "";
   produitSelectionne = null;
   renderCalc();
