@@ -298,15 +298,15 @@ body{
   flex-shrink:0;
   background:var(--surface); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
   display:flex; z-index:10;
-  max-height: 40px;
+  max-height: 58px;
 }
 .nav-btn[hidden]{ display:none !important; }
 .nav-btn{
   flex:1; background:none; border:none; color:var(--muted);
-  display:flex; flex-direction:column; align-items:center; gap:1px;
-  font-size:11px; padding:1px 0; cursor:pointer; gap:0;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:20px; padding:4px 0; cursor:pointer;
 }
-.nav-btn span{font-size:7px;}
+.nav-btn span{font-size:9px;}
 .nav-btn.active{color:var(--primary);}
 
 /* MENU LATÉRAL */
@@ -763,13 +763,13 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 /* Chantier 6 - ajustement : 6 tuiles par ligne, plus compactes */
 #marqueGrid{
   grid-template-columns:repeat(6,1fr);
-  gap:4px;
-  padding:4px;
+  gap:3px;
+  padding:3px;
 }
 .marque-cell{
-  font-size:clamp(9px, 2.6vw, 12px);
-  padding:clamp(2px, 1vh, 6px) 2px;
-  min-height:clamp(28px, 6vh, 40px);
+  font-size:clamp(8px, 2.2vw, 10px);
+  padding:clamp(1px, 0.6vh, 3px) 1px;
+  min-height:clamp(22px, 4.5vh, 32px);
   border-radius:8px;
   line-height:1.15;
 }
