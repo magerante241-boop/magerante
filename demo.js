@@ -37,6 +37,7 @@ const PRODUITS_DEMO_ETENDU = [
   { nom: "Label 5 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
   { nom: "Ricard 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 15 },
   { nom: "Ricard 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
+  { nom: "Booster 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 60 },
   { nom: "Brochette de bœuf", categorie: "Snack", prixAchat: 500, prixVente: 1000, stock: 40 },
   { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 2500, stock: 25 },
   { nom: "Beignets (lot de 5)", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
