@@ -22,7 +22,7 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:var(--font-main);
-  height:100vh; height:100dvh; overflow:hidden;
+  height:100vh; height:100dvh; overflow-y:auto; overflow-x:hidden;
   display:flex;
   flex-direction:column;
   overscroll-behavior:none;
@@ -293,7 +293,7 @@ body{
 }
 
 /* BOTTOM NAV */
-#appRoot{ display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; }
+#appRoot{ display:flex; flex-direction:column; height:100vh; height:100dvh; overflow-y:auto; overflow-x:hidden; }
 .bottom-nav{
   flex-shrink:0;
   background:linear-gradient(135deg,#2e7d32,#1b5e20); box-shadow:0 -2px 12px rgba(43,38,32,0.06);
