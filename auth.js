@@ -344,6 +344,7 @@ function updateAccountStatusBadge() {
   }
 
   const estProprietaireOuAdmin = (window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE") || window.AuthState.email === window.ADMIN_EMAIL;
+  alert("DIAG estProprietaireOuAdmin=" + estProprietaireOuAdmin + " accountType=" + window.AuthState.accountType + " role=" + window.AuthState.role + " email=" + window.AuthState.email);
   const menuToggleDemoVisiteur = document.getElementById("menuToggleDemoVisiteur");
   if (menuToggleDemoVisiteur) menuToggleDemoVisiteur.hidden = estProprietaireOuAdmin;
   const menuGenererDemoVisiteur = document.getElementById("menuGenererDemoVisiteur");
