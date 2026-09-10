@@ -231,6 +231,11 @@ button:active {
         </div>
       </div>
 
+      <details class="collapsible-section" open>
+        <summary class="section-title" id="secCourbeCA">Évolution du chiffre d'affaires (global, 14 derniers jours)</summary>
+        <canvas id="caCourbeChart" height="220"></canvas>
+      </details>
+
       <h2 class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</h2>
       <div id="pendingList" class="empty-msg">Chargement...</div>
 
@@ -242,6 +247,7 @@ button:active {
             <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
           </table>
         </div>
+        <canvas id="caBarChart" height="220"></canvas>
       </details>
 
       <h2 class="section-title" id="secZones">Établissements par zone / quartier</h2>
@@ -309,6 +315,7 @@ button:active {
 
   <script src="scroll-arrows.js"></script>
   <script type="module" src="demo.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <script type="module" src="admin.js"></script>
 
   <!-- MENU LATÉRAL ADMIN -->

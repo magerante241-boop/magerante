@@ -20,6 +20,10 @@ if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(pendingList);
 const btnSettings = document.getElementById("btnSettings");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const settingsEmail = document.getElementById("settingsEmail");
+const ctxCaCourbe = document.getElementById("caCourbeChart")?.getContext("2d");
+let caCourbeChart = null;
+const ctxCaBar = document.getElementById("caBarChart")?.getContext("2d");
+let caBarChart = null;
 
 let loginAttempted = false;
 
@@ -262,6 +266,34 @@ async function chargerFinanceEtRapports() {
     caTableBody.innerHTML = rows.map((r) =>
       "<tr><td>" + escapeHtml(r.nom) + "</td><td>" + r.count + "</td><td>" + r.total.toLocaleString("fr-FR") + " FCFA</td></tr>"
     ).join("");
+  }
+
+  if (ctxCaBar) {
+    const top10 = rows.slice(0, 10);
+    if (caBarChart) caBarChart.destroy();
+    caBarChart = new Chart(ctxCaBar, {
+      type: "bar",
+      data: { labels: top10.map((r) => r.nom), datasets: [{ label: "CA (FCFA)", data: top10.map((r) => r.total), backgroundColor: "#22c55e" }] },
+      options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+    });
+  }
+
+  if (ctxCaCourbe) {
+    const parJour = {};
+    ventesDocs.forEach((v) => {
+      const dateObj = v.date && v.date.toDate ? v.date.toDate() : null;
+      if (!dateObj) return;
+      const cle = dateObj.toISOString().slice(0, 10);
+      parJour[cle] = (parJour[cle] || 0) + v.montant;
+    });
+    const labelsJour = Object.keys(parJour).sort().slice(-14);
+    const dataJour = labelsJour.map((k) => parJour[k]);
+    if (caCourbeChart) caCourbeChart.destroy();
+    caCourbeChart = new Chart(ctxCaCourbe, {
+      type: "line",
+      data: { labels: labelsJour, datasets: [{ label: "CA global (FCFA)", data: dataJour, borderColor: "#4a90d9", tension: 0.3 }] },
+      options: { responsive: true, plugins: { legend: { display: false } } },
+    });
   }
 
   if (ventesDocs.length === 0) {
