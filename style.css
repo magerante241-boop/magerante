@@ -1524,6 +1524,8 @@ select.btn-toggle-facturier {
   border: none;
   box-shadow: none;
   background-image: none;
+}
+select.btn-toggle-facturier.btn-blinking {
   animation: btn-bg-flash 0.7s ease-in-out infinite;
 }
 @keyframes btn-bg-flash {
@@ -1541,4 +1543,17 @@ select.btn-toggle-facturier {
 .facture-lignes .placeholder-msg {
   padding: 8px 8px;
   margin: 0;
+}
+
+
+/* Chantier : petit bouton ABC a cote de EFFA, remplace l'ancien bouton pleine largeur */
+.key-abc-mini {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg,#e9e0cd 0%,#c2b191 55%,#8f7a52 100%);
+  color: var(--text); border: none; border-radius: 12px;
+  font-size: 11px; font-weight: 700; padding: 5px 2px; min-height: 38px; cursor: pointer;
+  box-shadow:
+    0 3px 0 rgba(20,17,12,0.28),
+    0 6px 14px rgba(20,17,12,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.55);
 }

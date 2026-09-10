@@ -1051,3 +1051,17 @@ document.addEventListener('DOMContentLoaded', function(){
     btnCloseAbout.addEventListener('click', function(){ aboutGate.hidden = true; });
   }
 });
+
+
+// Chantier : le clignotement du bouton Mode Facturier s'arrete apres 30s ou au premier clic/changement, sans redemarrer
+if (btnToggleFacturier) {
+  let blinkStopped = false;
+  const stopBtnBlink = () => {
+    if (blinkStopped) return;
+    blinkStopped = true;
+    btnToggleFacturier.classList.remove("btn-blinking");
+  };
+  setTimeout(stopBtnBlink, 30000);
+  btnToggleFacturier.addEventListener("click", stopBtnBlink, { once: true });
+  btnToggleFacturier.addEventListener("change", stopBtnBlink, { once: true });
+}
