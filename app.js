@@ -797,8 +797,7 @@ function appliquerModeFacturier(actif) {
   modeFacturier = actif;
   window.modeFacturierActif = modeFacturier;
   if (btnToggleFacturier) {
-    btnToggleFacturier.classList.toggle("active", modeFacturier);
-    btnToggleFacturier.textContent = modeFacturier ? "🧮 Calculette classique" : "🧾 Mode Facturier";
+    btnToggleFacturier.value = modeFacturier ? "facturier" : "calculatrice";
   }
   if (facturePanel) facturePanel.hidden = !modeFacturier;
   const calcDisplayEl = document.querySelector(".calc-display");
@@ -813,8 +812,8 @@ function appliquerModeFacturier(actif) {
   renderFacture();
 }
 if (btnToggleFacturier) {
-  btnToggleFacturier.addEventListener("click", () => {
-    appliquerModeFacturier(!modeFacturier);
+  btnToggleFacturier.addEventListener("change", () => {
+    appliquerModeFacturier(btnToggleFacturier.value === "facturier");
   });
 }
 appliquerModeFacturier(true);
