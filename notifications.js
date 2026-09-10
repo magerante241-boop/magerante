@@ -1,6 +1,6 @@
 // notifications.js — Système de notifications temps réel
 import {
-  auth, db, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch, limit
+  auth, db, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -203,6 +203,16 @@ export async function marquerToutLu() {
   await batch.commit();
 }
 
+export async function marquerUneLu(id) {
+  const notif = notifsCache.find(n => n.id === id);
+  if (!notif || notif.lu) return;
+  try {
+    await updateDoc(doc(db, "establishments", appState.establishmentId, "notifications", id), { lu: true });
+  } catch (err) {
+    console.warn("Marquage notification lue echoue :", err.message);
+  }
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -251,9 +261,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (overlay) overlay.addEventListener("click", () => { panel.hidden = true; });
   if (listEl2) listEl2.addEventListener("click", (e) => {
-    const item = e.target.closest(".notif-item[data-cible]");
+    const item = e.target.closest(".notif-item");
     if (!item) return;
+    const notifId = item.dataset.notifId;
+    if (notifId) marquerUneLu(notifId);
     const cible = item.dataset.cible;
+    if (!cible) return;
     const factureNumero = item.dataset.factureNumero;
     panel.hidden = true;
     if (window.switchView) window.switchView(cible);
