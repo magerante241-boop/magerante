@@ -136,6 +136,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     // état de chargement le temps que window.AuthState.hasEstablishment passe à true.
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
+    moveNavIndicator();
     switchView(view);
   });
 });
@@ -498,6 +499,7 @@ document.querySelectorAll(".side-menu-quick-btn").forEach((btn) => {
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     const navBtn = document.querySelector(`.nav-btn[data-view="${btn.dataset.view}"]`);
     if (navBtn) navBtn.classList.add("active");
+    moveNavIndicator();
     switchView(btn.dataset.view);
   });
 });
@@ -1125,3 +1127,16 @@ if (btnToggleFacturier) {
   btnToggleFacturier.addEventListener("click", stopBtnBlink, { once: true });
   btnToggleFacturier.addEventListener("change", stopBtnBlink, { once: true });
 }
+
+function moveNavIndicator() {
+  const indicator = document.getElementById("navIndicator");
+  const activeBtn = document.querySelector(".nav-btn.active");
+  const nav = document.getElementById("bottomNav");
+  if (!indicator || !activeBtn || !nav) return;
+  const navRect = nav.getBoundingClientRect();
+  const btnRect = activeBtn.getBoundingClientRect();
+  const center = btnRect.left - navRect.left + btnRect.width / 2;
+  indicator.style.left = (center - 12) + "px";
+}
+window.addEventListener("load", moveNavIndicator);
+window.addEventListener("resize", moveNavIndicator);
