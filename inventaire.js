@@ -26,10 +26,12 @@ export function render(container) {
       <button class="inv-add-btn" id="invAddBtn">+ Ajouter</button>
     </div>
     <button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>
+    <div class="inv-outils-grid" id="invOutilsGrid"></div>
     <div class="inv-list" id="invList"><p class="inv-empty">Chargement...</p></div>
   `;
   document.getElementById("invAddBtn").addEventListener("click", () => openModal(null));
   document.getElementById("invStockDepartBtn").addEventListener("click", () => openStockDepartModal());
+  chargerOutilsSuivi();
 
   if (unsubscribe) unsubscribe();
   const q = query(produitsRef(), orderBy("nom"));
@@ -95,6 +97,152 @@ export function cleanup() {
     unsubscribe = null;
   }
   closeModal();
+}
+
+async function chargerOutilsSuivi() {
+  const gridEl = document.getElementById("invOutilsGrid");
+  if (!gridEl || !appState.establishmentId) return;
+  const estId = appState.establishmentId;
+
+  gridEl.innerHTML = `
+    <div class="inv-outil-tuile">
+      <div class="inv-outil-titre">📈 Chiffre d'affaires (14 derniers jours)</div>
+      <canvas id="invCaChart" height="160"></canvas>
+    </div>
+    <div class="inv-outil-tuile">
+      <div class="inv-outil-titre">🏆 Produits les plus vendus</div>
+      <canvas id="invTopChart" height="160"></canvas>
+    </div>
+    <div class="inv-outil-tuile">
+      <div class="inv-outil-titre">⚠️ Suivi déficit de stock</div>
+      <div id="invDeficitListe"><p class="inv-empty">Chargement...</p></div>
+    </div>
+    <div class="inv-outil-tuile">
+      <div class="inv-outil-titre">✏️ Prix &amp; stock — démarrage libre</div>
+      <p class="inv-stock-depart-hint">Renseigne tes propres produits pour démarrer ton inventaire, ou complète les lignes vides ci-dessous.</p>
+      <div id="invTableEditable"></div>
+      <button class="inv-btn-primary" id="invTableSaveBtn">Enregistrer</button>
+      <p class="inv-error" id="invTableError"></p>
+    </div>
+  `;
+
+  const produitsSnap = await getDocs(produitsRef());
+  const produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const debutPeriode = new Date();
+  debutPeriode.setDate(debutPeriode.getDate() - 14);
+  let ventesData = [];
+  try {
+    const ventesSnap = await getDocs(query(collection(db, "establishments", estId, "ventes"), where("date", ">=", debutPeriode)));
+    ventesData = ventesSnap.docs.map((d) => d.data());
+  } catch (err) {
+    console.error("Erreur chargement ventes (outils suivi):", err);
+  }
+
+  const parJour = {};
+  const parProduit = {};
+  ventesData.forEach((v) => {
+    const montant = Number(v.montant) || 0;
+    const dateObj = v.date && v.date.toDate ? v.date.toDate() : null;
+    if (dateObj) {
+      const cle = dateObj.toISOString().slice(0, 10);
+      parJour[cle] = (parJour[cle] || 0) + montant;
+    }
+    if (v.type === "produit" && v.produitId) {
+      if (!parProduit[v.produitId]) parProduit[v.produitId] = { nom: v.produitNom || "Produit", montant: 0 };
+      parProduit[v.produitId].montant += montant;
+    }
+  });
+
+  const labelsJour = Object.keys(parJour).sort();
+  const ctxCa = document.getElementById("invCaChart")?.getContext("2d");
+  if (ctxCa && window.Chart) {
+    new Chart(ctxCa, {
+      type: "line",
+      data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
+      options: { responsive: true, plugins: { legend: { display: false } } },
+    });
+  }
+
+  const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
+  const ctxTop = document.getElementById("invTopChart")?.getContext("2d");
+  if (ctxTop && window.Chart) {
+    new Chart(ctxTop, {
+      type: "bar",
+      data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
+      options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+    });
+  }
+
+  const deficitParCategorie = {};
+  produits.forEach((p) => {
+    const cat = p.categorie || "Autres";
+    const deficit = (Number(p.stockDepart) || 0) - (Number(p.stock) || 0);
+    if (deficit > 0) deficitParCategorie[cat] = (deficitParCategorie[cat] || 0) + deficit;
+  });
+  const deficitListeEl = document.getElementById("invDeficitListe");
+  const catsAvecDeficit = Object.entries(deficitParCategorie);
+  deficitListeEl.innerHTML = catsAvecDeficit.length === 0
+    ? `<p class="inv-empty">Aucun déficit de stock détecté.</p>`
+    : catsAvecDeficit.map(([cat, total]) => `<div class="inv-deficit-ligne"><span>${escapeHtml(cat)}</span><span class="inv-deficit-badge">-${total} unité(s)</span></div>`).join("");
+
+  const tableEl = document.getElementById("invTableEditable");
+  const NB_LIGNES_VIDES = 3;
+  tableEl.innerHTML = `
+    <div class="inv-table-editable">
+      <div class="inv-table-header"><span>Nom</span><span>Catégorie</span><span>Achat</span><span>Vente</span><span>Stock</span></div>
+      ${produits.map((p) => ligneTableEditable(p)).join("")}
+      ${Array.from({ length: NB_LIGNES_VIDES }).map(() => ligneTableEditable(null)).join("")}
+    </div>
+  `;
+
+  document.getElementById("invTableSaveBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("invTableSaveBtn");
+    const errorEl = document.getElementById("invTableError");
+    errorEl.textContent = "";
+    btn.disabled = true;
+    try {
+      const lignes = tableEl.querySelectorAll(".inv-table-ligne");
+      for (const ligne of lignes) {
+        const id = ligne.dataset.id || null;
+        const nom = ligne.querySelector(".it-nom").value.trim();
+        const categorie = ligne.querySelector(".it-categorie").value;
+        const prixAchat = parseFloat(ligne.querySelector(".it-achat").value);
+        const prixVente = parseFloat(ligne.querySelector(".it-vente").value);
+        const stock = parseInt(ligne.querySelector(".it-stock").value, 10);
+        if (!nom && !id) continue;
+        if (!nom || isNaN(prixAchat) || isNaN(prixVente) || isNaN(stock)) {
+          if (id) continue;
+          throw new Error(`Ligne "${nom || "sans nom"}" incomplète.`);
+        }
+        if (id) {
+          await updateDoc(doc(db, "establishments", estId, "produits", id), { nom, categorie, prixAchat, prixVente, stock, updatedAt: serverTimestamp() });
+        } else {
+          await addDoc(produitsRef(), { nom, categorie, prixAchat, prixVente, stock, stockDepart: stock, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        }
+      }
+      errorEl.style.color = "var(--primary)";
+      errorEl.textContent = "Enregistré ✓";
+      chargerOutilsSuivi();
+    } catch (err) {
+      errorEl.style.color = "var(--danger)";
+      errorEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function ligneTableEditable(p) {
+  return `
+    <div class="inv-table-ligne" data-id="${p ? p.id : ""}">
+      <input class="it-nom" type="text" value="${p ? escapeAttr(p.nom) : ""}" placeholder="Nouveau produit">
+      <select class="it-categorie">${CATEGORIES.map((c) => `<option value="${c}" ${p && p.categorie === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+      <input class="it-achat" type="number" inputmode="decimal" value="${p ? p.prixAchat : ""}" placeholder="0">
+      <input class="it-vente" type="number" inputmode="decimal" value="${p ? p.prixVente : ""}" placeholder="0">
+      <input class="it-stock" type="number" inputmode="numeric" value="${p ? p.stock : ""}" placeholder="0">
+    </div>
+  `;
 }
 
 // --- Appelé par app.js (tuiles Bar/Snack/Club) pour récupérer les produits d'une catégorie ---

@@ -1578,3 +1578,15 @@ select.btn-toggle-facturier.btn-blinking {
 select.btn-toggle-facturier:not(.btn-blinking) {
   border: 2px solid #ff8f00;
 }
+
+/* ===== Onglet Inventaire : 4 tuiles outils de suivi (CA, top produits, déficit, tableau éditable) ===== */
+.inv-outils-grid { display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+.inv-outil-tuile { border:1px solid var(--border); border-radius:12px; background:var(--surface); padding:14px; }
+.inv-outil-titre { font-weight:700; font-size:14px; color:var(--text); margin-bottom:10px; }
+.inv-deficit-ligne { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--border); font-size:13px; }
+.inv-deficit-ligne:first-child { border-top:none; }
+.inv-deficit-badge { font-weight:700; color:var(--danger); background:rgba(163,52,43,0.12); padding:2px 8px; border-radius:8px; font-size:12px; }
+.inv-table-editable { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.inv-table-header { display:grid; grid-template-columns:2fr 1.3fr 1fr 1fr 0.8fr; gap:4px; font-size:11px; font-weight:700; color:var(--muted); padding:0 2px; }
+.inv-table-ligne { display:grid; grid-template-columns:2fr 1.3fr 1fr 1fr 0.8fr; gap:4px; }
+.inv-table-ligne input, .inv-table-ligne select { font-size:12px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); width:100%; }
