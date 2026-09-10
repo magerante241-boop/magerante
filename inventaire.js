@@ -184,27 +184,33 @@ async function openStockDepartModal() {
         const benefUnitaire = (Number(p.prixVente) || 0) - (Number(p.prixAchat) || 0);
         return `
         <div class="stock-depart-ligne-detail" data-id="${p.id}" data-benef-unit="${benefUnitaire}">
-          <div class="sdl-nom-row">
+          <button type="button" class="sdl-header">
             <span class="sdl-nom">${escapeHtml(p.nom)}</span>
-            <span class="sdl-badge-saved" hidden></span>
-          </div>
-          <div class="sdl-prix-info">Achat ${(Number(p.prixAchat)||0).toLocaleString("fr-FR")} FCFA · Vente ${(Number(p.prixVente)||0).toLocaleString("fr-FR")} FCFA · Bénéfice/unité ${benefUnitaire.toLocaleString("fr-FR")} FCFA</span>
-          <div class="sdl-row">
-            <div class="sdl-casier-toggle">
-              <button type="button" class="sdl-casier-btn active" data-taille="24">Casier 24</button>
-              <button type="button" class="sdl-casier-btn" data-taille="12">Casier 12</button>
-              <button type="button" class="sdl-casier-btn" data-taille="autre">Autre</button>
+            <span class="sdl-header-right">
+              <span class="sdl-badge-saved" hidden></span>
+              <span class="sdl-header-total">0 bouteille(s)</span>
+              <span class="sdl-chevron">▸</span>
+            </span>
+          </button>
+          <div class="sdl-body" hidden>
+            <div class="sdl-prix-info">Achat ${(Number(p.prixAchat)||0).toLocaleString("fr-FR")} FCFA · Vente ${(Number(p.prixVente)||0).toLocaleString("fr-FR")} FCFA · Bénéfice/unité ${benefUnitaire.toLocaleString("fr-FR")} FCFA</span>
+            <div class="sdl-row">
+              <div class="sdl-casier-toggle">
+                <button type="button" class="sdl-casier-btn active" data-taille="24">Casier 24</button>
+                <button type="button" class="sdl-casier-btn" data-taille="12">Casier 12</button>
+                <button type="button" class="sdl-casier-btn" data-taille="autre">Autre</button>
+              </div>
+              <input type="number" min="0" class="sdl-nb-casiers" placeholder="Nb casiers" value="0">
             </div>
-            <input type="number" min="0" class="sdl-nb-casiers" placeholder="Nb casiers" value="0">
+            <div class="sdl-row sdl-row-autre" hidden>
+              <input type="number" min="1" class="sdl-taille-autre" placeholder="Bouteilles par casier">
+            </div>
+            <div class="sdl-resultats">
+              <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
+              <span class="sdl-total-benef">Bénéfice : 0 FCFA</span>
+            </div>
+            <button type="button" class="sdl-btn-save">💾 Enregistrer</button>
           </div>
-          <div class="sdl-row sdl-row-autre" hidden>
-            <input type="number" min="1" class="sdl-taille-autre" placeholder="Bouteilles par casier">
-          </div>
-          <div class="sdl-resultats">
-            <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
-            <span class="sdl-total-benef">Bénéfice : 0 FCFA</span>
-          </div>
-          <button type="button" class="sdl-btn-save">💾 Enregistrer</button>
         </div>
       `;
       }).join("")}
@@ -229,6 +235,7 @@ async function openStockDepartModal() {
     const totalBenef = totalBouteilles * benefUnit;
     ligneEl.querySelector(".sdl-total-bouteilles").textContent = `= ${totalBouteilles} bouteille(s)`;
     ligneEl.querySelector(".sdl-total-benef").textContent = `Bénéfice : ${totalBenef.toLocaleString("fr-FR")} FCFA`;
+    ligneEl.querySelector(".sdl-header-total").textContent = `${totalBouteilles} bouteille(s)`;
     ligneEl.dataset.totalBouteilles = totalBouteilles;
     ligneEl.dataset.totalBenef = totalBenef;
     recalculerCategorie(ligneEl.closest(".stock-depart-groupe"));
@@ -245,6 +252,12 @@ async function openStockDepartModal() {
   }
 
   listeEl.querySelectorAll(".stock-depart-ligne-detail").forEach((ligneEl) => {
+    ligneEl.querySelector(".sdl-header").addEventListener("click", () => {
+      const body = ligneEl.querySelector(".sdl-body");
+      const ouvert = !body.hidden;
+      body.hidden = ouvert;
+      ligneEl.querySelector(".sdl-chevron").textContent = ouvert ? "▸" : "▾";
+    });
     ligneEl.querySelectorAll(".sdl-casier-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         ligneEl.querySelectorAll(".sdl-casier-btn").forEach((b) => b.classList.remove("active"));

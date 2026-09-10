@@ -1434,3 +1434,17 @@ body.mode-facturier-actif #appRoot {
 .sdl-casier-btn[data-taille="24"] { background:rgba(76,175,80,0.18); color:#2e7d32; border-color:#4caf50; }
 .sdl-casier-btn[data-taille="12"] { background:rgba(66,165,245,0.18); color:#1565c0; border-color:#42a5f5; }
 .sdl-casier-btn[data-taille="autre"] { background:rgba(255,167,38,0.18); color:#ef6c00; border-color:#ffa726; }
+
+
+/* ===== Ligne produit repliable (Définir stock de départ) ===== */
+.stock-depart-ligne-detail { border-bottom:1px solid var(--border); }
+.sdl-header {
+  width:100%; display:flex; justify-content:space-between; align-items:center;
+  background:none; border:none; padding:10px 0; cursor:pointer; text-align:left;
+}
+.sdl-header .sdl-nom { font-size:13px; font-weight:700; color:var(--text); }
+.sdl-header-right { display:flex; align-items:center; gap:8px; }
+.sdl-header-total { font-size:12px; font-weight:700; color:var(--primary-dark); white-space:nowrap; }
+.sdl-chevron { color:var(--muted); font-size:13px; }
+.sdl-body { padding-bottom:10px; }
+.sdl-body[hidden] { display:none; }
