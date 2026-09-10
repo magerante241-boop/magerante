@@ -1338,10 +1338,20 @@ body.mode-facturier-actif #appRoot {
   flex:1 1 30%; min-width:80px;
   display:flex; flex-direction:column; align-items:center; gap:3px;
   background:var(--bg); border:1px solid var(--border); border-radius:12px;
-  padding:8px 4px; font-size:20px; cursor:pointer; color:var(--text);
+  padding:8px 4px; cursor:pointer; color:var(--text);
 }
-.side-menu-quick-btn span { font-size:10px; font-weight:600; }
+.side-menu-quick-btn span:not(.side-menu-quick-icon) { font-size:10px; font-weight:600; }
 .side-menu-quick-btn:active { transform:scale(0.95); }
+.side-menu-quick-icon {
+  display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:12px;
+  font-size:16px; margin-bottom:1px;
+}
+.side-menu-quick-btn[data-view="guide"] .side-menu-quick-icon { background: linear-gradient(135deg,#26c6da,#00838f); }
+.side-menu-quick-btn[data-view="calc"] .side-menu-quick-icon { background: linear-gradient(135deg,#4caf50,#2e7d32); }
+.side-menu-quick-btn[data-view="inventaire"] .side-menu-quick-icon { background: linear-gradient(135deg,#42a5f5,#1565c0); }
+.side-menu-quick-btn[data-view="factures"] .side-menu-quick-icon { background: linear-gradient(135deg,#ffa726,#ef6c00); }
+.side-menu-quick-btn[data-view="ventes"] .side-menu-quick-icon { background: linear-gradient(135deg,#ab47bc,#7b1fa2); }
 
 
 /* ===== Tuile "Définir stock de départ" ===== */
