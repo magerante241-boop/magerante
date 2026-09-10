@@ -19,7 +19,8 @@
 *{box-sizing:border-box; margin:0; padding:0;}
 
 body{
-  background:var(--bg);
+  background:linear-gradient(160deg,#f4fafe 0%,#8fb8d6 45%,#1f3d52 100%);
+  background-attachment:fixed;
   color:var(--text);
   font-family:var(--font-main);
   height:100vh; height:100dvh; overflow-y:auto; overflow-x:hidden;
