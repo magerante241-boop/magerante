@@ -25,9 +25,11 @@ export function render(container) {
       <span class="inv-title">Produits</span>
       <button class="inv-add-btn" id="invAddBtn">+ Ajouter</button>
     </div>
+    <button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>
     <div class="inv-list" id="invList"><p class="inv-empty">Chargement...</p></div>
   `;
   document.getElementById("invAddBtn").addEventListener("click", () => openModal(null));
+  document.getElementById("invStockDepartBtn").addEventListener("click", () => openStockDepartModal());
 
   if (unsubscribe) unsubscribe();
   const q = query(produitsRef(), orderBy("nom"));
@@ -112,6 +114,83 @@ export async function getTousLesProduits() {
 }
 
 const CATEGORIES = ["Bar", "Snack", "Club"];
+
+// --- Tuile "Définir stock de départ" : saisie groupée du stock pour tous les produits ---
+async function openStockDepartModal() {
+  if (!appState.establishmentId) return;
+  const backdrop = document.createElement("div");
+  backdrop.className = "inv-modal-backdrop";
+  backdrop.id = "invStockDepartBackdrop";
+  backdrop.innerHTML = `
+    <div class="inv-modal inv-stock-depart-modal">
+      <h2>📋 Définir stock de départ</h2>
+      <p class="inv-stock-depart-hint">Remplis la quantité de départ pour chaque produit. Cette valeur remplace immédiatement le stock actuel pour tout le monde, jusqu'à la prochaine saisie.</p>
+      <div id="stockDepartListe"><p class="inv-empty">Chargement des produits...</p></div>
+      <p class="inv-error" id="stockDepartError"></p>
+      <div class="inv-modal-actions">
+        <button class="inv-btn-secondary" id="stockDepartCancel">Annuler</button>
+        <button class="inv-btn-primary" id="stockDepartSave">Valider le stock de départ</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  const fermer = () => backdrop.remove();
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) fermer(); });
+  document.getElementById("stockDepartCancel").addEventListener("click", fermer);
+
+  const q = query(produitsRef(), orderBy("nom"));
+  const snap = await getDocs(q);
+  const listeEl = document.getElementById("stockDepartListe");
+  if (!listeEl) return;
+
+  if (snap.empty) {
+    listeEl.innerHTML = `<p class="inv-empty">Aucun produit à configurer.</p>`;
+    return;
+  }
+
+  const parCategorie = new Map();
+  snap.forEach((d) => {
+    const p = { id: d.id, ...d.data() };
+    const cat = p.categorie || "Autres";
+    if (!parCategorie.has(cat)) parCategorie.set(cat, []);
+    parCategorie.get(cat).push(p);
+  });
+
+  listeEl.innerHTML = [...parCategorie.keys()].sort().map((cat) => `
+    <div class="stock-depart-groupe">
+      <h4>${escapeHtml(cat)}</h4>
+      ${parCategorie.get(cat).map((p) => `
+        <div class="stock-depart-ligne">
+          <span class="stock-depart-nom">${escapeHtml(p.nom)}</span>
+          <input type="number" min="0" class="stock-depart-input" data-id="${p.id}" value="${Number(p.stock) || 0}">
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+
+  document.getElementById("stockDepartSave").addEventListener("click", async () => {
+    const saveBtn = document.getElementById("stockDepartSave");
+    const errorEl = document.getElementById("stockDepartError");
+    saveBtn.disabled = true;
+    errorEl.textContent = "";
+    try {
+      const batch = writeBatch(db);
+      document.querySelectorAll(".stock-depart-input").forEach((input) => {
+        const val = parseInt(input.value, 10);
+        const stock = isNaN(val) || val < 0 ? 0 : val;
+        batch.update(
+          doc(db, "establishments", appState.establishmentId, "produits", input.dataset.id),
+          { stock, updatedAt: serverTimestamp() }
+        );
+      });
+      await batch.commit();
+      fermer();
+    } catch (err) {
+      errorEl.textContent = "Erreur : " + err.message;
+      saveBtn.disabled = false;
+    }
+  });
+}
 
 function openModal(produit) {
   produitEnEdition = produit;
