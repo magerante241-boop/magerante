@@ -876,7 +876,7 @@ if (btnToggleFacturier) {
     appliquerModeFacturier(btnToggleFacturier.value === "facturier");
   });
 }
-appliquerModeFacturier(true);
+appliquerModeFacturier(btnToggleFacturier ? btnToggleFacturier.value === "facturier" : false);
 
 const factureLignesContainer = document.getElementById("factureLignes");
 if (factureLignesContainer) {
