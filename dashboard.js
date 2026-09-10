@@ -240,14 +240,30 @@ function afficherSolde(totalRecettes, totalDepenses, totalAchats) {
   `;
 }
 
+let topProduitsChart = null;
 function afficherTopProduits(topProduits) {
   if (!topProduits.length) {
     topProduitsContentEl.innerHTML = "<p>Aucune vente de produit sur la période.</p>";
+    if (topProduitsChart) { topProduitsChart.destroy(); topProduitsChart = null; }
     return;
   }
   topProduitsContentEl.innerHTML = "<ol>" + topProduits.map((p) =>
     `<li>${p.nom} — ${p.quantite} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
   ).join("") + "</ol>";
+
+  let canvasTop = document.getElementById("topProduitsChart");
+  if (!canvasTop) {
+    canvasTop = document.createElement("canvas");
+    canvasTop.id = "topProduitsChart";
+    canvasTop.height = 180;
+    topProduitsContentEl.after(canvasTop);
+  }
+  if (topProduitsChart) topProduitsChart.destroy();
+  topProduitsChart = new Chart(canvasTop.getContext("2d"), {
+    type: "bar",
+    data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#f2c94c" }] },
+    options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+  });
 }
 
 function afficherAlerteStock(produitsEnRupture) {
