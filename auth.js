@@ -347,9 +347,9 @@ function updateAccountStatusBadge() {
   const menuToggleDemoVisiteur = document.getElementById("menuToggleDemoVisiteur");
   if (menuToggleDemoVisiteur) menuToggleDemoVisiteur.hidden = estProprietaireOuAdmin;
   const menuGenererDemoVisiteur = document.getElementById("menuGenererDemoVisiteur");
-  if (menuGenererDemoVisiteur) menuGenererDemoVisiteur.hidden = !estProprietaireOuAdmin;
+  if (menuGenererDemoVisiteur) menuGenererDemoVisiteur.hidden = estProprietaireOuAdmin;
   const menuSupprimerDemoVisiteur = document.getElementById("menuSupprimerDemoVisiteur");
-  if (menuSupprimerDemoVisiteur) menuSupprimerDemoVisiteur.hidden = !estProprietaireOuAdmin;
+  if (menuSupprimerDemoVisiteur) menuSupprimerDemoVisiteur.hidden = estProprietaireOuAdmin;
 
   const menuGenererDemoComplet = document.getElementById("menuGenererDemoComplet");
   if (menuGenererDemoComplet) {
