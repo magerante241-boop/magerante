@@ -41,20 +41,44 @@ export function render(container) {
     }
 
     listEl.innerHTML = "";
+    const parCategorie = new Map();
     snap.forEach((docSnap) => {
-      const p = docSnap.data();
-      const isLow = Number(p.stock) <= 5;
-      const card = document.createElement("div");
-      card.className = "inv-card";
-      card.innerHTML = `
-        <div class="inv-card-info">
-          <span class="inv-card-nom">${escapeHtml(p.nom)}</span>
-          <span class="inv-card-meta">Achat ${formatFcfa(p.prixAchat)} · Vente ${formatFcfa(p.prixVente)}${p.categorie ? " · " + escapeHtml(p.categorie) : ""}</span>
-        </div>
-        <span class="inv-card-stock${isLow ? " low" : ""}">${p.stock} en stock</span>
+      const p = { id: docSnap.id, ...docSnap.data() };
+      const cat = p.categorie || "Autres";
+      if (!parCategorie.has(cat)) parCategorie.set(cat, []);
+      parCategorie.get(cat).push(p);
+    });
+
+    [...parCategorie.keys()].sort().forEach((cat) => {
+      const produits = parCategorie.get(cat);
+      const groupe = document.createElement("div");
+      groupe.className = "inv-groupe";
+      groupe.innerHTML = `
+        <button class="inv-groupe-header">
+          <span>${escapeHtml(cat)} <span class="inv-groupe-count">(${produits.length})</span></span>
+          <span class="inv-groupe-chevron">▸</span>
+        </button>
+        <div class="inv-groupe-body" hidden></div>
       `;
-      card.addEventListener("click", () => openModal({ id: docSnap.id, ...p }));
-      listEl.appendChild(card);
+      const header = groupe.querySelector(".inv-groupe-header");
+      const body = groupe.querySelector(".inv-groupe-body");
+      produits.forEach((p) => {
+        const isLow = Number(p.stock) <= 5;
+        const ligne = document.createElement("div");
+        ligne.className = "inv-ligne-compacte";
+        ligne.innerHTML = `
+          <span class="inv-ligne-nom">${escapeHtml(p.nom)}</span>
+          <span class="inv-ligne-stock${isLow ? " low" : ""}">${p.stock}</span>
+        `;
+        ligne.addEventListener("click", (e) => { e.stopPropagation(); openModal(p); });
+        body.appendChild(ligne);
+      });
+      header.addEventListener("click", () => {
+        const ferme = body.hidden;
+        body.hidden = !ferme;
+        groupe.querySelector(".inv-groupe-chevron").textContent = ferme ? "▾" : "▸";
+      });
+      listEl.appendChild(groupe);
     });
   }, (err) => {
     const listEl = document.getElementById("invList");

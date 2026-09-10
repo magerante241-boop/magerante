@@ -489,6 +489,15 @@ function closeSideMenu() {
 }
 document.getElementById("btnMenu").addEventListener("click", openSideMenu);
 document.getElementById("btnCloseMenu").addEventListener("click", closeSideMenu);
+document.querySelectorAll(".side-menu-quick-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    closeSideMenu();
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+    const navBtn = document.querySelector(`.nav-btn[data-view="${btn.dataset.view}"]`);
+    if (navBtn) navBtn.classList.add("active");
+    switchView(btn.dataset.view);
+  });
+});
 document.getElementById("sideMenuOverlay").addEventListener("click", closeSideMenu);
 document.getElementById("menuRenameEstablishment").addEventListener("click", () => {
   closeSideMenu();
