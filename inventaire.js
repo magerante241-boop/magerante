@@ -285,7 +285,8 @@ async function openStockDepartModal() {
         badge.textContent = `✓ ${stock} en stock`;
         badge.hidden = false;
         btn.textContent = "💾 Enregistrer";
-        afficherBadgeSurTuileMarque(p.nom, stock);
+        const nomProduit = ligneEl.querySelector(".sdl-nom").textContent;
+        afficherBadgeSurTuileMarque(nomProduit, stock);
       } catch (err) {
         alert("Erreur : " + err.message);
         btn.textContent = "💾 Enregistrer";
