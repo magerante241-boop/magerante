@@ -1591,3 +1591,19 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .inv-table-header { display:grid; grid-template-columns:2fr 1.3fr 1fr 1fr 0.8fr; gap:4px; font-size:11px; font-weight:700; color:var(--muted); padding:0 2px; }
 .inv-table-ligne { display:grid; grid-template-columns:2fr 1.3fr 1fr 1fr 0.8fr; gap:4px; }
 .inv-table-ligne input, .inv-table-ligne select { font-size:12px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); width:100%; }
+
+/* Curseur nav jaune glissant */
+#bottomNav { position: relative; }
+.nav-indicator {
+  left: 0;
+  position: absolute;
+  bottom: -2px;
+  height: 3px;
+  width: 24px;
+  background: #ffd600;
+  border-radius: 3px;
+  transition: left 0.3s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+  z-index: 1;
+}
+.nav-btn.active::after { display: none; }
