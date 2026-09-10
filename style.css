@@ -1419,3 +1419,18 @@ body.mode-facturier-actif #appRoot {
 }
 .sdl-btn-save:active { transform:scale(0.97); }
 .sdl-btn-save:disabled { opacity:0.6; }
+
+
+/* ===== Badge quantité sur tuile de marque (après Enregistrer stock de départ) ===== */
+.marque-cell-stock-badge {
+  position:absolute; top:-6px; right:-6px;
+  background:#ffca28; color:#2b1c00; font-size:10px; font-weight:800;
+  min-width:18px; height:18px; border-radius:9px; padding:0 4px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 5px rgba(0,0,0,0.35); border:1px solid rgba(0,0,0,0.15);
+}
+
+/* ===== Boutons Casier toujours colorés (pas seulement à l'état actif) ===== */
+.sdl-casier-btn[data-taille="24"] { background:rgba(76,175,80,0.18); color:#2e7d32; border-color:#4caf50; }
+.sdl-casier-btn[data-taille="12"] { background:rgba(66,165,245,0.18); color:#1565c0; border-color:#42a5f5; }
+.sdl-casier-btn[data-taille="autre"] { background:rgba(255,167,38,0.18); color:#ef6c00; border-color:#ffa726; }

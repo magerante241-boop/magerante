@@ -372,6 +372,7 @@ const MARQUES_TAILLES = {
   "Label 5": { petite: "Label 5 70cl", grande: "Label 5 1L" },
   "Ricard": { petite: "Ricard 70cl", grande: "Ricard 1L" },
 };
+window.MARQUES_TAILLES = MARQUES_TAILLES;
 
 const marqueTaillesEl = document.getElementById("marqueTailles");
 let marqueTaillesTimer = null;
