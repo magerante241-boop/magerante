@@ -1,5 +1,5 @@
 :root{
-  --bg:#eef5fb;            /* blanc cassé / ivoire, fond général */
+  --bg:#f6f1e7;            /* blanc cassé / ivoire, fond général */
   --surface:#ffffff;       /* cartes / en-tête, blanc pur pour contraste */
   --surface2:#f0e8d8;      /* beige clair : inputs, touches clavier */
   --border:rgba(35,28,15,0.08);
@@ -1316,9 +1316,7 @@ body.mode-facturier-actif #appRoot {
 .inv-groupe-count { font-weight:500; color:var(--muted); font-size:12px; }
 .inv-groupe-chevron { color:var(--muted); font-size:14px; }
 .inv-groupe-body[hidden] { display:none; }
-.inv-groupe-body {
-  background: linear-gradient(160deg, #f4fafe 0%, #8fb8d6 45%, #1f3d52 100%);
-  background-attachment: fixed; display:flex; flex-direction:column; }
+.inv-groupe-body { display:flex; flex-direction:column; }
 .inv-ligne-compacte {
   display:flex; justify-content:space-between; align-items:center;
   padding:8px 14px; border-top:1px solid var(--border); cursor:pointer;
