@@ -1298,3 +1298,45 @@ body.mode-facturier-actif #appRoot {
   text-align:center;
   text-indent:16px;
 }
+
+
+/* ===== Inventaire : groupes par catégorie, liste compacte dépliable ===== */
+.inv-groupe {
+  border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:8px;
+  background:var(--surface);
+}
+.inv-groupe-header {
+  width:100%; display:flex; justify-content:space-between; align-items:center;
+  background:var(--bg); border:none; padding:10px 14px; font-weight:700; font-size:14px;
+  color:var(--text); cursor:pointer;
+}
+.inv-groupe-count { font-weight:500; color:var(--muted); font-size:12px; }
+.inv-groupe-chevron { color:var(--muted); font-size:14px; }
+.inv-groupe-body[hidden] { display:none; }
+.inv-groupe-body { display:flex; flex-direction:column; }
+.inv-ligne-compacte {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 14px; border-top:1px solid var(--border); cursor:pointer;
+}
+.inv-ligne-nom { font-size:13px; font-weight:600; color:var(--text); }
+.inv-ligne-stock {
+  font-size:12px; font-weight:700; padding:2px 8px; border-radius:8px;
+  background:rgba(31,111,74,0.12); color:var(--primary-dark);
+}
+.inv-ligne-stock.low { background:rgba(163,52,43,0.12); color:var(--danger); }
+
+
+/* ===== Liens rapides menu latéral ===== */
+.side-menu-quicklinks {
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:10px 4px 14px; margin-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.side-menu-quick-btn {
+  flex:1 1 30%; min-width:80px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:var(--bg); border:1px solid var(--border); border-radius:12px;
+  padding:8px 4px; font-size:20px; cursor:pointer; color:var(--text);
+}
+.side-menu-quick-btn span { font-size:10px; font-weight:600; }
+.side-menu-quick-btn:active { transform:scale(0.95); }
