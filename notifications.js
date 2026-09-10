@@ -1,6 +1,6 @@
 // notifications.js — Système de notifications temps réel
 import {
-  auth, db, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
+  auth, db, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -151,8 +151,8 @@ export function initNotifications() {
   const estProprietaire = !!uid && uid === appState.establishmentId;
   if (estProprietaire) nettoyerVieillesNotifications();
   const q = estProprietaire
-    ? query(notifsRef(), orderBy("createdAt", "desc"))
-    : query(notifsRef(), where("auteurId", "==", uid), orderBy("createdAt", "desc"));
+    ? query(notifsRef(), orderBy("createdAt", "desc"), limit(300))
+    : query(notifsRef(), where("auteurId", "==", uid), orderBy("createdAt", "desc"), limit(300));
   unsubscribeNotifs = onSnapshot(q, (snap) => {
     notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
     renderPanel();
