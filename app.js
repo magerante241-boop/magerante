@@ -473,6 +473,19 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
 const sideMenu = document.getElementById("sideMenu");
 function openSideMenu() {
   sideMenu.hidden = false;
+  rafraichirLibelleToggleDemo();
+}
+
+async function rafraichirLibelleToggleDemo() {
+  const btn = document.getElementById("menuToggleDemoVisiteur");
+  if (!btn || btn.hidden || !window.DemoModule) return;
+  try {
+    const existe = await window.DemoModule.existeDonneesDemoVisiteur();
+    btn.textContent = existe ? "🗑️ Supprimer les données de simulation" : "🧪 Générer des données de simulation";
+    btn.dataset.etat = existe ? "presentes" : "absentes";
+  } catch (err) {
+    console.error("Erreur vérification données démo:", err);
+  }
 }
 function closeSideMenu() {
   sideMenu.hidden = true;
@@ -694,6 +707,47 @@ document.addEventListener("click", (e) => {
     marqueTaillesEl.hidden = true;
   }
 });
+document.getElementById("menuToggleDemoVisiteur").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  const genererMode = btn.dataset.etat !== "presentes";
+  const confirmMsg = genererMode
+    ? "Générer des produits et ventes de simulation pour tester les graphiques et outils de suivi ?"
+    : "Supprimer toutes tes données de simulation (produits et ventes marqués comme démo) ?";
+  if (!confirm(confirmMsg)) return;
+  try {
+    const res = genererMode
+      ? await window.DemoModule.genererDonneesDemoVisiteur()
+      : await window.DemoModule.supprimerDonneesDemoVisiteur();
+    alert(res.success ? (res.resume || (genererMode ? "Données de simulation générées." : `${res.count} élément(s) supprimé(s).`)) : (res.message || "Erreur."));
+    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
+    rafraichirLibelleToggleDemo();
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  }
+});
+
+document.getElementById("menuGenererDemoVisiteur").addEventListener("click", async () => {
+  if (!confirm("Générer des produits et ventes de simulation pour tester les graphiques et outils de suivi ? (visible uniquement dans ton établissement, supprimable ensuite)")) return;
+  try {
+    const res = await window.DemoModule.genererDonneesDemoVisiteur();
+    alert(res.success ? (res.resume || "Données de simulation générées.") : (res.message || "Erreur lors de la génération."));
+    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  }
+});
+
+document.getElementById("menuSupprimerDemoVisiteur").addEventListener("click", async () => {
+  if (!confirm("Supprimer toutes tes données de simulation (produits et ventes marqués comme démo) ?")) return;
+  try {
+    const res = await window.DemoModule.supprimerDonneesDemoVisiteur();
+    alert(res.success ? `${res.count} élément(s) de simulation supprimé(s).` : (res.message || "Erreur lors de la suppression."));
+    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  }
+});
+
 document.getElementById("menuGenererDemoComplet").addEventListener("click", async () => {
   if (window.AuthState?.email !== window.ADMIN_EMAIL) {
     alert("Cette action est réservée au compte administrateur.");

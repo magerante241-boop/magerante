@@ -343,6 +343,14 @@ function updateAccountStatusBadge() {
     menuRename.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
   }
 
+  const estProprietaireOuAdmin = (window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE") || window.AuthState.email === window.ADMIN_EMAIL;
+  const menuToggleDemoVisiteur = document.getElementById("menuToggleDemoVisiteur");
+  if (menuToggleDemoVisiteur) menuToggleDemoVisiteur.hidden = estProprietaireOuAdmin;
+  const menuGenererDemoVisiteur = document.getElementById("menuGenererDemoVisiteur");
+  if (menuGenererDemoVisiteur) menuGenererDemoVisiteur.hidden = !estProprietaireOuAdmin;
+  const menuSupprimerDemoVisiteur = document.getElementById("menuSupprimerDemoVisiteur");
+  if (menuSupprimerDemoVisiteur) menuSupprimerDemoVisiteur.hidden = !estProprietaireOuAdmin;
+
   const menuGenererDemoComplet = document.getElementById("menuGenererDemoComplet");
   if (menuGenererDemoComplet) {
     menuGenererDemoComplet.hidden = (window.AuthState.email !== window.ADMIN_EMAIL);
