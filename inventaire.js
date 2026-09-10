@@ -163,7 +163,11 @@ async function openStockDepartModal() {
         const benefUnitaire = (Number(p.prixVente) || 0) - (Number(p.prixAchat) || 0);
         return `
         <div class="stock-depart-ligne-detail" data-id="${p.id}" data-benef-unit="${benefUnitaire}">
-          <div class="sdl-nom">${escapeHtml(p.nom)}</div>
+          <div class="sdl-nom-row">
+            <span class="sdl-nom">${escapeHtml(p.nom)}</span>
+            <span class="sdl-badge-saved" hidden></span>
+          </div>
+          <div class="sdl-prix-info">Achat ${(Number(p.prixAchat)||0).toLocaleString("fr-FR")} FCFA · Vente ${(Number(p.prixVente)||0).toLocaleString("fr-FR")} FCFA · Bénéfice/unité ${benefUnitaire.toLocaleString("fr-FR")} FCFA</span>
           <div class="sdl-row">
             <div class="sdl-casier-toggle">
               <button type="button" class="sdl-casier-btn active" data-taille="24">Casier 24</button>
@@ -179,6 +183,7 @@ async function openStockDepartModal() {
             <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
             <span class="sdl-total-benef">Bénéfice : 0 FCFA</span>
           </div>
+          <button type="button" class="sdl-btn-save">💾 Enregistrer</button>
         </div>
       `;
       }).join("")}
@@ -230,6 +235,26 @@ async function openStockDepartModal() {
     });
     ligneEl.querySelector(".sdl-nb-casiers").addEventListener("input", () => recalculerLigne(ligneEl));
     ligneEl.querySelector(".sdl-taille-autre").addEventListener("input", () => recalculerLigne(ligneEl));
+    ligneEl.querySelector(".sdl-btn-save").addEventListener("click", async () => {
+      const btn = ligneEl.querySelector(".sdl-btn-save");
+      const badge = ligneEl.querySelector(".sdl-badge-saved");
+      const stock = Number(ligneEl.dataset.totalBouteilles) || 0;
+      btn.disabled = true;
+      btn.textContent = "...";
+      try {
+        await updateDoc(
+          doc(db, "establishments", appState.establishmentId, "produits", ligneEl.dataset.id),
+          { stock, updatedAt: serverTimestamp() }
+        );
+        badge.textContent = `✓ ${stock} en stock`;
+        badge.hidden = false;
+        btn.textContent = "💾 Enregistrer";
+      } catch (err) {
+        alert("Erreur : " + err.message);
+        btn.textContent = "💾 Enregistrer";
+      }
+      btn.disabled = false;
+    });
   });
 
   document.getElementById("stockDepartSave").addEventListener("click", async () => {
