@@ -1385,7 +1385,10 @@ body.mode-facturier-actif #appRoot {
   flex:1; padding:6px 4px; font-size:11px; font-weight:700; border-radius:8px;
   border:1px solid var(--border); background:var(--bg); color:var(--muted); cursor:pointer;
 }
-.sdl-casier-btn.active { background:var(--primary); color:#fdfaf3; border-color:var(--primary); }
+.sdl-casier-btn[data-taille="24"].active { background:linear-gradient(135deg,#4caf50,#2e7d32); color:#fff; border-color:#2e7d32; }
+.sdl-casier-btn[data-taille="12"].active { background:linear-gradient(135deg,#42a5f5,#1565c0); color:#fff; border-color:#1565c0; }
+.sdl-casier-btn[data-taille="autre"].active { background:linear-gradient(135deg,#ffa726,#ef6c00); color:#fff; border-color:#ef6c00; }
+.sdl-row-autre[hidden] { display:none !important; }
 .sdl-nb-casiers {
   width:80px; text-align:center; padding:6px 4px; border-radius:8px;
   border:1px solid var(--border); font-size:13px; font-weight:700;
