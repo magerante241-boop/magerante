@@ -1544,8 +1544,8 @@ select.btn-toggle-facturier.btn-blinking {
   animation: btn-bg-flash 0.7s ease-in-out infinite;
 }
 @keyframes btn-bg-flash {
-  0%, 100% { background-color: #ffca28; }
-  50% { background-color: #ff6f00; }
+  0%, 100% { background-color: #ffee00; }
+  50% { background-color: #fff9b0; }
 }
 
 /* Chantier : cadre Aucune ligne / facture compact et dynamique, ne cache plus les tuiles */
