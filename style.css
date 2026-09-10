@@ -1489,3 +1489,31 @@ select.btn-toggle-facturier {
   padding: 9px 1px;
   font-size: 11px;
 }
+
+
+/* Chantier : bouton Mode Facturier centre + couleur speciale */
+select.btn-toggle-facturier {
+  text-align: center;
+  text-align-last: center;
+  background: linear-gradient(135deg,#ffd54f,#ff8f00) url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27><path fill=%27%23ffffff%27 d=%27M7 10l5 5 5-5z%27/></svg>") no-repeat right 10px center / 16px;
+  border: 1px solid #ff8f00;
+  color: #5c3d00;
+  font-weight: 800;
+}
+
+/* Chantier : page fixe non scrollable, seul le contenu interne scrolle */
+body,
+body.mode-facturier-actif,
+body.mode-facturier-actif #appRoot,
+#appRoot {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+.calc-zone {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
