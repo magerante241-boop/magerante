@@ -116,6 +116,27 @@ export async function getTousLesProduits() {
 const CATEGORIES = ["Bar", "Snack", "Club"];
 
 // --- Tuile "Définir stock de départ" : saisie groupée du stock pour tous les produits ---
+// Trouve la marque (clé de MARQUES_TAILLES) correspondant à un nom de produit,
+// et affiche/actualise un badge de quantité sur la tuile de marque correspondante
+// dans la page Facture (tuiles toujours présentes dans le DOM, juste masquées).
+function afficherBadgeSurTuileMarque(nomProduit, quantite) {
+  const table = window.MARQUES_TAILLES;
+  if (!table) return;
+  const marqueKey = Object.keys(table).find(
+    (k) => table[k].petite === nomProduit || table[k].grande === nomProduit
+  );
+  if (!marqueKey) return;
+  const tuile = document.querySelector(`.marque-cell[data-marque="${marqueKey}"]`);
+  if (!tuile) return;
+  let badge = tuile.querySelector(".marque-cell-stock-badge");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "marque-cell-stock-badge";
+    tuile.appendChild(badge);
+  }
+  badge.textContent = quantite;
+}
+
 async function openStockDepartModal() {
   if (!appState.establishmentId) return;
   const backdrop = document.createElement("div");
@@ -249,6 +270,7 @@ async function openStockDepartModal() {
         badge.textContent = `✓ ${stock} en stock`;
         badge.hidden = false;
         btn.textContent = "💾 Enregistrer";
+        afficherBadgeSurTuileMarque(p.nom, stock);
       } catch (err) {
         alert("Erreur : " + err.message);
         btn.textContent = "💾 Enregistrer";
