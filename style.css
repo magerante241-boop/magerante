@@ -1238,9 +1238,10 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 .nav-btn[data-view="plus"] .nav-icon { background: linear-gradient(135deg,#bda15c,#8d6e28); }
 .nav-btn.active .nav-icon { box-shadow: 0 3px 10px rgba(0,0,0,0.28); transform: scale(1.08); }
 
-/* Fix : #bottomNav (nav principale) ne doit pas hériter du position:fixed prévu pour #adminBottomNav via .bottom-nav */
+/* Fix : #bottomNav (nav principale) ne doit pas hériter du position:fixed ni du z-index:500 prévus pour #adminBottomNav via .bottom-nav (sinon elle passe devant les modales, même en position:static, car c'est un élément flex direct de #appRoot) */
 #bottomNav {
   position: static;
+  z-index: 10;
   flex-shrink: 0;
 }
 
