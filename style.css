@@ -168,7 +168,7 @@ body{
   transform:translateY(1px) scale(0.97); filter:brightness(0.95);
 }
 
-.view-container{color:var(--muted); font-size:14px;}
+.view-container{color:var(--text); font-size:14px;}
 .placeholder-msg{text-align:center; padding:30px 10px;}
 
 /* NUMPAD — touches chromées, chaque chiffre a sa teinte, effet brillant + relief */
@@ -1598,9 +1598,9 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   left: 0;
   position: absolute;
   bottom: -2px;
-  height: 3px;
-  width: 24px;
-  background: #ffd600;
+  height: 4px;
+  width: 32px;
+  background: #ffeb3b;
   border-radius: 3px;
   transition: left 0.3s cubic-bezier(.4,0,.2,1);
   pointer-events: none;

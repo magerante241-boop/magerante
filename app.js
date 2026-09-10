@@ -1136,7 +1136,7 @@ function moveNavIndicator() {
   const navRect = nav.getBoundingClientRect();
   const btnRect = activeBtn.getBoundingClientRect();
   const center = btnRect.left - navRect.left + btnRect.width / 2;
-  indicator.style.left = (center - 12) + "px";
+  indicator.style.left = (center - 16) + "px";
 }
 window.addEventListener("load", moveNavIndicator);
 window.addEventListener("resize", moveNavIndicator);
