@@ -314,7 +314,7 @@ function afficherVentesFiltrees() {
     return `
       <div class="inv-row">
         <div>
-          <div>${libelle}</div>
+          <div style="font-weight:700;color:var(--text);">${libelle}</div>
           <small style="color:var(--muted);">${dateStr}</small>
         </div>
         <div style="font-weight:bold;">${Number(v.montant || 0).toLocaleString("fr-FR")} FCFA</div>
