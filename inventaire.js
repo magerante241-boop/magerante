@@ -144,7 +144,10 @@ async function openStockDepartModal() {
   backdrop.id = "invStockDepartBackdrop";
   backdrop.innerHTML = `
     <div class="inv-modal inv-stock-depart-modal">
-      <h2>📋 Définir stock de départ</h2>
+      <div class="inv-modal-header">
+        <h2>📋 Définir stock de départ</h2>
+        <button class="icon-btn" id="stockDepartClose" aria-label="Fermer">✕</button>
+      </div>
       <p class="inv-stock-depart-hint">Remplis la quantité de départ pour chaque produit. Cette valeur remplace immédiatement le stock actuel pour tout le monde, jusqu'à la prochaine saisie.</p>
       <div id="stockDepartListe"><p class="inv-empty">Chargement des produits...</p></div>
       <p class="inv-error" id="stockDepartError"></p>
@@ -158,6 +161,7 @@ async function openStockDepartModal() {
   const fermer = () => backdrop.remove();
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) fermer(); });
   document.getElementById("stockDepartCancel").addEventListener("click", fermer);
+  document.getElementById("stockDepartClose").addEventListener("click", fermer);
 
   const q = query(produitsRef(), orderBy("nom"));
   const snap = await getDocs(q);

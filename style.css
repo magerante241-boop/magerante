@@ -1354,6 +1354,9 @@ body.mode-facturier-actif #appRoot {
 .side-menu-quick-btn[data-view="ventes"] .side-menu-quick-icon { background: linear-gradient(135deg,#ab47bc,#7b1fa2); }
 
 
+.inv-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.inv-modal-header h2{ margin:0; }
+
 /* ===== Tuile "Définir stock de départ" ===== */
 .inv-stock-depart-btn {
   width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
