@@ -754,13 +754,19 @@ function ajouterLigneFacture(p) {
   }
   const quantite = calcValeurNumerique > 0 ? calcValeurNumerique : 1;
   const prixUnitaire = Number(p.prixVente) || 0;
-  lignesFacture.push({
-    produitId: p.id,
-    nom: p.nom,
-    prixUnitaire,
-    quantite,
-    totalLigne: quantite * prixUnitaire,
-  });
+  const ligneExistante = lignesFacture.find(l => l.produitId === p.id);
+  if (ligneExistante) {
+    ligneExistante.quantite += quantite;
+    ligneExistante.totalLigne = ligneExistante.quantite * ligneExistante.prixUnitaire;
+  } else {
+    lignesFacture.push({
+      produitId: p.id,
+      nom: p.nom,
+      prixUnitaire,
+      quantite,
+      totalLigne: quantite * prixUnitaire,
+    });
+  }
   calcExpr = "";
   produitSelectionne = null;
   renderCalc();
