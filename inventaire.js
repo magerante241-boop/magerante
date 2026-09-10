@@ -113,7 +113,7 @@ export async function getTousLesProduits() {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-const CATEGORIES = ["Bar", "Snack", "Club"];
+const CATEGORIES = ["Bar"];
 
 // --- Tuile "Définir stock de départ" : saisie groupée du stock pour tous les produits ---
 // Trouve la marque (clé de MARQUES_TAILLES) correspondant à un nom de produit,
@@ -459,28 +459,6 @@ const PRODUITS_DEMO = [
   { nom: "Vin rouge (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
   { nom: "Vin blanc (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
   { nom: "Vin rosé (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 20 },
-  { nom: "Whisky Johnnie Walker Red Label 70cl", categorie: "Club", prixAchat: 8000, prixVente: 15000, stock: 20 },
-  { nom: "Whisky Jack Daniel's 70cl", categorie: "Club", prixAchat: 10000, prixVente: 18000, stock: 15 },
-  { nom: "Pastis 51 70cl", categorie: "Club", prixAchat: 6000, prixVente: 12000, stock: 15 },
-  { nom: "Ricard 70cl", categorie: "Club", prixAchat: 6500, prixVente: 12500, stock: 15 },
-  { nom: "Gin Gordon's 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
-  { nom: "Vodka Smirnoff 70cl", categorie: "Club", prixAchat: 5500, prixVente: 11000, stock: 15 },
-  { nom: "Rhum Negrita 70cl", categorie: "Club", prixAchat: 4500, prixVente: 9000, stock: 15 },
-  { nom: "Cognac Hennessy VS 70cl", categorie: "Club", prixAchat: 15000, prixVente: 28000, stock: 10 },
-  { nom: "Liqueur Baileys 70cl", categorie: "Club", prixAchat: 9000, prixVente: 16000, stock: 10 },
-  { nom: "Champagne Moët & Chandon 75cl", categorie: "Club", prixAchat: 25000, prixVente: 45000, stock: 6 },
-  { nom: "Vin mousseux 75cl", categorie: "Club", prixAchat: 3000, prixVente: 6000, stock: 15 },
-  { nom: "Chips paquet 45g", categorie: "Snack", prixAchat: 300, prixVente: 500, stock: 50 },
-  { nom: "Cacahuètes grillées sachet", categorie: "Snack", prixAchat: 200, prixVente: 400, stock: 50 },
-  { nom: "Biscuits paquet", categorie: "Snack", prixAchat: 250, prixVente: 450, stock: 40 },
-  { nom: "Chocolat tablette", categorie: "Snack", prixAchat: 400, prixVente: 700, stock: 30 },
-  { nom: "Brochettes de bœuf (unité)", categorie: "Snack", prixAchat: 500, prixVente: 1000, stock: 40 },
-  { nom: "Poulet braisé (portion)", categorie: "Snack", prixAchat: 1500, prixVente: 3000, stock: 20 },
-  { nom: "Cigarettes Rothmans (paquet)", categorie: "Snack", prixAchat: 1000, prixVente: 1500, stock: 40 },
-  { nom: "Cigarettes Marlboro (paquet)", categorie: "Snack", prixAchat: 1200, prixVente: 1800, stock: 40 },
-  { nom: "Cigarettes Dunhill (paquet)", categorie: "Snack", prixAchat: 1300, prixVente: 2000, stock: 30 },
-  { nom: "Cigarettes London (paquet)", categorie: "Snack", prixAchat: 900, prixVente: 1400, stock: 30 },
-  { nom: "Glaçons (sachet)", categorie: "Snack", prixAchat: 200, prixVente: 500, stock: 60 },
   { nom: "33 Export 65cl", categorie: "Bar", prixAchat: 500, prixVente: 800, stock: 40 },
   { nom: "Beaufort 65cl", categorie: "Bar", prixAchat: 800, prixVente: 1300, stock: 40 },
   { nom: "Guinness 65cl", categorie: "Bar", prixAchat: 1100, prixVente: 1900, stock: 30 },

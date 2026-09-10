@@ -336,18 +336,7 @@ renderCalc();
 
 // --- Filtrage des tuiles Bar/Snack/Club selon le type d'etablissement ---
 // Types d'établissement pour lesquels la grille de marques (boissons) n'a pas
-// de sens et doit rester masquée. Tout type absent de cette liste (y compris
-// le "boutique" créé par défaut en mode visiteur) l'affiche.
-// ⚠️ À ajuster selon ton besoin réel si la liste ne te convient pas.
-const TYPES_SANS_GRILLE_MARQUES = ["hotel", "salon", "atelier", "service"];
-function filtrerCategoriesCalc(type) {
-  const masquer = TYPES_SANS_GRILLE_MARQUES.includes((type || "").toLowerCase());
-  const marqueGrid = document.getElementById("marqueGrid");
-  if (marqueGrid) marqueGrid.hidden = masquer;
-}
-window.filtrerCategoriesCalc = filtrerCategoriesCalc;
-
-// --- Tuiles Bar / Snack / Club : liste de produits filtrée par catégorie ---
+// --- Grille de marques (bar) : liste de produits filtrée par catégorie ---
 const calcProduitsListe = document.getElementById("calcProduitsListe");
 if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(calcProduitsListe);
 
