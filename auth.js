@@ -29,7 +29,7 @@ if (menuDashboardBtn) menuDashboardBtn.addEventListener("click", () => { window.
 
 window.AuthState = { ready: false, hasEstablishment: false, accountType: "anonyme", validated: false };
 
-const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "boutique" };
+const DEFAULT_ESTABLISHMENT = { name: "Mon établissement", type: "bar" };
 
 if (btnAdminAccess) {
   btnAdminAccess.addEventListener("click", () => {
@@ -129,7 +129,7 @@ authGate.addEventListener("click", (e) => {
 // --- Création (manuelle, via modale) ou mise à jour de l'établissement ---
 document.getElementById("btnCreateEstablishment").addEventListener("click", async () => {
   const name = document.getElementById("establishmentName").value.trim();
-  const type = document.getElementById("establishmentType").value;
+  const type = "bar";
   const errorEl = document.getElementById("establishmentError");
   const btn = document.getElementById("btnCreateEstablishment");
   errorEl.textContent = "";
@@ -245,7 +245,7 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value;
   const etablissementNom = document.getElementById("regEtablissementNom").value.trim();
-  const etablissementType = document.getElementById("regEtablissementType").value;
+  const etablissementType = "bar";
   const localisation = document.getElementById("regLocalisation").value.trim();
   const whatsappEtablissement = document.getElementById("regWhatsappEtablissement").value.trim();
   const gpsLat = window.gpsCaptureLat || null;
@@ -377,11 +377,8 @@ async function ouvrirApplication(establishmentId) {
   appState.establishmentId = establishmentId;
   const estSnap = await getDoc(doc(db, "establishments", establishmentId));
   const name = estSnap.exists() ? estSnap.data().name : DEFAULT_ESTABLISHMENT.name;
-  const type = estSnap.exists() ? estSnap.data().type : DEFAULT_ESTABLISHMENT.type;
   window.AuthState.hasEstablishment = true;
-  window.AuthState.establishmentType = type;
   etablissementNomEl.textContent = name;
-  if (window.filtrerCategoriesCalc) window.filtrerCategoriesCalc(type);
   closeModal();
 }
 
