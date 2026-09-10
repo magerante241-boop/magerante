@@ -49,8 +49,12 @@ export async function genererProduitsDemo() {
   if (!appState.establishmentId) {
     return { success: false, message: "Établissement non initialisé." };
   }
-  const batch = writeBatch(db);
   const ref = produitsRef();
+  const existant = await getDocs(query(ref, where("isDemo", "==", true)));
+  if (!existant.empty) {
+    return { success: true, count: 0, message: "Produits démo déjà présents, import ignoré." };
+  }
+  const batch = writeBatch(db);
   PRODUITS_DEMO_ETENDU.forEach((p) => {
     const newDocRef = doc(ref);
     batch.set(newDocRef, {

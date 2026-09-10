@@ -445,6 +445,8 @@ onAuthStateChanged(auth, async (user) => {
     }
     // Mode visiteur : on crée l'établissement par défaut tout seul,
     // aucune modale, aucune action requise de l'utilisateur.
+    if (window.AuthState._creationEnCours) { return; }
+    window.AuthState._creationEnCours = true;
     try {
       await creerEtablissementParDefaut(user.uid);
       await ouvrirApplication(user.uid);
@@ -456,6 +458,8 @@ onAuthStateChanged(auth, async (user) => {
     } catch (err) {
       console.warn("Création automatique de l'établissement impossible :", err);
       window.AuthState.hasEstablishment = false;
+    } finally {
+      window.AuthState._creationEnCours = false;
     }
     return;
   }
