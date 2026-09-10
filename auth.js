@@ -455,6 +455,7 @@ onAuthStateChanged(auth, async (user) => {
     try {
       await creerEtablissementParDefaut(user.uid);
       await ouvrirApplication(user.uid);
+      updateAccountStatusBadge();
       try {
         await genererProduitsDemo();
       } catch (errDemo) {
