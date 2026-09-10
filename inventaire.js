@@ -264,6 +264,8 @@ async function openStockDepartModal() {
         btn.classList.add("active");
         const rowAutre = ligneEl.querySelector(".sdl-row-autre");
         rowAutre.hidden = btn.dataset.taille !== "autre";
+        ligneEl.querySelector(".sdl-nb-casiers").value = "0";
+        ligneEl.querySelector(".sdl-taille-autre").value = "";
         recalculerLigne(ligneEl);
       });
     });
