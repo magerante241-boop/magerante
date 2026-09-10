@@ -168,8 +168,12 @@ async function openStockDepartModal() {
             <div class="sdl-casier-toggle">
               <button type="button" class="sdl-casier-btn active" data-taille="24">Casier 24</button>
               <button type="button" class="sdl-casier-btn" data-taille="12">Casier 12</button>
+              <button type="button" class="sdl-casier-btn" data-taille="autre">Autre</button>
             </div>
             <input type="number" min="0" class="sdl-nb-casiers" placeholder="Nb casiers" value="0">
+          </div>
+          <div class="sdl-row sdl-row-autre" hidden>
+            <input type="number" min="1" class="sdl-taille-autre" placeholder="Bouteilles par casier">
           </div>
           <div class="sdl-resultats">
             <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
@@ -187,7 +191,12 @@ async function openStockDepartModal() {
 
   function recalculerLigne(ligneEl) {
     const tailleBtn = ligneEl.querySelector(".sdl-casier-btn.active");
-    const taille = parseInt(tailleBtn.dataset.taille, 10);
+    let taille;
+    if (tailleBtn.dataset.taille === "autre") {
+      taille = parseInt(ligneEl.querySelector(".sdl-taille-autre").value, 10) || 0;
+    } else {
+      taille = parseInt(tailleBtn.dataset.taille, 10);
+    }
     const nbCasiers = parseInt(ligneEl.querySelector(".sdl-nb-casiers").value, 10) || 0;
     const totalBouteilles = nbCasiers * taille;
     const benefUnit = parseFloat(ligneEl.dataset.benefUnit) || 0;
@@ -214,10 +223,13 @@ async function openStockDepartModal() {
       btn.addEventListener("click", () => {
         ligneEl.querySelectorAll(".sdl-casier-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
+        const rowAutre = ligneEl.querySelector(".sdl-row-autre");
+        rowAutre.hidden = btn.dataset.taille !== "autre";
         recalculerLigne(ligneEl);
       });
     });
     ligneEl.querySelector(".sdl-nb-casiers").addEventListener("input", () => recalculerLigne(ligneEl));
+    ligneEl.querySelector(".sdl-taille-autre").addEventListener("input", () => recalculerLigne(ligneEl));
   });
 
   document.getElementById("stockDepartSave").addEventListener("click", async () => {

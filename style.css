@@ -1396,3 +1396,8 @@ body.mode-facturier-actif #appRoot {
   display:flex; justify-content:space-between; margin-top:8px; padding-top:8px;
   border-top:2px solid var(--primary); font-size:12px; font-weight:800; color:var(--primary-dark);
 }
+
+.sdl-taille-autre {
+  width:100%; text-align:center; padding:6px 4px; border-radius:8px;
+  border:1px solid var(--border); font-size:13px; font-weight:700;
+}
