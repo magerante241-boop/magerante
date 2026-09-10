@@ -1404,3 +1404,18 @@ body.mode-facturier-actif #appRoot {
   width:100%; text-align:center; padding:6px 4px; border-radius:8px;
   border:1px solid var(--border); font-size:13px; font-weight:700;
 }
+
+
+/* ===== Prix/bénéfice + sauvegarde individuelle (Définir stock de départ) ===== */
+.sdl-nom-row { display:flex; align-items:center; gap:8px; margin-bottom:2px; flex-wrap:wrap; }
+.sdl-badge-saved {
+  font-size:10px; font-weight:800; color:#1b5e20; background:rgba(46,125,50,0.15);
+  padding:2px 7px; border-radius:8px;
+}
+.sdl-prix-info { display:block; font-size:10.5px; color:var(--muted); margin-bottom:6px; }
+.sdl-btn-save {
+  width:100%; margin-top:6px; background:linear-gradient(135deg,#4caf50,#2e7d32);
+  color:#fff; border:none; border-radius:8px; padding:8px; font-weight:700; font-size:12.5px; cursor:pointer;
+}
+.sdl-btn-save:active { transform:scale(0.97); }
+.sdl-btn-save:disabled { opacity:0.6; }
