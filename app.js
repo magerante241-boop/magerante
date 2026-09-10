@@ -67,6 +67,33 @@ function switchView(view) {
     } else {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
+  } else if (view === "guide") {
+    calcZone.hidden = true;
+    if (numpadElement) numpadElement.hidden = true;
+    if (abcKeyboardElement) abcKeyboardElement.hidden = true;
+    viewContainer.hidden = false;
+    if (facturePanelEl) facturePanelEl.hidden = true;
+    viewContainer.innerHTML = `
+      <div style="padding:4px 2px;">
+        <h3 style="margin:0 0 10px;color:var(--primary-dark);">📖 Mode d'emploi</h3>
+        <p style="margin:0 0 14px;color:var(--muted);font-size:13px;">Petit guide rapide pour bien utiliser l'application.</p>
+
+        <h4 style="margin:14px 0 6px;">🧾 Facture</h4>
+        <p style="font-size:13px;margin:0 0 4px;">Tape une quantité au clavier, puis touche une marque pour créer une ligne. Plusieurs lignes se cumulent automatiquement ; valide la facture une fois terminée.</p>
+
+        <h4 style="margin:14px 0 6px;">📦 Inventaire</h4>
+        <p style="font-size:13px;margin:0 0 4px;">Gère la liste des produits en stock : ajoute, modifie les quantités et les prix.</p>
+
+        <h4 style="margin:14px 0 6px;">🕘 Historique</h4>
+        <p style="font-size:13px;margin:0 0 4px;">Retrouve toutes les factures déjà validées, classées par date.</p>
+
+        <h4 style="margin:14px 0 6px;">🛒 Ventes</h4>
+        <p style="font-size:13px;margin:0 0 4px;">Consulte le récapitulatif des ventes réalisées.</p>
+
+        <h4 style="margin:14px 0 6px;">⚙️ Plus</h4>
+        <p style="font-size:13px;margin:0 0 4px;">Accède aux réglages complémentaires de l'établissement.</p>
+      </div>
+    `;
   } else if (view === "factures") {
     calcZone.hidden = true;
     if (numpadElement) numpadElement.hidden = true;

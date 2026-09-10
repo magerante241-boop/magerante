@@ -1228,6 +1228,7 @@ body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
   font-size: 16px; margin-bottom: 1px;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
+.nav-btn[data-view="guide"] .nav-icon { background: linear-gradient(135deg,#26c6da,#00838f); }
 .nav-btn[data-view="calc"] .nav-icon { background: linear-gradient(135deg,#4caf50,#2e7d32); }
 .nav-btn[data-view="inventaire"] .nav-icon { background: linear-gradient(135deg,#42a5f5,#1565c0); }
 .nav-btn[data-view="factures"] .nav-icon { background: linear-gradient(135deg,#ffa726,#ef6c00); }
