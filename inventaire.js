@@ -157,16 +157,68 @@ async function openStockDepartModal() {
   });
 
   listeEl.innerHTML = [...parCategorie.keys()].sort().map((cat) => `
-    <div class="stock-depart-groupe">
+    <div class="stock-depart-groupe" data-cat="${escapeHtml(cat)}">
       <h4>${escapeHtml(cat)}</h4>
-      ${parCategorie.get(cat).map((p) => `
-        <div class="stock-depart-ligne">
-          <span class="stock-depart-nom">${escapeHtml(p.nom)}</span>
-          <input type="number" min="0" class="stock-depart-input" data-id="${p.id}" value="${Number(p.stock) || 0}">
+      ${parCategorie.get(cat).map((p) => {
+        const benefUnitaire = (Number(p.prixVente) || 0) - (Number(p.prixAchat) || 0);
+        return `
+        <div class="stock-depart-ligne-detail" data-id="${p.id}" data-benef-unit="${benefUnitaire}">
+          <div class="sdl-nom">${escapeHtml(p.nom)}</div>
+          <div class="sdl-row">
+            <div class="sdl-casier-toggle">
+              <button type="button" class="sdl-casier-btn active" data-taille="24">Casier 24</button>
+              <button type="button" class="sdl-casier-btn" data-taille="12">Casier 12</button>
+            </div>
+            <input type="number" min="0" class="sdl-nb-casiers" placeholder="Nb casiers" value="0">
+          </div>
+          <div class="sdl-resultats">
+            <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
+            <span class="sdl-total-benef">Bénéfice : 0 FCFA</span>
+          </div>
         </div>
-      `).join("")}
+      `;
+      }).join("")}
+      <div class="stock-depart-total-cat">
+        <span class="sdc-bouteilles">Total catégorie : 0 bouteille(s)</span>
+        <span class="sdc-benef">Bénéfice catégorie : 0 FCFA</span>
+      </div>
     </div>
   `).join("");
+
+  function recalculerLigne(ligneEl) {
+    const tailleBtn = ligneEl.querySelector(".sdl-casier-btn.active");
+    const taille = parseInt(tailleBtn.dataset.taille, 10);
+    const nbCasiers = parseInt(ligneEl.querySelector(".sdl-nb-casiers").value, 10) || 0;
+    const totalBouteilles = nbCasiers * taille;
+    const benefUnit = parseFloat(ligneEl.dataset.benefUnit) || 0;
+    const totalBenef = totalBouteilles * benefUnit;
+    ligneEl.querySelector(".sdl-total-bouteilles").textContent = `= ${totalBouteilles} bouteille(s)`;
+    ligneEl.querySelector(".sdl-total-benef").textContent = `Bénéfice : ${totalBenef.toLocaleString("fr-FR")} FCFA`;
+    ligneEl.dataset.totalBouteilles = totalBouteilles;
+    ligneEl.dataset.totalBenef = totalBenef;
+    recalculerCategorie(ligneEl.closest(".stock-depart-groupe"));
+  }
+
+  function recalculerCategorie(groupeEl) {
+    let totalBouteilles = 0, totalBenef = 0;
+    groupeEl.querySelectorAll(".stock-depart-ligne-detail").forEach((l) => {
+      totalBouteilles += Number(l.dataset.totalBouteilles) || 0;
+      totalBenef += Number(l.dataset.totalBenef) || 0;
+    });
+    groupeEl.querySelector(".sdc-bouteilles").textContent = `Total catégorie : ${totalBouteilles} bouteille(s)`;
+    groupeEl.querySelector(".sdc-benef").textContent = `Bénéfice catégorie : ${totalBenef.toLocaleString("fr-FR")} FCFA`;
+  }
+
+  listeEl.querySelectorAll(".stock-depart-ligne-detail").forEach((ligneEl) => {
+    ligneEl.querySelectorAll(".sdl-casier-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        ligneEl.querySelectorAll(".sdl-casier-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        recalculerLigne(ligneEl);
+      });
+    });
+    ligneEl.querySelector(".sdl-nb-casiers").addEventListener("input", () => recalculerLigne(ligneEl));
+  });
 
   document.getElementById("stockDepartSave").addEventListener("click", async () => {
     const saveBtn = document.getElementById("stockDepartSave");
@@ -175,11 +227,10 @@ async function openStockDepartModal() {
     errorEl.textContent = "";
     try {
       const batch = writeBatch(db);
-      document.querySelectorAll(".stock-depart-input").forEach((input) => {
-        const val = parseInt(input.value, 10);
-        const stock = isNaN(val) || val < 0 ? 0 : val;
+      listeEl.querySelectorAll(".stock-depart-ligne-detail").forEach((ligneEl) => {
+        const stock = Number(ligneEl.dataset.totalBouteilles) || 0;
         batch.update(
-          doc(db, "establishments", appState.establishmentId, "produits", input.dataset.id),
+          doc(db, "establishments", appState.establishmentId, "produits", ligneEl.dataset.id),
           { stock, updatedAt: serverTimestamp() }
         );
       });

@@ -1372,3 +1372,27 @@ body.mode-facturier-actif #appRoot {
 }
 .inv-btn-secondary { background:var(--bg); color:var(--text); border:1px solid var(--border); }
 .inv-btn-primary { background:var(--primary); color:#fdfaf3; }
+
+
+/* ===== Détail casiers (Définir stock de départ) ===== */
+.stock-depart-ligne-detail {
+  border-bottom:1px solid var(--border); padding:10px 0;
+}
+.sdl-nom { font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.sdl-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.sdl-casier-toggle { display:flex; gap:4px; flex:1; }
+.sdl-casier-btn {
+  flex:1; padding:6px 4px; font-size:11px; font-weight:700; border-radius:8px;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted); cursor:pointer;
+}
+.sdl-casier-btn.active { background:var(--primary); color:#fdfaf3; border-color:var(--primary); }
+.sdl-nb-casiers {
+  width:80px; text-align:center; padding:6px 4px; border-radius:8px;
+  border:1px solid var(--border); font-size:13px; font-weight:700;
+}
+.sdl-resultats { display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); font-weight:600; }
+.sdl-total-benef { color:var(--primary-dark); }
+.stock-depart-total-cat {
+  display:flex; justify-content:space-between; margin-top:8px; padding-top:8px;
+  border-top:2px solid var(--primary); font-size:12px; font-weight:800; color:var(--primary-dark);
+}
