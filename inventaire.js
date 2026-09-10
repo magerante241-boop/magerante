@@ -310,7 +310,7 @@ async function openStockDepartModal() {
         const stock = Number(ligneEl.dataset.totalBouteilles) || 0;
         batch.update(
           doc(db, "establishments", appState.establishmentId, "produits", ligneEl.dataset.id),
-          { stock, updatedAt: serverTimestamp() }
+          { stock, stockDepart: stock, updatedAt: serverTimestamp() }
         );
       });
       await batch.commit();
