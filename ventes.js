@@ -1,7 +1,7 @@
 // ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
 // (deduit automatiquement le stock quand une vente est liee a un produit).
 import {
-  auth, db, doc, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, increment, runTransaction
+  auth, db, doc, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, increment, runTransaction, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
@@ -267,7 +267,7 @@ export function render(container) {
   });
 
   if (unsubscribeVentes) unsubscribeVentes();
-  const q = query(ventesRef(), orderBy("date", "desc"));
+  const q = query(ventesRef(), orderBy("date", "desc"), limit(300));
   unsubscribeVentes = onSnapshot(q, (snap) => {
     ventesCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     afficherVentesFiltrees();

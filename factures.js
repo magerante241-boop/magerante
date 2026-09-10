@@ -2,7 +2,7 @@
 // en plus des ventes individuelles déjà enregistrées par ventes.js pour
 // chaque ligne (le comptage CA/stock existant n'est pas modifié).
 import {
-  db, doc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth
+  db, doc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 
@@ -79,7 +79,7 @@ export function render(container) {
   });
 
   if (unsubscribeFactures) unsubscribeFactures();
-  const q = query(facturesRef(), orderBy("date", "desc"));
+  const q = query(facturesRef(), orderBy("date", "desc"), limit(300));
   unsubscribeFactures = onSnapshot(q, (snap) => {
     facturesCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     afficherFacturesFiltrees();
