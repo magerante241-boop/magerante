@@ -203,10 +203,55 @@ export async function supprimerDonneesDemo() {
   return { success: true, count: total };
 }
 
+export async function genererDonneesDemoVisiteur() {
+  const resProduits = await genererProduitsDemo();
+  if (!resProduits.success) return resProduits;
+  const resVentes = await genererVentesDemo();
+  return {
+    success: true,
+    resume: `${resProduits.count} produits, ${resVentes.count || 0} ventes de simulation créés (visibles uniquement dans ton établissement).`,
+  };
+}
+
+export async function supprimerDonneesDemoVisiteur() {
+  let total = 0;
+  if (!appState.establishmentId) return { success: false, message: "Établissement non initialisé." };
+
+  const qProduits = query(produitsRef(), where("isDemo", "==", true));
+  const snapProduits = await getDocs(qProduits);
+  if (!snapProduits.empty) {
+    const batch1 = writeBatch(db);
+    snapProduits.docs.forEach((d) => batch1.delete(d.ref));
+    await batch1.commit();
+    total += snapProduits.size;
+  }
+
+  const qVentes = query(ventesRef(), where("isDemo", "==", true));
+  const snapVentes = await getDocs(qVentes);
+  if (!snapVentes.empty) {
+    const batch2 = writeBatch(db);
+    snapVentes.docs.forEach((d) => batch2.delete(d.ref));
+    await batch2.commit();
+    total += snapVentes.size;
+  }
+
+  return { success: true, count: total };
+}
+
+export async function existeDonneesDemoVisiteur() {
+  if (!appState.establishmentId) return false;
+  const qProduits = query(produitsRef(), where("isDemo", "==", true));
+  const snap = await getDocs(qProduits);
+  return !snap.empty;
+}
+
 window.DemoModule = {
   genererProduitsDemo,
   genererVentesDemo,
   genererComptesEtZonesDemo,
   genererDonneesDemoCompletes,
   supprimerDonneesDemo,
+  genererDonneesDemoVisiteur,
+  supprimerDonneesDemoVisiteur,
+  existeDonneesDemoVisiteur,
 };
