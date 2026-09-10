@@ -128,8 +128,8 @@ function afficherFacturesFiltrees() {
     return `
       <details class="collapsible-section" id="facture-${f.numero}">
         <summary style="display:flex; justify-content:space-between; padding:10px 14px; cursor:pointer;">
-          <span>Facture #${f.numero || "—"} — ${dateStr}</span>
-          <strong>${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
+          <span style="font-weight:700;color:var(--text);">Facture #${f.numero || "—"} — ${dateStr}</span>
+          <strong style="color:var(--text);">${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
         </summary>
         <div style="padding:6px 14px 12px; font-size:13px; color:var(--muted);">${detailLignes || "Détail indisponible."}</div>
       </details>
