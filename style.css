@@ -1486,8 +1486,9 @@ select.btn-toggle-facturier {
   padding: 3px 0;
 }
 .marque-cell {
-  padding: 9px 1px;
-  font-size: 11px;
+  padding: 7px 1px;
+  font-size: 10.5px;
+  min-height: 40px;
 }
 
 
