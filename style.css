@@ -1463,10 +1463,14 @@ select.btn-toggle-facturier {
   cursor: pointer;
 }
 
-/* Chantier : tuiles marques, legere augmentation par rapport a l'original */
+/* Chantier : tuiles marques plus larges, presque bord a bord */
+#marqueGrid {
+  gap: 4px;
+  padding: 4px;
+}
 .marque-cell {
   min-height: 46px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 9px 5px;
+  padding: 9px 2px;
 }
