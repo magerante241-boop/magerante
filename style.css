@@ -1262,15 +1262,18 @@ body.mode-facturier-actif #appRoot {
   font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 .guide-title {
-  text-align:left;
-  color:#111111;
-  font-size:19px;
+  text-align:center;
+  color:#1b5e20;
+  font-size:20px;
   font-weight:800;
-  margin:0 0 4px;
+  font-style:italic;
+  margin:0 0 6px;
   letter-spacing:0.2px;
+  text-decoration:underline;
+  text-underline-offset:4px;
 }
 .guide-intro {
-  text-align:left;
+  text-align:center;
   color:#111111;
   font-size:13px;
   font-weight:600;
@@ -1280,6 +1283,7 @@ body.mode-facturier-actif #appRoot {
   margin:0 0 10px;
 }
 .guide-section h4 {
+  text-align:center;
   color:#111111;
   font-size:14.5px;
   font-weight:800;
@@ -1291,6 +1295,6 @@ body.mode-facturier-actif #appRoot {
   font-weight:600;
   line-height:1.32;
   margin:0;
-  text-align:justify;
-  text-justify:inter-word;
+  text-align:center;
+  text-indent:16px;
 }
