@@ -1,5 +1,5 @@
 :root{
-  --bg:#f6f1e7;            /* blanc cassé / ivoire, fond général */
+  --bg:#eef5fb;            /* blanc cassé / ivoire, fond général */
   --surface:#ffffff;       /* cartes / en-tête, blanc pur pour contraste */
   --surface2:#f0e8d8;      /* beige clair : inputs, touches clavier */
   --border:rgba(35,28,15,0.08);
