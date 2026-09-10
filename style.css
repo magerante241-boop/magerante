@@ -1474,3 +1474,18 @@ select.btn-toggle-facturier {
   font-weight: 700;
   padding: 9px 2px;
 }
+
+
+/* Chantier : reduire bande blanche laterale + tuiles marques quasi bord a bord */
+.calc-zone {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+#marqueGrid {
+  gap: 3px;
+  padding: 3px 0;
+}
+.marque-cell {
+  padding: 9px 1px;
+  font-size: 11px;
+}
