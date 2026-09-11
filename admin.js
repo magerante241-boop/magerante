@@ -417,7 +417,23 @@ async function ouvrirEditionEtablissement(id, etablissements) {
   }
 }
 
+function attendreChart(callback, tentatives = 0) {
+  if (window.Chart) {
+    callback();
+    return;
+  }
+  if (tentatives > 50) {
+    console.error("Chart.js n'a jamais fini de charger (timeout).");
+    return;
+  }
+  setTimeout(() => attendreChart(callback, tentatives + 1), 100);
+}
+
 function renderInventaireGlobal(produits) {
+  attendreChart(() => renderInventaireGlobalImpl(produits));
+}
+
+function renderInventaireGlobalImpl(produits) {
   let valeurTotale = 0;
   const parCategorie = {};
   produits.forEach((p) => {
