@@ -1181,10 +1181,14 @@ window.showToast = function (message, duration = 2200) {
 .bottom-nav-item {
   color: #fff;
   background: none; border: none;
-  font-size: 11px; display: flex; flex-direction: column;
-  align-items: center; gap: 2px; padding: 4px 6px; cursor: pointer;
+  flex: 1; min-width: 0;
+  font-size: 9px; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; padding: 4px 2px; cursor: pointer;
 }
-.bottom-nav-icon { font-size: 18px; }
+.bottom-nav-item span:last-child {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.bottom-nav-icon { font-size: 15px; }
 .bottom-nav-item:active { color: var(--primary); }
 body:has(#adminBottomNav:not([hidden])) .container { padding-bottom: 70px; }
 

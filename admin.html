@@ -175,7 +175,7 @@ table.data-table tr:last-child td { border-bottom: none; }
 }
 .quick-tile {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px; padding: 14px 6px;
+  gap: 6px; padding: 14px 6px; min-height: 76px; box-sizing: border-box;
 }
 .quick-tile .quick-tile-icon { font-size: 24px; }
 .quick-tile .quick-tile-label { font-size: 11.5px; font-weight: 700; color: var(--text); text-align: center; }
@@ -217,7 +217,7 @@ button:active {
     </div>
 
     <div id="adminPanel" hidden>
-      <div class="quick-access-grid">
+      <div class="quick-access-grid" id="secAccueil">
         <div class="stat-card quick-tile" data-target="secVentes">
           <span class="quick-tile-icon">🧾</span><span class="quick-tile-label">Ventes</span>
         </div>
@@ -265,15 +265,17 @@ button:active {
         </div>
       </div>
 
-      <details class="collapsible-section" open>
+      <details class="collapsible-section">
         <summary class="section-title" id="secCourbeCA">Évolution du chiffre d'affaires (global, 14 derniers jours)</summary>
         <canvas id="caCourbeChart" height="220"></canvas>
       </details>
 
-      <h2 class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</h2>
-      <div id="pendingList" class="empty-msg">Chargement...</div>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</summary>
+        <div id="pendingList" class="empty-msg">Chargement...</div>
+      </details>
 
-      <details class="collapsible-section" open>
+      <details class="collapsible-section">
         <summary class="section-title" id="secCA">Chiffre d'affaires par etablissement</summary>
         <div class="table-wrap">
           <table class="data-table">
@@ -284,9 +286,11 @@ button:active {
         <canvas id="caBarChart" height="220"></canvas>
       </details>
 
-      <h2 class="section-title" id="secZones">Établissements par zone / quartier</h2>
-      <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
-      <div id="listeZones"></div>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secZones">Établissements par zone / quartier</summary>
+        <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
+        <div id="listeZones"></div>
+      </details>
 
       <h2 class="section-title">Inventaire global</h2>
       <div class="stats-grid">
@@ -316,26 +320,32 @@ button:active {
       <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
     </section>
 
-      <h2 class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</h2>
-      <select id="filtreEtablissementProduits" class="filtre-select">
-        <option value="tous">Tous les etablissements</option>
-      </select>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
-          <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
-        </table>
-      </div>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</summary>
+        <select id="filtreEtablissementProduits" class="filtre-select">
+          <option value="tous">Tous les etablissements</option>
+        </select>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
+            <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
 
-      <h2 class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</h2>
-      <div id="rapportList" class="empty-msg">Chargement...</div>
-      <h2 class="section-title" id="secConnexions">Historique des connexions</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
-          <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
-        </table>
-      </div>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</summary>
+        <div id="rapportList" class="empty-msg">Chargement...</div>
+      </details>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secConnexions">Historique des connexions</summary>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
+            <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -368,6 +378,7 @@ button:active {
         <button class="icon-btn" id="btnCloseAdminMenu" aria-label="Fermer le menu">✕</button>
       </div>
       <ul class="side-menu-list">
+        <li><button class="side-menu-item" data-target="secAccueil">🏠 Tableau de bord</button></li>
         <li><button class="side-menu-item" data-target="secVentes">🧾 Dernieres ventes</button></li>
         <li><button class="side-menu-item" data-target="secComptesAttente">👥 Comptes proprietaires</button></li>
         <li><button class="side-menu-item" data-target="secGestionProduits">🛠️ Gestion des produits</button></li>
@@ -382,6 +393,7 @@ button:active {
 
   <!-- NAV DU BAS ADMIN -->
   <nav id="adminBottomNav" class="bottom-nav" hidden>
+    <button class="bottom-nav-item" data-target="secAccueil"><span class="bottom-nav-icon">🏠</span><span>Accueil</span></button>
     <button class="bottom-nav-item" data-target="secVentes"><span class="bottom-nav-icon">🧾</span><span>Ventes</span></button>
     <button class="bottom-nav-item" data-target="secComptesAttente"><span class="bottom-nav-icon">👥</span><span>Comptes</span></button>
     <button class="bottom-nav-item" data-target="secGestionProduits"><span class="bottom-nav-icon">🛠️</span><span>Produits</span></button>
