@@ -119,6 +119,8 @@ table.data-table tr:last-child td { border-bottom: none; }
 .settings-panel {
   background: var(--bg); width: 100%; border-radius: 18px 18px 0 0;
   padding: 16px; max-width: 700px; margin: 0 auto;
+  max-height: 85vh; overflow-y: auto;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 .settings-header {
   display: flex; justify-content: space-between; align-items: center;
