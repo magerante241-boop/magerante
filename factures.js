@@ -131,7 +131,7 @@ function afficherFacturesFiltrees() {
           <span style="font-weight:700;color:var(--text);">Facture #${f.numero || "—"} — ${dateStr}</span>
           <strong style="color:var(--text);">${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
         </summary>
-        <div style="padding:6px 14px 12px; font-size:13px; color:var(--muted);">${detailLignes || "Détail indisponible."}</div>
+        <div style="padding:6px 14px 12px; font-size:13px; color:var(--text);">${detailLignes || "Détail indisponible."}</div>
       </details>
     `;
   }).join("");
