@@ -1,4 +1,4 @@
-with open("style.css", "r", encoding="utf-8") as f:
+with open("admin.html", "r", encoding="utf-8") as f:
     c = f.read()
 
 old = """.quick-tile {
@@ -21,7 +21,7 @@ new = """.quick-tile {
 assert old in c, "ancre quick-tile introuvable"
 c = c.replace(old, new, 1)
 
-with open("style.css", "w", encoding="utf-8") as f:
+with open("admin.html", "w", encoding="utf-8") as f:
     f.write(c)
 
-print("Patch style.css (quick-tile) termine.")
+print("Patch admin.html (quick-tile) termine.")
