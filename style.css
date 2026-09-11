@@ -766,6 +766,7 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
   grid-template-columns:repeat(6,1fr);
   gap:3px;
   padding:3px;
+  position: relative;
 }
 .marque-cell{
   font-size:clamp(8px, 2.2vw, 10px);
