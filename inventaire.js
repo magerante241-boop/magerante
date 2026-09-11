@@ -128,8 +128,13 @@ async function chargerOutilsSuivi() {
     </div>
   `;
 
-  const produitsSnap = await getDocs(produitsRef());
-  const produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  let produits = [];
+  try {
+    const produitsSnap = await getDocs(produitsRef());
+    produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.error("Erreur chargement produits (outils suivi):", err);
+  }
 
   const debutPeriode = new Date();
   debutPeriode.setDate(debutPeriode.getDate() - 14);
