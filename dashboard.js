@@ -242,14 +242,12 @@ function afficherSolde(totalRecettes, totalDepenses, totalAchats) {
 
 let topProduitsChart = null;
 function afficherTopProduits(topProduits) {
-  if (!topProduits.length) {
-    topProduitsContentEl.innerHTML = "<p>Aucune vente de produit sur la période.</p>";
-    if (topProduitsChart) { topProduitsChart.destroy(); topProduitsChart = null; }
-    return;
-  }
-  topProduitsContentEl.innerHTML = "<ol>" + topProduits.map((p) =>
-    `<li>${p.nom} — ${p.quantite} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
-  ).join("") + "</ol>";
+  const aDesDonnees = topProduits.length > 0;
+  topProduitsContentEl.innerHTML = aDesDonnees
+    ? "<ol>" + topProduits.map((p) =>
+        `<li>${p.nom} — ${p.quantite} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
+      ).join("") + "</ol>"
+    : "<p>Aucune vente de produit sur la période.</p>";
 
   let canvasTop = document.getElementById("topProduitsChart");
   if (!canvasTop) {
@@ -259,9 +257,11 @@ function afficherTopProduits(topProduits) {
     topProduitsContentEl.after(canvasTop);
   }
   if (topProduitsChart) topProduitsChart.destroy();
+  const labelsTop = aDesDonnees ? topProduits.map((p) => p.nom) : ["Aucun produit"];
+  const dataTop = aDesDonnees ? topProduits.map((p) => p.montant) : [0];
   topProduitsChart = new Chart(canvasTop.getContext("2d"), {
     type: "bar",
-    data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#f2c94c" }] },
+    data: { labels: labelsTop, datasets: [{ label: "Ventes (FCFA)", data: dataTop, backgroundColor: "#f2c94c" }] },
     options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
   });
 }
@@ -390,12 +390,16 @@ async function chargerDonnees(ownerUid) {
   const soldeNet = donneesMouvements.totalRecettes - donneesMouvements.totalDepenses - donneesMouvements.totalAchats;
   afficherAlerteDeficit(soldeNet, donneesMouvements.totalRecettes, donneesMouvements.totalDepenses, donneesMouvements.totalAchats);
 
-  const labelsCategorie = Object.keys(donneesMois.parCategorie);
-  const dataCategorie = labelsCategorie.map((k) => donneesMois.parCategorie[k]);
+  let labelsCategorie = Object.keys(donneesMois.parCategorie);
+  let dataCategorie = labelsCategorie.map((k) => donneesMois.parCategorie[k]);
+  if (!labelsCategorie.length) {
+    labelsCategorie = ["Aucune vente"];
+    dataCategorie = [1];
+  }
   if (chartCategorie) chartCategorie.destroy();
   chartCategorie = new Chart(ctxCategorie, {
     type: "pie",
-    data: { labels: labelsCategorie, datasets: [{ data: dataCategorie, backgroundColor: ["#22c55e", "#f2c94c", "#4a90d9", "#e5484d", "#9b59b6", "#f39c12"] }] },
+    data: { labels: labelsCategorie, datasets: [{ data: dataCategorie, backgroundColor: (labelsCategorie.length === 1 && labelsCategorie[0] === "Aucune vente") ? ["#d8d5cc"] : ["#22c55e", "#f2c94c", "#4a90d9", "#e5484d", "#9b59b6", "#f39c12"] }] },
     options: { responsive: true },
   });
 
@@ -418,8 +422,12 @@ async function chargerDonnees(ownerUid) {
   totalSemaineEl.textContent = totalSemaine.toLocaleString("fr-FR") + " FCFA";
   totalMoisEl.textContent = totalMoisGlissant.toLocaleString("fr-FR") + " FCFA";
 
-  const labels = Object.keys(parJour).sort().slice(-14);
-  const data = labels.map((k) => parJour[k]);
+  let labels = Object.keys(parJour).sort().slice(-14);
+  let data = labels.map((k) => parJour[k]);
+  if (!labels.length) {
+    labels = Array.from({ length: 14 }, (_, i) => "J-" + (13 - i));
+    data = labels.map(() => 0);
+  }
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: "line",

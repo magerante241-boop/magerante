@@ -433,23 +433,19 @@ function renderInventaireGlobal(produits) {
   const ctxCat = document.getElementById("stockCategorieChart");
   if (ctxCat) {
     if (window._stockCategorieChart) window._stockCategorieChart.destroy();
-    const labels = Object.keys(parCategorie);
+    let labels = Object.keys(parCategorie);
+    let dataCat = labels.map((l) => parCategorie[l]);
     if (!labels.length) {
-      const octx = ctxCat.getContext("2d");
-      octx.clearRect(0, 0, ctxCat.width, ctxCat.height);
-      octx.font = "13px sans-serif";
-      octx.fillStyle = "#8c8271";
-      octx.textAlign = "center";
-      octx.fillText("Aucune donnee pour l'instant", ctxCat.width / 2, ctxCat.height / 2);
-      return;
+      labels = ["Aucune donnee"];
+      dataCat = [1];
     }
     window._stockCategorieChart = new Chart(ctxCat, {
       type: "pie",
       data: {
         labels,
         datasets: [{
-          data: labels.map((l) => parCategorie[l]),
-          backgroundColor: ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#6250d6","#e34948"]
+          data: dataCat,
+          backgroundColor: (labels.length === 1 && labels[0] === "Aucune donnee") ? ["#d8d5cc"] : ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#6250d6","#e34948"]
         }]
       },
       options: { responsive: true, maintainAspectRatio: false }
@@ -466,20 +462,12 @@ function renderInventaireGlobal(produits) {
   const ctxTop = document.getElementById("stockTopProduitsChart");
   if (ctxTop) {
     if (window._stockTopProduitsChart) window._stockTopProduitsChart.destroy();
-    if (!top8.length) {
-      const octx2 = ctxTop.getContext("2d");
-      octx2.clearRect(0, 0, ctxTop.width, ctxTop.height);
-      octx2.font = "13px sans-serif";
-      octx2.fillStyle = "#8c8271";
-      octx2.textAlign = "center";
-      octx2.fillText("Aucune donnee pour l'instant", ctxTop.width / 2, ctxTop.height / 2);
-      return;
-    }
+    const top8Affiche = top8.length ? top8 : [{ nom: "Aucun produit", valeur: 0 }];
     window._stockTopProduitsChart = new Chart(ctxTop, {
       type: "bar",
       data: {
-        labels: top8.map((p) => p.nom),
-        datasets: [{ data: top8.map((p) => p.valeur), backgroundColor: "#2a78d6" }]
+        labels: top8Affiche.map((p) => p.nom),
+        datasets: [{ data: top8Affiche.map((p) => p.valeur), backgroundColor: "#2a78d6" }]
       },
       options: {
         indexAxis: "y",
