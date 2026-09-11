@@ -56,17 +56,43 @@ function switchView(view) {
     } else {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
-  } else if (view === "ventes") {
+  } else if (view === "apropos") {
     calcZone.hidden = true;
     if (numpadElement) numpadElement.hidden = true;
     if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
-    if (window.VentesModule && window.VentesModule.render) {
-      window.VentesModule.render(viewContainer);
-    } else {
-      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
-    }
+    viewContainer.innerHTML = `
+      <div class="guide-page">
+        <h3 class="guide-title">ℹ️ À propos</h3>
+        <div style="text-align:center;margin-bottom:16px;">
+          <img src="img/patrick-bertin.jpg" alt="Patrick Bertin Kozangue Essono" style="width:110px;height:110px;border-radius:50%;object-fit:cover;box-shadow:var(--shadow-sm);">
+        </div>
+        <p class="guide-intro">Magerante est une application de gestion de caisse et d'inventaire pensée pour les petits établissements.</p>
+
+        <div class="guide-section">
+          <h4>👨‍💻 Créateur technique</h4>
+          <p>KOZANGUE ESSONO Patrick Bertin — PC-INFORMATIQUE</p>
+          <p>✉️ magerante241@gmail.com</p>
+        </div>
+
+        <div class="guide-section">
+          <h4>🔒 Politique de confidentialité</h4>
+          <p>Les données saisies (produits, ventes, factures) sont stockées de façon sécurisée et servent uniquement au fonctionnement de l'application. Elles ne sont ni vendues ni partagées avec des tiers.</p>
+        </div>
+
+        <div class="guide-section">
+          <h4>👥 Rôles et accès</h4>
+          <p><strong>Administrateur</strong> : accès complet — gestion de l'inventaire, des prix, import des produits, paramètres de l'établissement.</p>
+          <p><strong>Utilisateur / caissier</strong> : accès aux modes Facturier et Calculatrice, consultation de l'historique.</p>
+        </div>
+
+        <div class="guide-section">
+          <h4>📄 Mentions légales</h4>
+          <p>© 2026 Magerante — Tous droits réservés.</p>
+        </div>
+      </div>
+    `;
   } else if (view === "guide") {
     calcZone.hidden = true;
     if (numpadElement) numpadElement.hidden = true;
@@ -94,8 +120,8 @@ function switchView(view) {
         </div>
 
         <div class="guide-section">
-          <h4>🛒 Ventes</h4>
-          <p>Consulte le récapitulatif des ventes réalisées.</p>
+          <h4>ℹ️ À propos</h4>
+          <p>Découvre les informations sur l'application, son créateur, la politique de confidentialité et les rôles.</p>
         </div>
 
         <div class="guide-section">
