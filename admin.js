@@ -687,23 +687,22 @@ async function chargerGestionProduits() {
       estId: d.ref.parent.parent.id,
       ...d.data(),
     }));
-    alert("DEBUG: " + _cacheProduitsGestion.length + " produits recuperes depuis Firestore.");
+    window._debugLog("Lecture OK : " + _cacheProduitsGestion.length + " produits recuperes.");
   } catch (err) {
-    console.error("Erreur lecture produits:", err);
-    alert("DEBUG ETAPE LECTURE: " + err.message);
+    window._debugLog("ERREUR lecture produits : " + err.message);
     return;
   }
   try {
     rendreTableauGestionProduits();
+    window._debugLog("Tableau gestion OK.");
   } catch (err) {
-    console.error("Erreur tableau gestion produits:", err);
-    alert("DEBUG ETAPE TABLEAU: " + err.message);
+    window._debugLog("ERREUR tableau gestion : " + err.message);
   }
   try {
     renderInventaireGlobal(_cacheProduitsGestion);
+    window._debugLog("Inventaire global OK (appel lance).");
   } catch (err) {
-    console.error("Erreur inventaire global:", err);
-    alert("DEBUG ETAPE INVENTAIRE: " + err.message);
+    window._debugLog("ERREUR inventaire global : " + err.message);
   }
 }
 
