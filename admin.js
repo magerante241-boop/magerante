@@ -687,12 +687,23 @@ async function chargerGestionProduits() {
       estId: d.ref.parent.parent.id,
       ...d.data(),
     }));
+    alert("DEBUG: " + _cacheProduitsGestion.length + " produits recuperes depuis Firestore.");
+  } catch (err) {
+    console.error("Erreur lecture produits:", err);
+    alert("DEBUG ETAPE LECTURE: " + err.message);
+    return;
+  }
+  try {
     rendreTableauGestionProduits();
+  } catch (err) {
+    console.error("Erreur tableau gestion produits:", err);
+    alert("DEBUG ETAPE TABLEAU: " + err.message);
+  }
+  try {
     renderInventaireGlobal(_cacheProduitsGestion);
   } catch (err) {
-    console.error("Erreur chargement gestion produits:", err);
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur : ' + err.message + '</td></tr>';
-    alert("DEBUG chargerGestionProduits: " + err.message);
+    console.error("Erreur inventaire global:", err);
+    alert("DEBUG ETAPE INVENTAIRE: " + err.message);
   }
 }
 
