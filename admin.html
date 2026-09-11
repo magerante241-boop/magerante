@@ -309,6 +309,15 @@ button:active {
         </div>
       </div>
 
+      <p style="font-size:13px;color:var(--muted);margin:4px 0;">Repartition du stock par categorie</p>
+      <div class="table-wrap">
+        <canvas id="stockCategorieChart" height="220"></canvas>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:16px 0 4px;">Top 8 produits par valeur de stock</p>
+      <div class="table-wrap">
+        <canvas id="stockTopProduitsChart" height="260"></canvas>
+      </div>
+
       <section class="admin-import" id="secImport">
       <h2 class="section-title">📥 Importer un catalogue CSV</h2>
       <p class="import-hint">Colonnes attendues : Nom, Prix achat, Prix vente, Stock, Catégorie</p>

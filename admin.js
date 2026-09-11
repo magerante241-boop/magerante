@@ -132,7 +132,6 @@ onAuthStateChanged(auth, (user) => {
     chargerComptesEnAttente();
     chargerFinanceEtRapports();
     chargerEtablissementsParZone();
-    chargerInventaireGlobal();
     chargerGestionProduits();
     chargerConnexions();
   } else {
@@ -418,22 +417,60 @@ async function ouvrirEditionEtablissement(id, etablissements) {
   }
 }
 
-async function chargerInventaireGlobal() {
-  try {
-    const prodSnap = await getDocs(collectionGroup(db, "produits"));
-    let valeurTotale = 0;
-    prodSnap.forEach((d) => {
-      const data = d.data();
-      const prix = Number(data.prix || data.prixAchat || data.prixVente || 0);
-      const qte = Number(data.quantite || data.stock || 0);
-      valeurTotale += prix * qte;
+function renderInventaireGlobal(produits) {
+  let valeurTotale = 0;
+  const parCategorie = {};
+  produits.forEach((p) => {
+    const prix = Number(p.prixVente || p.prixAchat || p.prix || 0);
+    const qte = Number(p.stock || p.quantite || 0);
+    valeurTotale += prix * qte;
+    const cat = p.categorie || "Sans categorie";
+    parCategorie[cat] = (parCategorie[cat] || 0) + qte;
+  });
+  document.getElementById("statTotalProduits").textContent = produits.length;
+  document.getElementById("statValeurStock").textContent = valeurTotale.toLocaleString("fr-FR") + " FCFA";
+
+  const ctxCat = document.getElementById("stockCategorieChart");
+  if (ctxCat) {
+    if (window._stockCategorieChart) window._stockCategorieChart.destroy();
+    const labels = Object.keys(parCategorie);
+    window._stockCategorieChart = new Chart(ctxCat, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [{
+          data: labels.map((l) => parCategorie[l]),
+          backgroundColor: ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#6250d6","#e34948"]
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
     });
-    document.getElementById("statTotalProduits").textContent = prodSnap.size;
-    document.getElementById("statValeurStock").textContent = valeurTotale.toLocaleString("fr-FR") + " FCFA";
-  } catch (err) {
-    console.error("Erreur inventaire global (normal si module Inventaire pas encore synchronise):", err);
-    document.getElementById("statTotalProduits").textContent = "0";
-    document.getElementById("statValeurStock").textContent = "0 FCFA";
+  }
+
+  const top8 = [...produits]
+    .map((p) => ({
+      nom: p.nom || "?",
+      valeur: Number(p.prixVente || p.prixAchat || p.prix || 0) * Number(p.stock || p.quantite || 0)
+    }))
+    .sort((a, b) => b.valeur - a.valeur)
+    .slice(0, 8);
+  const ctxTop = document.getElementById("stockTopProduitsChart");
+  if (ctxTop) {
+    if (window._stockTopProduitsChart) window._stockTopProduitsChart.destroy();
+    window._stockTopProduitsChart = new Chart(ctxTop, {
+      type: "bar",
+      data: {
+        labels: top8.map((p) => p.nom),
+        datasets: [{ data: top8.map((p) => p.valeur), backgroundColor: "#2a78d6" }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { callback: (v) => Number(v).toLocaleString("fr-FR") } } }
+      }
+    });
   }
 }
 
@@ -630,6 +667,7 @@ async function chargerGestionProduits() {
       ...d.data(),
     }));
     rendreTableauGestionProduits();
+    renderInventaireGlobal(_cacheProduitsGestion);
   } catch (err) {
     console.error("Erreur chargement gestion produits:", err);
     tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur : ' + err.message + '</td></tr>';
