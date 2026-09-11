@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAGERANTE — Admin</title>
 <link rel="stylesheet" href="style.css">
 <style>
@@ -13,6 +13,15 @@ body {
   margin: 0;
   padding: 0;
   color: var(--text);
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-y: auto;
+  display: block;
+}
+#adminPanel {
+  overflow-y: visible;
+  height: auto;
 }
 header {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
