@@ -434,6 +434,15 @@ function renderInventaireGlobal(produits) {
   if (ctxCat) {
     if (window._stockCategorieChart) window._stockCategorieChart.destroy();
     const labels = Object.keys(parCategorie);
+    if (!labels.length) {
+      const octx = ctxCat.getContext("2d");
+      octx.clearRect(0, 0, ctxCat.width, ctxCat.height);
+      octx.font = "13px sans-serif";
+      octx.fillStyle = "#8c8271";
+      octx.textAlign = "center";
+      octx.fillText("Aucune donnee pour l'instant", ctxCat.width / 2, ctxCat.height / 2);
+      return;
+    }
     window._stockCategorieChart = new Chart(ctxCat, {
       type: "pie",
       data: {
@@ -457,6 +466,15 @@ function renderInventaireGlobal(produits) {
   const ctxTop = document.getElementById("stockTopProduitsChart");
   if (ctxTop) {
     if (window._stockTopProduitsChart) window._stockTopProduitsChart.destroy();
+    if (!top8.length) {
+      const octx2 = ctxTop.getContext("2d");
+      octx2.clearRect(0, 0, ctxTop.width, ctxTop.height);
+      octx2.font = "13px sans-serif";
+      octx2.fillStyle = "#8c8271";
+      octx2.textAlign = "center";
+      octx2.fillText("Aucune donnee pour l'instant", ctxTop.width / 2, ctxTop.height / 2);
+      return;
+    }
     window._stockTopProduitsChart = new Chart(ctxTop, {
       type: "bar",
       data: {
@@ -627,10 +645,9 @@ document.getElementById("btnViderInventaire").addEventListener("click", async ()
 });
 
 // --- Tuiles stats cliquables : defilement vers la section correspondante ---
-document.querySelectorAll(".stat-card[data-target]").forEach((card) => {
+document.querySelectorAll(".stat-card[data-target], .quick-tile[data-target]").forEach((card) => {
   card.addEventListener("click", () => {
-    const cible = document.getElementById(card.dataset.target);
-    if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (typeof afficherOngletAdmin === "function") afficherOngletAdmin(card.dataset.target);
   });
 });
 
@@ -735,13 +752,35 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  document.querySelectorAll("#adminSideMenu [data-target], #adminBottomNav [data-target]").forEach((btn) => {
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions"];
+
+function afficherOngletAdmin(idCible) {
+  TOUTES_SECTIONS_ADMIN.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const conteneur = el.closest("details") || el;
+    if (id === idCible || id === "secAccueil" && idCible === "secAccueil") {
+      conteneur.classList.remove("admin-tab-hidden");
+      if (conteneur.tagName === "DETAILS") conteneur.open = true;
+    } else {
+      conteneur.classList.add("admin-tab-hidden");
+    }
+  });
+  const backBtn = document.getElementById("btnAdminTabBack");
+  if (backBtn) backBtn.classList.toggle("show", idCible !== "secAccueil");
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.querySelectorAll("#adminSideMenu [data-target], #adminBottomNav [data-target]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const cible = document.getElementById(btn.getAttribute("data-target"));
-      if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
-      fermerMenu();
+      afficherOngletAdmin(btn.dataset.target);
     });
   });
+
+const btnAdminTabBack = document.getElementById("btnAdminTabBack");
+if (btnAdminTabBack) {
+  btnAdminTabBack.addEventListener("click", () => afficherOngletAdmin("secAccueil"));
+}
 })();
 
 

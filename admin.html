@@ -64,6 +64,10 @@ header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
 .stat-card.wide .value { color: var(--accent); }
 
 h2.section-title { font-size: 17px; margin: 24px 0 10px; color: var(--primary-dark); font-weight: 700; }
+.collapsible-section summary.section-title { color: var(--primary-dark); font-weight: 700; }
+.admin-tab-hidden { display: none !important; }
+.admin-tab-back { display: none; align-items: center; gap: 6px; background: none; border: none; color: var(--primary-dark); font-weight: 700; font-size: 15px; margin: 8px 0 4px; cursor: pointer; padding: 4px 0; }
+.admin-tab-back.show { display: flex; }
 
 .compte-card {
   background: var(--surface); border-radius: var(--radius); padding: 16px; margin: 10px 0;
@@ -220,6 +224,7 @@ button:active {
     </div>
 
     <div id="adminPanel" hidden>
+      <button class="admin-tab-back" id="btnAdminTabBack"><span>&larr;</span> Retour a l'accueil</button>
       <div class="quick-access-grid" id="secAccueil">
         <div class="stat-card quick-tile" data-target="secVentes">
           <span class="quick-tile-icon">🧾</span><span class="quick-tile-label">Ventes</span>

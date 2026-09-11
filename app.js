@@ -829,12 +829,35 @@ let modeFacturier = false;
 let lignesFacture = [];
 let ligneFactureSelectionnee = null;
 
+function afficherToastFacture(message) {
+  let toast = document.getElementById("factureToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "factureToast";
+    toast.style.cssText = "position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#a3342b;color:#fdfaf3;padding:10px 16px;border-radius:10px;font-size:13px;z-index:999;max-width:85vw;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = "1";
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+}
+
 function ajouterLigneFacture(p) {
   if (!p || !p.id) {
     alert("Ce produit n'est pas configuré correctement (id manquant).");
     return;
   }
   const quantite = calcValeurNumerique > 0 ? calcValeurNumerique : 1;
+  const stockDisponible = Number(p.stock || 0);
+  const ligneExistanteAvant = lignesFacture.find(l => l.produitId === p.id);
+  const quantiteDejaPrevue = ligneExistanteAvant ? ligneExistanteAvant.quantite : 0;
+  if (quantiteDejaPrevue + quantite > stockDisponible) {
+    afficherToastFacture("Stock insuffisant pour " + (p.nom || "ce produit") + " (" + stockDisponible + " disponible).");
+    calcExpr = "";
+    renderCalc();
+    return;
+  }
   const prixUnitaire = Number(p.prixVente) || 0;
   const ligneExistante = lignesFacture.find(l => l.produitId === p.id);
   if (ligneExistante) {
