@@ -390,6 +390,11 @@ button:active {
     </div>
   </div>
 
+  <script>
+    window.addEventListener("error", (e) => {
+      alert("DEBUG erreur globale: " + e.message + " (" + (e.filename || "") + ":" + (e.lineno || "") + ")");
+    });
+  </script>
   <script src="scroll-arrows.js"></script>
   <script type="module" src="demo.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>

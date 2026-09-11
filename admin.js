@@ -676,6 +676,7 @@ async function chargerGestionProduits() {
   } catch (err) {
     console.error("Erreur chargement gestion produits:", err);
     tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur : ' + err.message + '</td></tr>';
+    alert("DEBUG chargerGestionProduits: " + err.message);
   }
 }
 
