@@ -1,7 +1,8 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
-  collection, collectionGroup, query, where, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
+  collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
 } from "./firebase-config.js";
+import { enregistrerConnexion } from "./connexions.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
 
@@ -33,7 +34,8 @@ document.getElementById("btnAdminLogin").addEventListener("click", async () => {
   adminError.textContent = "";
   loginAttempted = true;
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    enregistrerConnexion(cred.user, "admin");
   } catch (err) {
     adminError.textContent = "Erreur : " + err.message;
   }
@@ -132,6 +134,7 @@ onAuthStateChanged(auth, (user) => {
     chargerEtablissementsParZone();
     chargerInventaireGlobal();
     chargerGestionProduits();
+    chargerConnexions();
   } else {
     loginBox.hidden = false;
     adminPanel.hidden = true;
@@ -702,3 +705,30 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
     });
   });
 })();
+
+
+async function chargerConnexions() {
+  const connexionsTableBody = document.getElementById("connexionsTableBody");
+  if (!connexionsTableBody) return;
+  try {
+    const q = query(collection(db, "connexions"), orderBy("dateConnexion", "desc"), limit(100));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      connexionsTableBody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune connexion enregistree.</td></tr>';
+      return;
+    }
+    let html = "";
+    snap.forEach((d) => {
+      const data = d.data();
+      const date = data.dateConnexion && data.dateConnexion.toDate ? data.dateConnexion.toDate() : null;
+      const dateStr = date ? date.toLocaleString("fr-FR") : "\u2014";
+      const lieu = [data.ville, data.pays].filter(Boolean).join(", ") || "\u2014";
+      const contexte = data.contexte === "admin" ? " (admin)" : "";
+      html += "<tr><td>" + escapeHtml(data.email || "inconnu") + contexte + "</td><td>" + dateStr + "</td><td>" + escapeHtml(lieu) + "</td></tr>";
+    });
+    connexionsTableBody.innerHTML = html;
+  } catch (err) {
+    console.error("Erreur chargement connexions:", err);
+    connexionsTableBody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement.</td></tr>';
+  }
+}

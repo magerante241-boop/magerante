@@ -12,6 +12,7 @@ import {
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { genererProduitsDemo } from "./demo.js";
+import { enregistrerConnexion } from "./connexions.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
 window.ADMIN_EMAIL = ADMIN_EMAIL;
@@ -188,7 +189,8 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   btn.disabled = true;
   btn.textContent = "Connexion...";
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    enregistrerConnexion(cred.user, "app");
   } catch (err) {
     if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
       errorEl.textContent = "E-mail ou mot de passe incorrect.";

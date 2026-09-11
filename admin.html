@@ -295,6 +295,13 @@ button:active {
 
       <h2 class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</h2>
       <div id="rapportList" class="empty-msg">Chargement...</div>
+      <h2 class="section-title" id="secConnexions">Historique des connexions</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
+          <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -333,6 +340,7 @@ button:active {
         <li><button class="side-menu-item" data-target="secImport">📦 Inventaire global</button></li>
         <li><button class="side-menu-item" data-target="secGestionProduits">🛠️ Gestion des produits</button></li>
         <li><button class="side-menu-item" data-target="secVentes">🧾 Dernieres ventes</button></li>
+        <li><button class="side-menu-item" data-target="secConnexions">Historique des connexions</button></li>
         <li><button class="side-menu-item" id="menuAdminRetourApp">🏠 Retour a l'application</button></li>
       </ul>
     </nav>
@@ -344,6 +352,7 @@ button:active {
     <button class="bottom-nav-item" data-target="secCA"><span class="bottom-nav-icon">💰</span><span>CA</span></button>
     <button class="bottom-nav-item" data-target="secZones"><span class="bottom-nav-icon">📍</span><span>Zones</span></button>
     <button class="bottom-nav-item" data-target="secGestionProduits"><span class="bottom-nav-icon">🛠️</span><span>Produits</span></button>
+    <button class="bottom-nav-item" data-target="secConnexions"><span class="bottom-nav-icon">🔐</span><span>Connexions</span></button>
     <button class="bottom-nav-item" data-target="secVentes"><span class="bottom-nav-icon">🧾</span><span>Ventes</span></button>
   </nav>
 </body>
