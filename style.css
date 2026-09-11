@@ -1607,3 +1607,6 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   z-index: 1;
 }
 .nav-btn.active::after { display: none; }
+
+/* Fix : #marqueGrid a plusieurs règles display:grid qui écrasent [hidden] (spécificité ID > attribut) */
+#marqueGrid[hidden] { display: none !important; }
