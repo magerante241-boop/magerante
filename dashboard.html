@@ -13,7 +13,7 @@
   .tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
   .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:var(--muted); border:none; cursor:pointer; font-size:13px; }
   .tab-btn.active { color:var(--primary); border-bottom:3px solid var(--accent); font-weight:bold; }
-  .tab-content { display:none; padding:16px; }
+  .tab-content { display:none; padding:16px; overflow-y:auto; max-height:100dvh; }
   .tab-content.active { display:block; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:16px; }
   .stock-alert { background:var(--surface2); border-left:4px solid var(--danger); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
