@@ -24,6 +24,7 @@ body {
   height: auto;
 }
 header {
+  position: sticky; top: 0; z-index: 600;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fdfaf3;
   padding: 20px;
@@ -447,3 +448,13 @@ button:active {
   </nav>
 </body>
 </html>
+<style>
+.quick-tile[data-target="secVentes"] { background: #1f6f4a; }
+.quick-tile[data-target="secComptesAttente"] { background: #b8902e; }
+.quick-tile[data-target="secGestionProduits"] { background: #2d8a5c; }
+.quick-tile[data-target="secCA"] { background: #d4a94a; }
+.quick-tile[data-target="secZones"] { background: #164f35; }
+.quick-tile[data-target="secConnexions"] { background: #8f6b1f; }
+.quick-tile[data-target="secMonEtablissement"] { background: #4a9970; }
+.quick-tile[data-target] .quick-tile-label { color: #fff; }
+</style>

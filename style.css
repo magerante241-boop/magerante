@@ -1624,7 +1624,7 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 /* Sections admin en plein écran (au lieu de scroller) */
 .admin-fullscreen-section {
   position: fixed;
-  top: 56px;
+  top: var(--header-h, 90px);
   left: 0; right: 0; bottom: 0;
   background: var(--bg, #fdfaf3);
   z-index: 400;
