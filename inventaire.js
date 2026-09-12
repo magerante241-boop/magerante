@@ -105,6 +105,7 @@ async function chargerOutilsSuivi() {
   const estId = appState.establishmentId;
 
   gridEl.innerHTML = `
+    <div class="inv-outil-tuile" id="invDebugTemp" style="border:2px solid #0f0;font-family:monospace;font-size:12px;white-space:pre-wrap;"></div>
     <div class="inv-outil-tuile">
       <div class="inv-outil-titre">📈 Chiffre d'affaires (14 derniers jours)</div>
       <canvas id="invCaChart" height="160"></canvas>
@@ -134,6 +135,8 @@ async function chargerOutilsSuivi() {
     produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (err) {
     console.error("Erreur chargement produits (outils suivi):", err);
+    const dbg = document.getElementById("invDebugTemp");
+    if (dbg) dbg.textContent += "ERREUR PRODUITS: " + err.message + "\n";
   }
 
   const debutPeriode = new Date();
@@ -144,6 +147,12 @@ async function chargerOutilsSuivi() {
     ventesData = ventesSnap.docs.map((d) => d.data());
   } catch (err) {
     console.error("Erreur chargement ventes (outils suivi):", err);
+    const dbg = document.getElementById("invDebugTemp");
+    if (dbg) dbg.textContent += "ERREUR VENTES: " + err.message + "\n";
+  }
+  {
+    const dbg = document.getElementById("invDebugTemp");
+    if (dbg) dbg.textContent += "OK - produits: " + produits.length + " / ventes trouvees (14j): " + ventesData.length + " / estId: " + estId + "\n";
   }
 
   const parJour = {};
