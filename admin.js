@@ -873,6 +873,19 @@ async function chargerHistoriqueGlobal() {
     console.error("Erreur chargement mouvements (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR MOUVEMENTS: " + err.message + "</td></tr>";
   }
 
+  try {
+    const ventesSnap = await getDocs(query(collectionGroup(db, "ventes"), orderBy("date", "desc"), limit(400)));
+    ventesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const estId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : "inconnu";
+      historiqueCache.push({
+        date: data.date, estId, gerant: data.auteurNom || "—", type: "vente",
+        detail: data.produitNom ? (data.quantite + " x " + data.produitNom) : "Vente libre", montant: Number(data.montant || 0)
+      });
+    });
+  } catch (err) {
+    console.error("Erreur chargement ventes (historique):", err);
+  }
   afficherHistoriqueFiltre();
 
   [periodeSelect, etabSelect, typeSelect].forEach((el) => {
