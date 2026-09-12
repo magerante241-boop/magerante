@@ -1,3 +1,4 @@
+window.addEventListener("error", (e) => { alert("Erreur JS: " + e.message + " (ligne " + e.lineno + ")"); });
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
   collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
