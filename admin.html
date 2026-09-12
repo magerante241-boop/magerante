@@ -211,6 +211,7 @@ button:active {
   background: var(--danger); color: #fdfaf3; font-size: 12px; cursor: pointer;
 }
 .btn-supprimer-ligne:active { filter: brightness(0.85); }
+.embedded-dashboard-frame { width: 100%; height: 80vh; border: none; border-radius: var(--radius, 8px); background: #fff; }
 </style>
 </head>
 <body>
@@ -255,6 +256,9 @@ button:active {
         <div class="stat-card quick-tile" data-target="secConnexions">
           <span class="quick-tile-icon">🔐</span><span class="quick-tile-label">Connexions</span>
         </div>
+        <div class="stat-card quick-tile" data-target="secMonEtablissement">
+          <span class="quick-tile-icon">🏪</span><span class="quick-tile-label">Mon établissement</span>
+        </div>
       </div>
       <div class="stats-grid">
         <div class="stat-card" data-target="secComptesAttente">
@@ -283,6 +287,11 @@ button:active {
           <div class="label">Chiffre d'affaires global (tous etablissements)</div>
         </div>
       </div>
+
+      <details class="collapsible-section">
+        <summary class="section-title" id="secMonEtablissement">🏪 Mon établissement (en tant que proprietaire)</summary>
+        <iframe src="dashboard.html" class="embedded-dashboard-frame" title="Mon établissement"></iframe>
+      </details>
 
       <details class="collapsible-section">
         <summary class="section-title" id="secCourbeCA">Évolution du chiffre d'affaires (global, 14 derniers jours)</summary>
@@ -419,6 +428,7 @@ button:active {
         <li><button class="side-menu-item" data-target="secCA">💰 Chiffre d'affaires</button></li>
         <li><button class="side-menu-item" data-target="secZones">📍 Établissements par zone</button></li>
         <li><button class="side-menu-item" data-target="secConnexions">🔐 Historique des connexions</button></li>
+        <li><button class="side-menu-item" data-target="secMonEtablissement">🏪 Mon établissement</button></li>
         <li><button class="side-menu-item" id="menuAdminRetourApp">🏠 Retour a l'application</button></li>
       </ul>
     </nav>
@@ -433,6 +443,7 @@ button:active {
     <button class="bottom-nav-item" data-target="secCA"><span class="bottom-nav-icon">💰</span><span>CA</span></button>
     <button class="bottom-nav-item" data-target="secZones"><span class="bottom-nav-icon">📍</span><span>Zones</span></button>
     <button class="bottom-nav-item" data-target="secConnexions"><span class="bottom-nav-icon">🔐</span><span>Connexions</span></button>
+    <button class="bottom-nav-item" data-target="secMonEtablissement"><span class="bottom-nav-icon">🏪</span><span>Mon bar</span></button>
   </nav>
 </body>
 </html>

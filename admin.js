@@ -781,7 +781,7 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions"];
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions"];
 
 function afficherOngletAdmin(idCible) {
   TOUTES_SECTIONS_ADMIN.forEach((id) => {
