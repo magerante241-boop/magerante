@@ -754,6 +754,7 @@ function afficherOngletAdmin(idCible) {
     const el = document.getElementById(id);
     if (!el) return;
     const conteneur = el.closest("details") || el;
+    if (id === idCible && idCible !== "secAccueil") { conteneur.classList.add("admin-fullscreen-section"); } else { conteneur.classList.remove("admin-fullscreen-section"); }
     if (id === idCible || id === "secAccueil" && idCible === "secAccueil") {
       conteneur.classList.remove("admin-tab-hidden");
       if (conteneur.tagName === "DETAILS") conteneur.open = true;
@@ -764,7 +765,9 @@ function afficherOngletAdmin(idCible) {
   document.querySelectorAll("#adminBottomNav .bottom-nav-item[data-target]").forEach((b) => { b.classList.toggle("active", b.dataset.target === idCible); });
   const backBtn = document.getElementById("btnAdminTabBack");
   if (backBtn) backBtn.classList.toggle("show", idCible !== "secAccueil");
-  window.scrollTo({ top: 0, behavior: "instant" });
+  const activeEl = document.getElementById(idCible);
+  const scrollTarget = (activeEl && activeEl.closest(".admin-fullscreen-section")) || document.scrollingElement || document.documentElement;
+  scrollTarget.scrollTo ? scrollTarget.scrollTo({ top: 0, behavior: "instant" }) : (scrollTarget.scrollTop = 0);
 }
 
 document.querySelectorAll("#adminSideMenu [data-target], #adminBottomNav [data-target]").forEach((btn) => {

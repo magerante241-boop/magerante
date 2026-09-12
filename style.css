@@ -1620,3 +1620,15 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 
 
 .bottom-nav-item.active { color: #fff; border-bottom: 3px solid var(--accent); font-weight: 700; }
+
+/* Sections admin en plein écran (au lieu de scroller) */
+.admin-fullscreen-section {
+  position: fixed;
+  top: 56px;
+  left: 0; right: 0; bottom: 0;
+  background: var(--bg, #fdfaf3);
+  z-index: 400;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+}
