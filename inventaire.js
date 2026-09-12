@@ -174,6 +174,10 @@ async function chargerOutilsSuivi() {
   const labelsJour = Object.keys(parJour).sort();
   const canvasCa = document.getElementById("invCaChart");
   const caEmptyEl = document.getElementById("invCaEmpty");
+  {
+    const dbg = document.getElementById("invDebugTemp");
+    if (dbg) dbg.textContent += "canvasCa existe: " + (!!canvasCa) + " / largeur: " + (canvasCa ? canvasCa.offsetWidth : "N/A") + " / hauteur: " + (canvasCa ? canvasCa.offsetHeight : "N/A") + " / Chart dispo: " + (!!window.Chart) + "\n";
+  }
   if (labelsJour.length === 0) {
     if (canvasCa) canvasCa.hidden = true;
     if (caEmptyEl) caEmptyEl.hidden = false;
