@@ -189,12 +189,18 @@ async function chargerOutilsSuivi() {
     const ctxCa = canvasCa?.getContext("2d");
     if (ctxCa) {
       attendreChartInv(() => {
-        if (invCaChartInstance) invCaChartInstance.destroy();
-      invCaChartInstance = new Chart(ctxCa, {
-          type: "line",
-          data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
-          options: { responsive: true, plugins: { legend: { display: false } } },
-        });
+        try {
+          if (invCaChartInstance) invCaChartInstance.destroy();
+          invCaChartInstance = new Chart(ctxCa, {
+            type: "line",
+            data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
+            options: { responsive: true, plugins: { legend: { display: false } } },
+          });
+        } catch (err) {
+          console.error("Erreur creation Chart CA:", err);
+          if (caEmptyEl) { caEmptyEl.hidden = false; caEmptyEl.textContent = "DEBUG chart CA: " + err.message; caEmptyEl.style.color = "red"; }
+          if (canvasCa) canvasCa.hidden = true;
+        }
       });
     }
   }
@@ -218,12 +224,18 @@ async function chargerOutilsSuivi() {
     const ctxTop = canvasTop?.getContext("2d");
     if (ctxTop) {
       attendreChartInv(() => {
-        if (invTopChartInstance) invTopChartInstance.destroy();
-      invTopChartInstance = new Chart(ctxTop, {
-          type: "bar",
-          data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
-          options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
-        });
+        try {
+          if (invTopChartInstance) invTopChartInstance.destroy();
+          invTopChartInstance = new Chart(ctxTop, {
+            type: "bar",
+            data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
+            options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+          });
+        } catch (err) {
+          console.error("Erreur creation Chart Top:", err);
+          if (topEmptyEl) { topEmptyEl.hidden = false; topEmptyEl.textContent = "DEBUG chart Top: " + err.message; topEmptyEl.style.color = "red"; }
+          if (canvasTop) canvasTop.hidden = true;
+        }
       });
     }
   }
