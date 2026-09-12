@@ -170,6 +170,7 @@ async function chargerOutilsSuivi() {
     }
   });
 
+  try {
   const labelsJour = Object.keys(parJour).sort();
   const canvasCa = document.getElementById("invCaChart");
   const caEmptyEl = document.getElementById("invCaEmpty");
@@ -214,6 +215,10 @@ async function chargerOutilsSuivi() {
     const deficit = (Number(p.stockDepart) || 0) - (Number(p.stock) || 0);
     if (deficit > 0) deficitParCategorie[cat] = (deficitParCategorie[cat] || 0) + deficit;
   });
+  } catch (errChart) {
+    const dbg = document.getElementById("invDebugTemp");
+    if (dbg) dbg.textContent += "ERREUR CHART: " + errChart.message + "\n" + errChart.stack + "\n";
+  }
   const deficitListeEl = document.getElementById("invDeficitListe");
   const catsAvecDeficit = Object.entries(deficitParCategorie);
   deficitListeEl.innerHTML = catsAvecDeficit.length === 0
