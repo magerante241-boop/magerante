@@ -886,7 +886,7 @@ async function chargerHistoriqueGlobal() {
   } catch (err) {
     console.error("Erreur chargement ventes (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR VENTES: " + err.message + "</td></tr>";
   }
-  afficherHistoriqueFiltre();
+  console.log("DEBUG historiqueCache total:", historiqueCache.length); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\">DEBUG: " + historiqueCache.length + " documents chargés au total.</td></tr>"; afficherHistoriqueFiltre();
 
   [periodeSelect, etabSelect, typeSelect].forEach((el) => {
     if (el && !el._histBound) { el.addEventListener("change", afficherHistoriqueFiltre); el._histBound = true; }
