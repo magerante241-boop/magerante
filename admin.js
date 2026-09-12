@@ -443,7 +443,7 @@ function renderInventaireGlobal(produits) {
   attendreChart(() => renderInventaireGlobalImpl(produits));
 }
 
-function renderInventaireGlobalImpl(produits) {
+function renderInventaireGlobalImpl(produits) { alert("Entree fonction impl, produits: " + produits.length);
   let valeurTotale = 0;
   const parCategorie = {};
   produits.forEach((p) => {
