@@ -8,6 +8,8 @@ import { creerNotification } from "./notifications.js";
 
 let unsubscribe = null;
 let produitEnEdition = null;
+let invCaChartInstance = null;
+let invTopChartInstance = null;
 
 import { CATALOGUE_STANDARD } from "./catalogue-standard.js";
 
@@ -152,7 +154,12 @@ async function chargerOutilsSuivi() {
     ventesData = ventesSnap.docs.map((d) => d.data());
   } catch (err) {
     console.error("Erreur chargement ventes (outils suivi):", err);
+    const caEmptyDebug = document.getElementById("invCaEmpty");
+    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG ventes: " + err.message; caEmptyDebug.style.color = "red"; }
+    return;
   }
+
+  try {
 
   const parJour = {};
   const parProduit = {};
@@ -181,13 +188,21 @@ async function chargerOutilsSuivi() {
     const ctxCa = canvasCa?.getContext("2d");
     if (ctxCa) {
       attendreChartInv(() => {
-        new Chart(ctxCa, {
+        if (invCaChartInstance) invCaChartInstance.destroy();
+      invCaChartInstance = new Chart(ctxCa, {
           type: "line",
           data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
           options: { responsive: true, plugins: { legend: { display: false } } },
         });
       });
     }
+  }
+
+  } catch (err) {
+    console.error("Erreur traitement ventes (outils suivi):", err);
+    const caEmptyDebug = document.getElementById("invCaEmpty");
+    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG traitement: " + err.message; caEmptyDebug.style.color = "red"; }
+    return;
   }
 
   const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
@@ -202,7 +217,8 @@ async function chargerOutilsSuivi() {
     const ctxTop = canvasTop?.getContext("2d");
     if (ctxTop) {
       attendreChartInv(() => {
-        new Chart(ctxTop, {
+        if (invTopChartInstance) invTopChartInstance.destroy();
+      invTopChartInstance = new Chart(ctxTop, {
           type: "bar",
           data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
           options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
