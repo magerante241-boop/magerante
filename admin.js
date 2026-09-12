@@ -857,7 +857,7 @@ async function chargerHistoriqueGlobal() {
       });
     });
   } catch (err) {
-    console.error("Erreur chargement factures (historique):", err); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR FACTURES: " + err.message + "</td></tr>";
+    console.error("Erreur chargement factures (historique):", err); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR FACTURES: " + err.message + "</td></tr>"; window._histErreurFactures = err.message;
   }
   try {
     const mouvementsSnap = await getDocs(query(collectionGroup(db, "mouvements"), orderBy("date", "desc"), limit(400)));
@@ -884,9 +884,9 @@ async function chargerHistoriqueGlobal() {
       });
     });
   } catch (err) {
-    console.error("Erreur chargement ventes (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR VENTES: " + err.message + "</td></tr>";
+    console.error("Erreur chargement ventes (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR VENTES: " + err.message + "</td></tr>"; window._histErreurVentes = err.message;
   }
-  console.log("DEBUG historiqueCache total:", historiqueCache.length); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\">DEBUG: " + historiqueCache.length + " documents chargés au total.</td></tr>"; afficherHistoriqueFiltre();
+  console.log("DEBUG historiqueCache total:", historiqueCache.length); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\">DEBUG: " + historiqueCache.length + " documents chargés au total.</td></tr>"; if (window._histErreurVentes || window._histErreurFactures) { document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" style=\"color:red; word-break:break-all; padding:10px;\">" + (window._histErreurFactures || "") + " | " + (window._histErreurVentes || "") + "</td></tr>"; } else { afficherHistoriqueFiltre(); }
 
   [periodeSelect, etabSelect, typeSelect].forEach((el) => {
     if (el && !el._histBound) { el.addEventListener("change", afficherHistoriqueFiltre); el._histBound = true; }
