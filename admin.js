@@ -189,7 +189,7 @@ async function chargerDashboard() {
   try {
     const produitsSnap = await getDocs(collectionGroup(db, "produits"));
     const produits = produitsSnap.docs.map((d) => d.data());
-    renderInventaireGlobal(produits);
+    renderInventaireGlobal(produits); alert("Produits trouves: " + produits.length);
   } catch (err) {
     console.error("Erreur inventaire global:", err); alert("Erreur inventaire: " + err.message);
     renderInventaireGlobal([]);
