@@ -1615,3 +1615,5 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 
 /* Fix : #marqueGrid a plusieurs règles display:grid qui écrasent [hidden] (spécificité ID > attribut) */
 #marqueGrid[hidden] { display: none !important; }
+
+.table-wrap { position: relative; min-height: 220px; }
