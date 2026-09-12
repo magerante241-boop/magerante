@@ -184,6 +184,15 @@ async function chargerDashboard() {
     console.error("Erreur CA global (normal si module Ventes pas encore actif):", err);
     document.getElementById("statCAGlobal").textContent = "0 FCFA";
   }
+
+  try {
+    const produitsSnap = await getDocs(collectionGroup(db, "produits"));
+    const produits = produitsSnap.docs.map((d) => d.data());
+    renderInventaireGlobal(produits);
+  } catch (err) {
+    console.error("Erreur inventaire global (normal si aucun produit encore cree):", err);
+    renderInventaireGlobal([]);
+  }
 }
 
 function chargerComptesEnAttente() {

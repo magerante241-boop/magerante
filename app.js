@@ -376,7 +376,7 @@ const MARQUES_TAILLES = {
   "Régab": { petite: "Régab 33cl", grande: "Régab 65cl" },
   "33 Export": { petite: "33 Export 33cl", grande: "33 Export 65cl" },
   "Castel": { petite: "Castel Beer 33cl", grande: "Castel Beer 65cl" },
-  "Booster": { petite: "Booster 24cl", grande: "Booster 50cl" },
+  "Booster": { petite: "Booster 24cl", grande: "Booster 33cl" },
   "Guinness": { petite: "Guinness 33cl", grande: "Guinness 65cl" },
   "Beaufort": { petite: "Beaufort 33cl", grande: "Beaufort 65cl" },
   "Tembo": { petite: "Tembo 33cl", grande: "Tembo 65cl" },
@@ -500,20 +500,8 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
 const sideMenu = document.getElementById("sideMenu");
 function openSideMenu() {
   sideMenu.hidden = false;
-  rafraichirLibelleToggleDemo();
 }
 
-async function rafraichirLibelleToggleDemo() {
-  const btn = document.getElementById("menuToggleDemoVisiteur");
-  if (!btn || btn.hidden || !window.DemoModule) return;
-  try {
-    const existe = await window.DemoModule.existeDonneesDemoVisiteur();
-    btn.textContent = existe ? "🗑️ Supprimer les données de simulation" : "🧪 Générer des données de simulation";
-    btn.dataset.etat = existe ? "presentes" : "absentes";
-  } catch (err) {
-    console.error("Erreur vérification données démo:", err);
-  }
-}
 function closeSideMenu() {
   sideMenu.hidden = true;
 }
@@ -733,92 +721,6 @@ if ("serviceWorker" in navigator) {
 document.addEventListener("click", (e) => {
   if (!marqueTaillesEl.hidden && !marqueTaillesEl.contains(e.target) && !e.target.closest(".marque-cell:not(.marque-cell-autres)")) {
     marqueTaillesEl.hidden = true;
-  }
-});
-document.getElementById("menuToggleDemoVisiteur").addEventListener("click", async (e) => {
-  const btn = e.currentTarget;
-  const genererMode = btn.dataset.etat !== "presentes";
-  const confirmMsg = genererMode
-    ? "Générer des produits et ventes de simulation pour tester les graphiques et outils de suivi ?"
-    : "Supprimer toutes tes données de simulation (produits et ventes marqués comme démo) ?";
-  if (!confirm(confirmMsg)) return;
-  try {
-    const res = genererMode
-      ? await window.DemoModule.genererDonneesDemoVisiteur()
-      : await window.DemoModule.supprimerDonneesDemoVisiteur();
-    alert(res.success ? (res.resume || (genererMode ? "Données de simulation générées." : `${res.count} élément(s) supprimé(s).`)) : (res.message || "Erreur."));
-    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
-    rafraichirLibelleToggleDemo();
-  } catch (err) {
-    alert("Erreur : " + err.message);
-  }
-});
-
-document.getElementById("menuGenererDemoVisiteur").addEventListener("click", async () => {
-  if (!confirm("Générer des produits et ventes de simulation pour tester les graphiques et outils de suivi ? (visible uniquement dans ton établissement, supprimable ensuite)")) return;
-  try {
-    const res = await window.DemoModule.genererDonneesDemoVisiteur();
-    alert(res.success ? (res.resume || "Données de simulation générées.") : (res.message || "Erreur lors de la génération."));
-    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
-  } catch (err) {
-    alert("Erreur : " + err.message);
-  }
-});
-
-document.getElementById("menuSupprimerDemoVisiteur").addEventListener("click", async () => {
-  if (!confirm("Supprimer toutes tes données de simulation (produits et ventes marqués comme démo) ?")) return;
-  try {
-    const res = await window.DemoModule.supprimerDonneesDemoVisiteur();
-    alert(res.success ? `${res.count} élément(s) de simulation supprimé(s).` : (res.message || "Erreur lors de la suppression."));
-    document.dispatchEvent(new Event("magerante:refresh-inventaire"));
-  } catch (err) {
-    alert("Erreur : " + err.message);
-  }
-});
-
-document.getElementById("menuGenererDemoComplet").addEventListener("click", async () => {
-  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
-    alert("Cette action est réservée au compte administrateur.");
-    return;
-  }
-  closeSideMenu();
-  if (!window.DemoModule || !window.DemoModule.genererDonneesDemoCompletes) {
-    alert("Module Démo en cours de chargement, réessaie dans un instant.");
-    return;
-  }
-  if (!confirm("Générer toutes les données de démonstration (produits, ventes, comptes, établissements) ?")) return;
-  try {
-    const res = await window.DemoModule.genererDonneesDemoCompletes();
-    if (res.success) {
-      alert("Données démo générées avec succès !");
-    } else {
-      alert("Erreur : " + res.message);
-    }
-  } catch (err) {
-    alert("Erreur lors de la génération : " + err.message);
-  }
-});
-
-document.getElementById("menuSupprimerDemo").addEventListener("click", async () => {
-  if (window.AuthState?.email !== window.ADMIN_EMAIL) {
-    alert("Cette action est réservée au compte administrateur.");
-    return;
-  }
-  closeSideMenu();
-  if (!window.DemoModule || !window.DemoModule.supprimerDonneesDemo) {
-    alert("Module Démo en cours de chargement, réessaie dans un instant.");
-    return;
-  }
-  if (!confirm("Supprimer toutes les données de démonstration ?")) return;
-  try {
-    const res = await window.DemoModule.supprimerDonneesDemo();
-    if (res.success) {
-      alert(res.count + " éléments de démo supprimés avec succès !");
-    } else {
-      alert("Erreur : " + res.message);
-    }
-  } catch (err) {
-    alert("Erreur lors de la suppression : " + err.message);
   }
 });
 

@@ -9,6 +9,8 @@ import { creerNotification } from "./notifications.js";
 let unsubscribe = null;
 let produitEnEdition = null;
 
+import { CATALOGUE_STANDARD } from "./catalogue-standard.js";
+
 function produitsRef() {
   return collection(db, "establishments", appState.establishmentId, "produits");
 }
@@ -626,49 +628,7 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 
-const PRODUITS_DEMO = [
-  { nom: "Régab 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
-  { nom: "Régab 65cl", categorie: "Bar", prixAchat: 433, prixVente: 700, stock: 80 },
-  { nom: "Castel Beer 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 100 },
-  { nom: "Castel Beer 65cl", categorie: "Bar", prixAchat: 550, prixVente: 900, stock: 80 },
-  { nom: "Beaufort 33cl", categorie: "Bar", prixAchat: 417, prixVente: 700, stock: 60 },
-  { nom: "Guinness 33cl", categorie: "Bar", prixAchat: 583, prixVente: 1000, stock: 50 },
-  { nom: "33 Export 33cl", categorie: "Bar", prixAchat: 275, prixVente: 450, stock: 60 },
-  { nom: "Heineken 33cl", categorie: "Bar", prixAchat: 750, prixVente: 1100, stock: 50 },
-  { nom: "Coca-Cola 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 120 },
-  { nom: "Fanta Orange 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
-  { nom: "Sprite 33cl", categorie: "Bar", prixAchat: 300, prixVente: 500, stock: 100 },
-  { nom: "Eau minérale Andza 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
-  { nom: "Eau minérale Andza 1.5L", categorie: "Bar", prixAchat: 400, prixVente: 550, stock: 80 },
-  { nom: "Eau minérale Odzi 50cl", categorie: "Bar", prixAchat: 200, prixVente: 400, stock: 150 },
-  { nom: "Jus d'ananas 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
-  { nom: "Jus de mangue 33cl", categorie: "Bar", prixAchat: 350, prixVente: 600, stock: 60 },
-  { nom: "Vin rouge (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
-  { nom: "Vin blanc (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 30 },
-  { nom: "Vin rosé (bouteille) 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 5000, stock: 20 },
-  { nom: "33 Export 65cl", categorie: "Bar", prixAchat: 500, prixVente: 800, stock: 40 },
-  { nom: "Beaufort 65cl", categorie: "Bar", prixAchat: 800, prixVente: 1300, stock: 40 },
-  { nom: "Guinness 65cl", categorie: "Bar", prixAchat: 1100, prixVente: 1900, stock: 30 },
-  { nom: "Heineken 65cl", categorie: "Bar", prixAchat: 1400, prixVente: 2100, stock: 30 },
-  { nom: "Coca-Cola 1L", categorie: "Bar", prixAchat: 500, prixVente: 900, stock: 60 },
-  { nom: "Booster 24cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 60 },
-  { nom: "Booster 50cl", categorie: "Bar", prixAchat: 700, prixVente: 1200, stock: 40 },
-  { nom: "Tembo 33cl", categorie: "Bar", prixAchat: 275, prixVente: 400, stock: 60 },
-  { nom: "Tembo 65cl", categorie: "Bar", prixAchat: 500, prixVente: 700, stock: 40 },
-  { nom: "Malta Guinness 33cl", categorie: "Bar", prixAchat: 400, prixVente: 700, stock: 40 },
-  { nom: "Malta Guinness 50cl", categorie: "Bar", prixAchat: 600, prixVente: 1000, stock: 30 },
-  { nom: "Martini Rosso 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
-  { nom: "Martini Bianco 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
-  { nom: "Grand Versant Rouge 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
-  { nom: "Grand Versant Blanc 75cl", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
-  { nom: "Martini 70cl", categorie: "Bar", prixAchat: 4500, prixVente: 7000, stock: 15 },
-  { nom: "Martini 1L", categorie: "Bar", prixAchat: 6000, prixVente: 9000, stock: 15 },
-  { nom: "Grand Versant 70cl", categorie: "Bar", prixAchat: 2000, prixVente: 3500, stock: 15 },
-  { nom: "Grand Versant 1L", categorie: "Bar", prixAchat: 2500, prixVente: 4000, stock: 15 },
-  { nom: "Label 5 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 15 },
-  { nom: "Label 5 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
-  { nom: "Ricard 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 15 },
-];
+const PRODUITS_DEMO = CATALOGUE_STANDARD;
 
 export async function importProduitsDemo() {
   if (!appState.establishmentId) {
