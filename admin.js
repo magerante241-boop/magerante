@@ -749,7 +749,15 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
 
   const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions"];
 
+function majHauteurHeader() {
+  const h = document.querySelector("header");
+  if (h) document.documentElement.style.setProperty("--header-h", h.offsetHeight + "px");
+}
+window.addEventListener("resize", majHauteurHeader);
+majHauteurHeader();
+
 function afficherOngletAdmin(idCible) {
+  majHauteurHeader();
   TOUTES_SECTIONS_ADMIN.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
