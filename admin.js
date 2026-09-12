@@ -191,7 +191,7 @@ async function chargerDashboard() {
     const produits = produitsSnap.docs.map((d) => d.data());
     renderInventaireGlobal(produits); alert("Produits trouves: " + produits.length);
   } catch (err) {
-    console.error("Erreur inventaire global:", err); alert("Erreur inventaire: " + err.message);
+    console.error("Erreur inventaire global:", err);
     renderInventaireGlobal([]);
   }
 }
@@ -427,7 +427,7 @@ async function ouvrirEditionEtablissement(id, etablissements) {
   }
 }
 
-function attendreChart(callback, tentatives = 0) { if (tentatives === 0) alert("Chart existe: " + !!window.Chart); if (tentatives === 0) alert("Chart existe: " + !!window.Chart);
+function attendreChart(callback, tentatives = 0) {  if (tentatives === 0) alert("Chart existe: " + !!window.Chart);
   if (window.Chart) {
     callback();
     return;
