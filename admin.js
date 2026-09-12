@@ -108,6 +108,7 @@ onAuthStateChanged(auth, (user) => {
     chargerDashboard();
     chargerComptesEnAttente();
     chargerFinanceEtRapports();
+    chargerHistoriqueGlobal();
     chargerEtablissementsParZone();
     chargerGestionProduits();
     chargerConnexions();
@@ -747,7 +748,7 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions"];
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique"];
 
 function majHauteurHeader() {
   const h = document.querySelector("header");
@@ -816,4 +817,100 @@ async function chargerConnexions() {
     console.error("Erreur chargement connexions:", err);
     connexionsTableBody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement.</td></tr>';
   }
+}
+
+let historiqueCache = [];
+let histEtabMapCache = {};
+
+async function chargerHistoriqueGlobal() {
+  const etabSelect = document.getElementById("histFiltreEtablissement");
+  const periodeSelect = document.getElementById("histFiltrePeriode");
+  const gerantInput = document.getElementById("histFiltreGerant");
+  const typeSelect = document.getElementById("histFiltreType");
+  if (!etabSelect) return;
+
+  try {
+    const estSnap = await getEstablishmentsSnap();
+    histEtabMapCache = {};
+    estSnap.forEach((d) => {
+      const data = d.data();
+      histEtabMapCache[d.id] = data.nom || data.name || ("Etablissement " + d.id.slice(0, 6));
+    });
+    if (etabSelect.children.length <= 1) {
+      const opts = Object.entries(histEtabMapCache).sort((a, b) => a[1].localeCompare(b[1]));
+      etabSelect.innerHTML = '<option value="">Tous les établissements</option>' +
+        opts.map(([id, nom]) => `<option value="${id}">${escapeHtml(nom)}</option>`).join("");
+    }
+  } catch (err) {
+    console.error("Erreur chargement etablissements (historique):", err);
+  }
+
+  historiqueCache = [];
+  try {
+    const facturesSnap = await getDocs(query(collectionGroup(db, "factures"), orderBy("date", "desc"), limit(400)));
+    facturesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const estId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : "inconnu";
+      historiqueCache.push({
+        date: data.date, estId, gerant: data.auteurNom || "—", type: "facture",
+        detail: "Facture n°" + (data.numero || "?"), montant: Number(data.total || 0)
+      });
+    });
+  } catch (err) {
+    console.error("Erreur chargement factures (historique):", err);
+  }
+  try {
+    const mouvementsSnap = await getDocs(query(collectionGroup(db, "mouvements"), orderBy("date", "desc"), limit(400)));
+    mouvementsSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const estId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : "inconnu";
+      historiqueCache.push({
+        date: data.date, estId, gerant: data.auteurNom || "—", type: "mouvement",
+        detail: "Mouvement (" + (data.type || "?") + ")", montant: Number(data.montant || 0)
+      });
+    });
+  } catch (err) {
+    console.error("Erreur chargement mouvements (historique):", err);
+  }
+
+  afficherHistoriqueFiltre();
+
+  [periodeSelect, etabSelect, typeSelect].forEach((el) => {
+    if (el && !el._histBound) { el.addEventListener("change", afficherHistoriqueFiltre); el._histBound = true; }
+  });
+  if (gerantInput && !gerantInput._histBound) { gerantInput.addEventListener("input", afficherHistoriqueFiltre); gerantInput._histBound = true; }
+}
+
+function afficherHistoriqueFiltre() {
+  const tbody = document.getElementById("histTableBody");
+  if (!tbody) return;
+  const periode = (document.getElementById("histFiltrePeriode") || {}).value || "tout";
+  const estId = (document.getElementById("histFiltreEtablissement") || {}).value || "";
+  const gerantFiltre = ((document.getElementById("histFiltreGerant") || {}).value || "").trim().toLowerCase();
+  const type = (document.getElementById("histFiltreType") || {}).value || "tout";
+
+  const maintenant = new Date();
+  let seuil = null;
+  if (periode === "jour") { seuil = new Date(); seuil.setHours(0, 0, 0, 0); }
+  else if (periode === "semaine") { seuil = new Date(maintenant.getTime() - 7 * 24 * 3600 * 1000); }
+  else if (periode === "mois") { seuil = new Date(maintenant.getTime() - 30 * 24 * 3600 * 1000); }
+
+  const lignes = historiqueCache.filter((l) => {
+    if (estId && l.estId !== estId) return false;
+    if (type !== "tout" && l.type !== type) return false;
+    if (gerantFiltre && !(l.gerant || "").toLowerCase().includes(gerantFiltre)) return false;
+    if (seuil && l.date && l.date.toDate && l.date.toDate() < seuil) return false;
+    return true;
+  });
+
+  if (lignes.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='6' class='empty-msg'>Aucun résultat.</td></tr>";
+    return;
+  }
+  tbody.innerHTML = lignes.map((l) => {
+    const dateStr = (l.date && l.date.toDate) ? l.date.toDate().toLocaleDateString("fr-FR") : "—";
+    const nomEtab = histEtabMapCache[l.estId] || l.estId;
+    return "<tr><td>" + dateStr + "</td><td>" + escapeHtml(nomEtab) + "</td><td>" + escapeHtml(l.gerant) +
+      "</td><td>" + l.type + "</td><td>" + escapeHtml(l.detail) + "</td><td>" + l.montant.toLocaleString("fr-FR") + " FCFA</td></tr>";
+  }).join("");
 }
