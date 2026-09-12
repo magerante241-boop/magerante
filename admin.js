@@ -884,7 +884,7 @@ async function chargerHistoriqueGlobal() {
       });
     });
   } catch (err) {
-    console.error("Erreur chargement ventes (historique):", err);
+    console.error("Erreur chargement ventes (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR VENTES: " + err.message + "</td></tr>";
   }
   afficherHistoriqueFiltre();
 
