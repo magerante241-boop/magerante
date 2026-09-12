@@ -1618,3 +1618,5 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 
 .table-wrap { position: relative; min-height: 220px; }
 
+
+.bottom-nav-item.active { color: #fff; border-bottom: 3px solid var(--accent); font-weight: 700; }
