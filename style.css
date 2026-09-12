@@ -1632,3 +1632,21 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   padding: 16px;
   padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
+
+/* Sections admin colorées par famille, alignées sur les tuiles d'accueil */
+#secVentes { color: #1f6f4a; }
+#secComptesAttente { color: #b8902e; }
+#secGestionProduits { color: #2d8a5c; }
+#secCA { color: #d4a94a; }
+#secZones { color: #164f35; }
+#secConnexions { color: #8f6b1f; }
+#secMonEtablissement { color: #4a9970; }
+#secCourbeCA { color: #d4a94a; }
+.collapsible-section:has(#secVentes) { border-left: 4px solid #1f6f4a; }
+.collapsible-section:has(#secComptesAttente) { border-left: 4px solid #b8902e; }
+.collapsible-section:has(#secGestionProduits) { border-left: 4px solid #2d8a5c; }
+.collapsible-section:has(#secCA) { border-left: 4px solid #d4a94a; }
+.collapsible-section:has(#secZones) { border-left: 4px solid #164f35; }
+.collapsible-section:has(#secConnexions) { border-left: 4px solid #8f6b1f; }
+.collapsible-section:has(#secMonEtablissement) { border-left: 4px solid #4a9970; }
+.collapsible-section:has(#secCourbeCA) { border-left: 4px solid #d4a94a; }
