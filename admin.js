@@ -6,20 +6,6 @@ import { enregistrerConnexion } from "./connexions.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
 
-// Panneau de debug temporaire non-bloquant (a retirer une fois le bug corrige)
-window._debugLog = function(msg) {
-  let panel = document.getElementById("debugPanelTemp");
-  if (!panel) {
-    panel = document.createElement("div");
-    panel.id = "debugPanelTemp";
-    panel.style.cssText = "position:fixed;bottom:60px;left:0;right:0;max-height:200px;overflow-y:auto;background:#111;color:#0f0;font-size:11px;padding:8px;z-index:9999;font-family:monospace;";
-    document.body.appendChild(panel);
-  }
-  const line = document.createElement("div");
-  line.textContent = new Date().toLocaleTimeString() + " - " + msg;
-  panel.appendChild(line);
-};
-
 // Échappe le HTML avant injection via innerHTML — évite l'XSS stocké sur les
 // champs contrôlés par le public (nom d'établissement, nom/prénom/email lors
 // de l'inscription, nom de produit...).
@@ -701,22 +687,16 @@ async function chargerGestionProduits() {
       estId: d.ref.parent.parent.id,
       ...d.data(),
     }));
-    window._debugLog("Lecture OK : " + _cacheProduitsGestion.length + " produits recuperes.");
   } catch (err) {
-    window._debugLog("ERREUR lecture produits : " + err.message);
     return;
   }
   try {
     rendreTableauGestionProduits();
-    window._debugLog("Tableau gestion OK.");
   } catch (err) {
-    window._debugLog("ERREUR tableau gestion : " + err.message);
   }
   try {
     renderInventaireGlobal(_cacheProduitsGestion);
-    window._debugLog("Inventaire global OK (appel lance).");
   } catch (err) {
-    window._debugLog("ERREUR inventaire global : " + err.message);
   }
 }
 
@@ -810,6 +790,7 @@ const btnAdminTabBack = document.getElementById("btnAdminTabBack");
 if (btnAdminTabBack) {
   btnAdminTabBack.addEventListener("click", () => afficherOngletAdmin("secAccueil"));
 }
+window.afficherOngletAdmin = afficherOngletAdmin;
 })();
 
 
