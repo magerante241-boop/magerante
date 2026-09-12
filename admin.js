@@ -191,7 +191,7 @@ async function chargerDashboard() {
     const produits = produitsSnap.docs.map((d) => d.data());
     renderInventaireGlobal(produits);
   } catch (err) {
-    console.error("Erreur inventaire global (normal si aucun produit encore cree):", err);
+    console.error("Erreur inventaire global:", err); alert("Erreur inventaire: " + err.message);
     renderInventaireGlobal([]);
   }
 }
