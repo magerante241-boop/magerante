@@ -1,4 +1,3 @@
-window.addEventListener("error", (e) => { alert("Erreur JS: " + e.message + " (ligne " + e.lineno + ")"); });
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
   collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
@@ -189,7 +188,7 @@ async function chargerDashboard() {
   try {
     const produitsSnap = await getDocs(collectionGroup(db, "produits"));
     const produits = produitsSnap.docs.map((d) => d.data());
-    renderInventaireGlobal(produits); alert("Produits trouves: " + produits.length);
+    renderInventaireGlobal(produits);
   } catch (err) {
     console.error("Erreur inventaire global:", err);
     renderInventaireGlobal([]);
@@ -427,7 +426,7 @@ async function ouvrirEditionEtablissement(id, etablissements) {
   }
 }
 
-function attendreChart(callback, tentatives = 0) {  if (tentatives === 0) alert("Chart existe: " + !!window.Chart);
+function attendreChart(callback, tentatives = 0) {
   if (window.Chart) {
     callback();
     return;
@@ -443,7 +442,7 @@ function renderInventaireGlobal(produits) {
   attendreChart(() => renderInventaireGlobalImpl(produits));
 }
 
-function renderInventaireGlobalImpl(produits) { alert("Entree fonction impl, produits: " + produits.length);
+function renderInventaireGlobalImpl(produits) {
   let valeurTotale = 0;
   const parCategorie = {};
   produits.forEach((p) => {
@@ -465,7 +464,7 @@ function renderInventaireGlobalImpl(produits) { alert("Entree fonction impl, pro
       labels = ["Aucune donnee"];
       dataCat = [1];
     }
-    alert("Creation graphique categorie, labels: " + labels.length); window._stockCategorieChart = new Chart(ctxCat, {
+    window._stockCategorieChart = new Chart(ctxCat, {
       type: "pie",
       data: {
         labels,
