@@ -260,6 +260,9 @@ button:active {
         <div class="stat-card quick-tile" data-target="secMonEtablissement">
           <span class="quick-tile-icon">🏪</span><span class="quick-tile-label">Mon établissement</span>
         </div>
+        <div class="stat-card quick-tile" data-target="secHistorique">
+          <span class="quick-tile-icon">📜</span><span class="quick-tile-label">Historique</span>
+        </div>
       </div>
       <div class="stats-grid">
         <div class="stat-card" data-target="secComptesAttente">
@@ -314,6 +317,29 @@ button:active {
         </div>
         <canvas id="caBarChart" height="220"></canvas>
       </details>
+      <details class="collapsible-section">
+        <summary class="section-title" id="secHistorique">Historique global (factures &amp; mouvements)</summary>
+        <select id="histFiltrePeriode" class="filtre-select">
+          <option value="jour">Aujourd'hui</option>
+          <option value="semaine">Cette semaine</option>
+          <option value="mois">Ce mois</option>
+          <option value="tout" selected>Tout</option>
+        </select>
+        <select id="histFiltreEtablissement" class="filtre-select"><option value="">Tous les établissements</option></select>
+        <input type="text" id="histFiltreGerant" class="filtre-select" placeholder="Filtrer par gérant...">
+        <select id="histFiltreType" class="filtre-select">
+          <option value="tout">Tout (factures + mouvements)</option>
+          <option value="facture">Factures uniquement</option>
+          <option value="mouvement">Mouvements uniquement</option>
+        </select>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Etablissement</th><th>Gérant</th><th>Type</th><th>Détail</th><th>Montant</th></tr></thead>
+            <tbody id="histTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
+
 
       <details class="collapsible-section">
         <summary class="section-title" id="secZones">Établissements par zone / quartier</summary>
