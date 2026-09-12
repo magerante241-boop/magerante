@@ -28,7 +28,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isSignedIn() && (request.auth.uid == estId || isAdmin());
       allow update: if isSignedIn() && (request.auth.uid == estId || isAdmin());
-      allow delete: if false;
+      allow delete: if isSignedIn() && isAdmin();
 
       match /produits/{prodId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
@@ -39,14 +39,6 @@ service cloud.firestore {
         allow read, delete: if isSignedIn() && request.auth.uid == estId;
         allow read, update: if isSignedIn() && request.auth.uid == gerantUid;
 
-        // CORRIGÉ : avant, "auth.uid == gerantUid" seul suffisait — n'importe
-        // quel utilisateur pouvait s'auto-déclarer gérant de N'IMPORTE QUEL
-        // établissement en connaissant juste son estId, sans jamais avoir vu
-        // le lien d'invitation ni le code PIN. La création exige désormais
-        // une preuve vérifiée côté serveur via get() :
-        //   - soit le token du lien d'invitation (établi pour cet estId),
-        //   - soit le code PIN, comparé à gerant_codes (jamais lisible par
-        //     le client, voir plus bas).
         allow create: if isSignedIn() && (
           request.auth.uid == estId
           ||
@@ -72,13 +64,14 @@ service cloud.firestore {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() &&
               (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
+        allow update, delete: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
       match /factures/{factureId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() &&
               (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
-        allow update, delete: if false;
+        allow update, delete: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
       match /meta/{metaId} {
@@ -90,13 +83,13 @@ service cloud.firestore {
       match /mouvements/{mvtId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
         allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
-        allow update, delete: if false;
+        allow update, delete: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
       match /journal/{journalId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin());
         allow create: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId));
-        allow update, delete: if false;
+        allow update, delete: if isSignedIn() && (request.auth.uid == estId || estGerantDe(estId) || isAdmin());
       }
 
       match /rapports/{periode} {
@@ -111,11 +104,6 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
-      // NOUVEAU : notifications temps réel (stock bas, ventes, clôtures,
-      // connexions gérant...). Le propriétaire et ses gérants peuvent tout
-      // lire et créer. Seule la mise à jour du champ "lu" est autorisée
-      // (marquage comme lu) ; la suppression sert uniquement au nettoyage
-      // automatique des notifications de plus de 30 jours (voir notifications.js).
       match /notifications/{notifId} {
         allow read: if isSignedIn() && (
           request.auth.uid == estId ||
@@ -129,27 +117,26 @@ service cloud.firestore {
       }
     }
 
+    match /{path=**}/produits/{prodId} {
+      allow read: if isAdmin();
+    }
+
+    match /{path=**}/ventes/{venteId} {
+      allow read: if isAdmin();
+    }
+
     match /invitations/{token} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.estId == request.auth.uid;
       allow update, delete: if false;
     }
 
-    // CORRIGÉ : ce document ne contient plus le code PIN (déplacé vers
-    // gerant_codes ci-dessous) — juste estId/nom/actif, nécessaires pour
-    // que l'écran de connexion gérant sache où rediriger. Le laisser lisible
-    // par tout signé (y compris anonyme) n'est plus un risque puisqu'il n'y
-    // a plus aucun secret dedans.
     match /gerant_logins/{telephone} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.estId;
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
     }
 
-    // NOUVEAU : le code PIN vit ici, séparé de gerant_logins. Lecture
-    // interdite en toute circonstance — seule la règle de gerants/{gerantUid}
-    // ci-dessus peut le consulter, via get(), pour valider une tentative de
-    // connexion. Le client ne peut jamais récupérer sa valeur.
     match /gerant_codes/{telephone} {
       allow read: if false;
       allow write: if isSignedIn() && request.auth.uid == request.resource.data.estId;
