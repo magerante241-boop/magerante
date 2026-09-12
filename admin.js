@@ -9,6 +9,13 @@ const ADMIN_EMAIL = "magerante241@gmail.com";
 // Échappe le HTML avant injection via innerHTML — évite l'XSS stocké sur les
 // champs contrôlés par le public (nom d'établissement, nom/prénom/email lors
 // de l'inscription, nom de produit...).
+let _cacheEstablishmentsSnap = null;
+async function getEstablishmentsSnap() {
+  if (_cacheEstablishmentsSnap) return _cacheEstablishmentsSnap;
+  _cacheEstablishmentsSnap = await getDocs(collection(db, "establishments"));
+  return _cacheEstablishmentsSnap;
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -64,7 +71,7 @@ document.getElementById("btnDiffuserNotif").addEventListener("click", async () =
   const message = prompt("Message a diffuser a tous les etablissements :");
   if (!message || !message.trim()) return;
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     const batch = writeBatch(db);
     let count = 0;
     estSnap.forEach((estDoc) => {
@@ -94,7 +101,7 @@ document.getElementById("btnDiffuserNotif").addEventListener("click", async () =
   const message = prompt("Message a diffuser a tous les etablissements :");
   if (!message || !message.trim()) return;
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     const batch = writeBatch(db);
     let count = 0;
     estSnap.forEach((estDoc) => {
@@ -165,7 +172,7 @@ async function chargerDashboard() {
   }
 
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     document.getElementById("statEtablissements").textContent = estSnap.size;
   } catch (err) {
     console.error("Erreur stats etablissements:", err);
@@ -240,7 +247,7 @@ async function chargerFinanceEtRapports() {
   const etabMap = {};
 
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     estSnap.forEach((d) => {
       const data = d.data();
       etabMap[d.id] = {
@@ -333,7 +340,7 @@ async function chargerEtablissementsParZone() {
   if (!listeZonesEl) return;
   let etablissements = [];
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     estSnap.forEach((d) => {
       const data = d.data();
       etablissements.push({
@@ -546,7 +553,7 @@ document.getElementById("btnImporterCatalogue").addEventListener("click", async 
     }
 
     statusEl.textContent = "Lecture des etablissements...";
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     const etablissementIds = estSnap.docs.map((d) => d.id);
 
     if (!etablissementIds.length) {
@@ -633,7 +640,7 @@ document.getElementById("btnViderInventaire").addEventListener("click", async ()
 
   statusEl.textContent = "Lecture des etablissements...";
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     const etablissementIds = estSnap.docs.map((d) => d.id);
     let totalSupprime = 0;
 
@@ -672,7 +679,7 @@ async function chargerGestionProduits() {
   const tbody = document.getElementById("produitsGestionTableBody");
   const select = document.getElementById("filtreEtablissementProduits");
   try {
-    const estSnap = await getDocs(collection(db, "establishments"));
+    const estSnap = await getEstablishmentsSnap();
     _cacheEtablissementsNoms = {};
     const valeurActuelle = select.value;
     select.innerHTML = '<option value="tous">Tous les etablissements</option>';
