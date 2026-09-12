@@ -146,6 +146,8 @@ async function chargerOutilsSuivi() {
     console.error("Erreur chargement produits (outils suivi):", err);
   }
 
+  const debugTitreEl = gridEl.querySelector(".inv-outil-titre");
+  if (debugTitreEl) debugTitreEl.textContent = "DEBUG estId: " + estId;
   const debutPeriode = new Date();
   debutPeriode.setDate(debutPeriode.getDate() - 14);
   let ventesData = [];
