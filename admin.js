@@ -784,6 +784,7 @@ function afficherOngletAdmin(idCible) {
       conteneur.classList.add("admin-tab-hidden");
     }
   });
+  document.querySelectorAll("#adminBottomNav .bottom-nav-item[data-target]").forEach((b) => { b.classList.toggle("active", b.dataset.target === idCible); });
   const backBtn = document.getElementById("btnAdminTabBack");
   if (backBtn) backBtn.classList.toggle("show", idCible !== "secAccueil");
   window.scrollTo({ top: 0, behavior: "instant" });
