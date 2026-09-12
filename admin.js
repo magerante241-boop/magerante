@@ -857,7 +857,7 @@ async function chargerHistoriqueGlobal() {
       });
     });
   } catch (err) {
-    console.error("Erreur chargement factures (historique):", err);
+    console.error("Erreur chargement factures (historique):", err); document.getElementById("histTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR FACTURES: " + err.message + "</td></tr>";
   }
   try {
     const mouvementsSnap = await getDocs(query(collectionGroup(db, "mouvements"), orderBy("date", "desc"), limit(400)));
@@ -870,7 +870,7 @@ async function chargerHistoriqueGlobal() {
       });
     });
   } catch (err) {
-    console.error("Erreur chargement mouvements (historique):", err);
+    console.error("Erreur chargement mouvements (historique):", err); document.getElementById("histTableBody").innerHTML += "<tr><td colspan=\"6\" class=\"empty-msg\" style=\"color:red; word-break:break-all;\">ERREUR MOUVEMENTS: " + err.message + "</td></tr>";
   }
 
   afficherHistoriqueFiltre();
