@@ -261,7 +261,7 @@ async function chargerFinanceEtRapports() {
     if (caBarChart) caBarChart.destroy();
     caBarChart = new Chart(ctxCaBar, {
       type: "bar",
-      data: { labels: top10.map((r) => r.nom), datasets: [{ label: "CA (FCFA)", data: top10.map((r) => r.total), backgroundColor: "#22c55e" }] },
+      data: { labels: top10.map((r) => r.nom), datasets: [{ label: "CA (FCFA)", data: top10.map((r) => r.total), backgroundColor: "#1f6f4a" }] },
       options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
     });
   }
@@ -279,7 +279,7 @@ async function chargerFinanceEtRapports() {
     if (caCourbeChart) caCourbeChart.destroy();
     caCourbeChart = new Chart(ctxCaCourbe, {
       type: "line",
-      data: { labels: labelsJour, datasets: [{ label: "CA global (FCFA)", data: dataJour, borderColor: "#4a90d9", tension: 0.3 }] },
+      data: { labels: labelsJour, datasets: [{ label: "CA global (FCFA)", data: dataJour, borderColor: "#b8902e", tension: 0.3 }] },
       options: { responsive: true, plugins: { legend: { display: false } } },
     });
   }
@@ -447,7 +447,7 @@ function renderInventaireGlobalImpl(produits) {
         labels,
         datasets: [{
           data: dataCat,
-          backgroundColor: (labels.length === 1 && labels[0] === "Aucune donnee") ? ["#d8d5cc"] : ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#6250d6","#e34948"]
+          backgroundColor: (labels.length === 1 && labels[0] === "Aucune donnee") ? ["#d8d5cc"] : ["#1f6f4a","#b8902e","#2d8a5c","#d4a94a","#164f35","#8f6b1f","#4a9970","#e0be6e"]
         }]
       },
       options: { responsive: true, maintainAspectRatio: false }
@@ -469,7 +469,7 @@ function renderInventaireGlobalImpl(produits) {
       type: "bar",
       data: {
         labels: top8Affiche.map((p) => p.nom),
-        datasets: [{ data: top8Affiche.map((p) => p.valeur), backgroundColor: "#2a78d6" }]
+        datasets: [{ data: top8Affiche.map((p) => p.valeur), backgroundColor: "#b8902e" }]
       },
       options: {
         indexAxis: "y",
