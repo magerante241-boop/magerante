@@ -176,6 +176,7 @@ async function chargerOutilsSuivi() {
     }
   });
 
+  try {
   const labelsJour = Object.keys(parJour).sort();
   const canvasCa = document.getElementById("invCaChart");
   const caEmptyEl = document.getElementById("invCaEmpty");
@@ -225,6 +226,12 @@ async function chargerOutilsSuivi() {
         });
       });
     }
+  }
+
+  } catch (err) {
+    console.error("Erreur rendu graphiques (outils suivi):", err);
+    const caEmptyDebug = document.getElementById("invCaEmpty");
+    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG rendu: " + err.message; caEmptyDebug.style.color = "red"; }
   }
 
   const deficitParCategorie = {};
