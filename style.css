@@ -1618,4 +1618,3 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 
 .table-wrap { position: relative; min-height: 220px; }
 
-#stockCategorieChart, #stockTopProduitsChart { border: 3px solid red !important; background: yellow !important; }
