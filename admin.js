@@ -465,7 +465,7 @@ function renderInventaireGlobalImpl(produits) {
       labels = ["Aucune donnee"];
       dataCat = [1];
     }
-    window._stockCategorieChart = new Chart(ctxCat, {
+    alert("Creation graphique categorie, labels: " + labels.length); window._stockCategorieChart = new Chart(ctxCat, {
       type: "pie",
       data: {
         labels,
