@@ -13,6 +13,12 @@ function produitsRef() {
   return collection(db, "establishments", appState.establishmentId, "produits");
 }
 
+function attendreChartInv(callback, tentatives = 0) {
+  if (window.Chart) { callback(); return; }
+  if (tentatives > 50) { console.error("Chart.js n'a jamais fini de charger (timeout, inventaire)."); return; }
+  setTimeout(() => attendreChartInv(callback, tentatives + 1), 100);
+}
+
 // --- Point d'entrée appelé par app.js quand l'onglet Inventaire est ouvert ---
 export function render(container) {
   if (!appState.establishmentId) {
@@ -105,7 +111,6 @@ async function chargerOutilsSuivi() {
   const estId = appState.establishmentId;
 
   gridEl.innerHTML = `
-    <div class="inv-outil-tuile" id="invDebugTemp" style="border:2px solid #0f0;font-family:monospace;font-size:12px;white-space:pre-wrap;"></div>
     <div class="inv-outil-tuile">
       <div class="inv-outil-titre">📈 Chiffre d'affaires (14 derniers jours)</div>
       <canvas id="invCaChart" height="160"></canvas>
@@ -135,8 +140,6 @@ async function chargerOutilsSuivi() {
     produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (err) {
     console.error("Erreur chargement produits (outils suivi):", err);
-    const dbg = document.getElementById("invDebugTemp");
-    if (dbg) dbg.textContent += "ERREUR PRODUITS: " + err.message + "\n";
   }
 
   const debutPeriode = new Date();
@@ -147,12 +150,6 @@ async function chargerOutilsSuivi() {
     ventesData = ventesSnap.docs.map((d) => d.data());
   } catch (err) {
     console.error("Erreur chargement ventes (outils suivi):", err);
-    const dbg = document.getElementById("invDebugTemp");
-    if (dbg) dbg.textContent += "ERREUR VENTES: " + err.message + "\n";
-  }
-  {
-    const dbg = document.getElementById("invDebugTemp");
-    if (dbg) dbg.textContent += "OK - produits: " + produits.length + " / ventes trouvees (14j): " + ventesData.length + " / estId: " + estId + "\n";
   }
 
   const parJour = {};
@@ -170,14 +167,9 @@ async function chargerOutilsSuivi() {
     }
   });
 
-  try {
   const labelsJour = Object.keys(parJour).sort();
   const canvasCa = document.getElementById("invCaChart");
   const caEmptyEl = document.getElementById("invCaEmpty");
-  {
-    const dbg = document.getElementById("invDebugTemp");
-    if (dbg) dbg.textContent += "canvasCa existe: " + (!!canvasCa) + " / largeur: " + (canvasCa ? canvasCa.offsetWidth : "N/A") + " / hauteur: " + (canvasCa ? canvasCa.offsetHeight : "N/A") + " / Chart dispo: " + (!!window.Chart) + "\n";
-  }
   if (labelsJour.length === 0) {
     if (canvasCa) canvasCa.hidden = true;
     if (caEmptyEl) caEmptyEl.hidden = false;
@@ -185,11 +177,13 @@ async function chargerOutilsSuivi() {
     if (canvasCa) canvasCa.hidden = false;
     if (caEmptyEl) caEmptyEl.hidden = true;
     const ctxCa = canvasCa?.getContext("2d");
-    if (ctxCa && window.Chart) {
-      new Chart(ctxCa, {
-        type: "line",
-        data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
-        options: { responsive: true, plugins: { legend: { display: false } } },
+    if (ctxCa) {
+      attendreChartInv(() => {
+        new Chart(ctxCa, {
+          type: "line",
+          data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
+          options: { responsive: true, plugins: { legend: { display: false } } },
+        });
       });
     }
   }
@@ -204,11 +198,13 @@ async function chargerOutilsSuivi() {
     if (canvasTop) canvasTop.hidden = false;
     if (topEmptyEl) topEmptyEl.hidden = true;
     const ctxTop = canvasTop?.getContext("2d");
-    if (ctxTop && window.Chart) {
-      new Chart(ctxTop, {
-        type: "bar",
-        data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
-        options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+    if (ctxTop) {
+      attendreChartInv(() => {
+        new Chart(ctxTop, {
+          type: "bar",
+          data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
+          options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+        });
       });
     }
   }
@@ -219,10 +215,6 @@ async function chargerOutilsSuivi() {
     const deficit = (Number(p.stockDepart) || 0) - (Number(p.stock) || 0);
     if (deficit > 0) deficitParCategorie[cat] = (deficitParCategorie[cat] || 0) + deficit;
   });
-  } catch (errChart) {
-    const dbg = document.getElementById("invDebugTemp");
-    if (dbg) dbg.textContent += "ERREUR CHART: " + errChart.message + "\n" + errChart.stack + "\n";
-  }
   const deficitListeEl = document.getElementById("invDeficitListe");
   const catsAvecDeficit = Object.entries(deficitParCategorie);
   deficitListeEl.innerHTML = catsAvecDeficit.length === 0
