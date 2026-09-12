@@ -137,6 +137,12 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
     }
 
+    match /connexions/{connexionId} {
+      allow read, list: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
     match /gerant_codes/{telephone} {
       allow read: if false;
       allow write: if isSignedIn() && request.auth.uid == request.resource.data.estId;
