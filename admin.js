@@ -427,7 +427,7 @@ async function ouvrirEditionEtablissement(id, etablissements) {
   }
 }
 
-function attendreChart(callback, tentatives = 0) { if (tentatives === 0) alert("Chart existe: " + !!window.Chart);
+function attendreChart(callback, tentatives = 0) { if (tentatives === 0) alert("Chart existe: " + !!window.Chart); if (tentatives === 0) alert("Chart existe: " + !!window.Chart);
   if (window.Chart) {
     callback();
     return;
