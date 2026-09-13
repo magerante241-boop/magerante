@@ -1,4 +1,8 @@
 import { initNotifications } from "./notifications.js";
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 // app.js — squelette : horloge, navigation, calculatrice de base
 // (l'Inventaire est géré par inventaire.js, exposé sur window.InventaireModule)
 // (les Ventes sont gérées par ventes.js, exposé sur window.VentesModule)
@@ -433,7 +437,7 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
       const demo = window.InventaireModule?.PRODUITS_DEMO?.find((x) => x.nom === nomProduit);
       const prixAffiche = p ? p.prixVente : (demo ? demo.prixVente : null);
       const suffixe = prixAffiche != null ? ` · ${prixAffiche} FCFA` : " (non configuré)";
-      return `<button class="marque-taille-item" data-nom="${nomProduit}">${label}${suffixe}</button>`;
+      return `<button class="marque-taille-item" data-nom="${escapeHtml(nomProduit)}">${escapeHtml(label)}${suffixe}</button>`;
     }).join("");
     const maxLeft = Math.max(0, btn.parentElement.offsetWidth - marqueTaillesEl.offsetWidth - 4);
     marqueTaillesEl.style.left = Math.min(btn.offsetLeft, maxLeft) + "px";
@@ -474,8 +478,8 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
     return;
   }
   calcProduitsListe.innerHTML = tousLesProduits.map((p) => `
-    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
-      <span class="calc-produit-nom">${p.nom}</span>
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${escapeHtml(p.nom || "")}">
+      <span class="calc-produit-nom">${escapeHtml(p.nom || "")}</span>
       <span class="calc-produit-prix">${p.prixVente} FCFA</span>
     </button>
   `).join("");
@@ -586,8 +590,8 @@ function afficherResultatsRecherche() {
     return;
   }
   calcProduitsListe.innerHTML = resultats.map((p) => `
-    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${p.nom || ""}">
-      <span class="calc-produit-nom">${p.nom}</span>
+    <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${escapeHtml(p.nom || "")}">
+      <span class="calc-produit-nom">${escapeHtml(p.nom || "")}</span>
       <span class="calc-produit-prix">${p.prixVente} FCFA</span>
     </button>
   `).join("");
