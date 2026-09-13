@@ -1629,6 +1629,7 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   background: var(--bg, #fdfaf3);
   z-index: 400;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
