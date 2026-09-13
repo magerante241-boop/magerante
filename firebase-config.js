@@ -1,7 +1,8 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, getDocs, setDoc, serverTimestamp,
+  initializeFirestore, persistentLocalCache, persistentSingleTabManager,
+  doc, getDoc, getDocs, setDoc, serverTimestamp,
   collection, collectionGroup, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, increment,
   writeBatch, runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -22,7 +23,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) })
+});
 export const auth = getAuth(app);
 
 export {

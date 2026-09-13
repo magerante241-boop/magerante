@@ -95,6 +95,20 @@
       <h1>Clôturer ma journée</h1>
       <p class="auth-hint" id="clotureResume">Chargement du résumé...</p>
       <p class="auth-error" id="clotureError"></p>
+
+      <label class="auth-label" for="clotureFondDepart">Fond de caisse au départ (FCFA)</label>
+      <input type="number" id="clotureFondDepart" class="auth-input" placeholder="0" min="0" value="0">
+
+      <label class="auth-label" for="clotureRecetteReelle">Argent compté en caisse maintenant (FCFA)</label>
+      <input type="number" id="clotureRecetteReelle" class="auth-input" placeholder="0" min="0" value="0">
+
+      <p class="auth-hint" style="margin:10px 0 4px;">Factures papier / hors-app reçues aujourd'hui (optionnel)</p>
+      <div id="clotureFacturesManuellesListe"></div>
+      <button type="button" id="btnAjouterFactureManuelle" class="icon-btn">+ Ajouter une facture manuelle</button>
+
+      <label class="auth-label" for="clotureCommentaire">Commentaire (optionnel)</label>
+      <textarea id="clotureCommentaire" class="auth-input" rows="3" placeholder="Remarques, anomalies, précisions..."></textarea>
+
       <button id="btnConfirmerCloture" class="auth-btn-primary">Envoyer mes comptes au propriétaire</button>
       <a id="clotureLienWhatsapp" class="auth-btn" target="_blank" hidden>Envoyer aussi par WhatsApp</a>
       <button id="btnCloseCloture" class="icon-btn">Fermer</button>
