@@ -263,6 +263,9 @@ button:active {
         <div class="stat-card quick-tile" data-target="secHistorique">
           <span class="quick-tile-icon">📜</span><span class="quick-tile-label">Historique</span>
         </div>
+        <div class="stat-card quick-tile" data-target="secClotures">
+          <span class="quick-tile-icon">🧾</span><span class="quick-tile-label">Clôtures</span>
+        </div>
       </div>
       <div class="stats-grid">
         <div class="stat-card" data-target="secComptesAttente">
@@ -339,6 +342,25 @@ button:active {
             <tbody id="histTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
           </table>
         </div>
+      </details>
+
+      <details class="collapsible-section">
+        <summary class="section-title" id="secClotures">Clôtures des gérants</summary>
+        <select id="clotFiltrePeriode" class="filtre-select">
+          <option value="tout">Toutes les dates</option>
+          <option value="jour" selected>Aujourd'hui</option>
+          <option value="semaine">Cette semaine</option>
+          <option value="mois">Ce mois</option>
+        </select>
+        <select id="clotFiltreEtablissement" class="filtre-select"><option value="">Tous les établissements</option></select>
+        <input type="text" id="clotFiltreGerant" class="filtre-select" placeholder="Filtrer par gérant...">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Établissement</th><th>Gérant</th><th>Ventes</th><th>Écart caisse</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="clotTableBody"><tr><td colspan="7" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="clotDetailZone"></div>
       </details>
 
 
@@ -458,6 +480,7 @@ button:active {
         <li><button class="side-menu-item" data-target="secConnexions">🔐 Historique des connexions</button></li>
         <li><button class="side-menu-item" data-target="secMonEtablissement">🏪 Mon établissement</button></li>
         <li><button class="side-menu-item" data-target="secHistorique">📜 Historique global</button></li>
+        <li><button class="side-menu-item" data-target="secClotures">🧾 Clôtures des gérants</button></li>
         <li><button class="side-menu-item" id="menuAdminRetourApp">🏠 Retour a l'application</button></li>
       </ul>
     </nav>
@@ -486,5 +509,6 @@ button:active {
 .quick-tile[data-target="secConnexions"] { background: #8f6b1f; }
 .quick-tile[data-target="secMonEtablissement"] { background: #4a9970; }
 .quick-tile[data-target="secHistorique"] { background: #6b4a1f; }
+.quick-tile[data-target="secClotures"] { background: #7a5230; }
 .quick-tile[data-target] .quick-tile-label { color: #fff; }
 </style>

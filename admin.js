@@ -109,6 +109,7 @@ onAuthStateChanged(auth, (user) => {
     chargerComptesEnAttente();
     chargerFinanceEtRapports();
     chargerHistoriqueGlobal();
+    chargerClotures();
     chargerEtablissementsParZone();
     chargerGestionProduits();
     chargerConnexions();
@@ -791,7 +792,7 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique"];
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secCourbeCA","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique","secClotures"];
 
 function majHauteurHeader() {
   const h = document.querySelector("header");
@@ -969,4 +970,171 @@ function afficherHistoriqueFiltre() {
     return "<tr><td>" + dateStr + "</td><td>" + escapeHtml(nomEtab) + "</td><td>" + escapeHtml(l.gerant) +
       "</td><td>" + l.type + "</td><td>" + escapeHtml(l.detail) + "</td><td>" + l.montant.toLocaleString("fr-FR") + " FCFA</td></tr>";
   }).join("");
+}
+
+let cloturesCache = [];
+let cloturesEtabMapCache = {};
+
+async function chargerClotures() {
+  const etabSelect = document.getElementById("clotFiltreEtablissement");
+  const periodeSelect = document.getElementById("clotFiltrePeriode");
+  const gerantInput = document.getElementById("clotFiltreGerant");
+  if (!etabSelect) return;
+
+  try {
+    const estSnap = await getEstablishmentsSnap();
+    cloturesEtabMapCache = {};
+    estSnap.forEach((d) => {
+      const data = d.data();
+      cloturesEtabMapCache[d.id] = data.nom || data.name || ("Etablissement " + d.id.slice(0, 6));
+    });
+    if (etabSelect.children.length <= 1) {
+      const opts = Object.entries(cloturesEtabMapCache).sort((a, b) => a[1].localeCompare(b[1]));
+      etabSelect.innerHTML = '<option value="">Tous les établissements</option>' +
+        opts.map(([id, nom]) => `<option value="${id}">${escapeHtml(nom)}</option>`).join("");
+    }
+  } catch (err) {
+    console.error("Erreur chargement etablissements (clotures):", err);
+  }
+
+  cloturesCache = [];
+  try {
+    const cloturesSnap = await getDocs(query(collectionGroup(db, "clotures"), orderBy("date", "desc"), limit(300)));
+    cloturesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const estId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : "inconnu";
+      cloturesCache.push({ id: docSnap.id, estId, ...data });
+    });
+  } catch (err) {
+    console.error("Erreur chargement clotures:", err);
+  }
+
+  afficherCloturesFiltre();
+
+  [periodeSelect, etabSelect].forEach((el) => {
+    if (el && !el._clotBound) { el.addEventListener("change", afficherCloturesFiltre); el._clotBound = true; }
+  });
+  if (gerantInput && !gerantInput._clotBound) { gerantInput.addEventListener("input", afficherCloturesFiltre); gerantInput._clotBound = true; }
+}
+
+function afficherCloturesFiltre() {
+  const tbody = document.getElementById("clotTableBody");
+  if (!tbody) return;
+  const periode = (document.getElementById("clotFiltrePeriode") || {}).value || "tout";
+  const estId = (document.getElementById("clotFiltreEtablissement") || {}).value || "";
+  const gerantFiltre = ((document.getElementById("clotFiltreGerant") || {}).value || "").trim().toLowerCase();
+
+  const maintenant = new Date();
+  let seuil = null;
+  if (periode === "jour") {
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
+  } else if (periode === "semaine") {
+    const jour = maintenant.getDay() || 7;
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() - jour + 1);
+  } else if (periode === "mois") {
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+  }
+
+  const filtrees = cloturesCache.filter((c) => {
+    if (estId && c.estId !== estId) return false;
+    if (gerantFiltre && !(c.gerantNom || "").toLowerCase().includes(gerantFiltre)) return false;
+    if (seuil) {
+      if (!c.date || !c.date.toDate) return false;
+      if (c.date.toDate() < seuil) return false;
+    }
+    return true;
+  });
+
+  if (filtrees.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Aucune clôture pour ces filtres.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtrees.map((c, i) => {
+    const d = c.date && c.date.toDate ? c.date.toDate() : null;
+    const dateStr = d ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
+    const nomEtab = c.etablissementNom || cloturesEtabMapCache[c.estId] || "—";
+    const ecart = c.caisse ? Number(c.caisse.ecart || 0) : 0;
+    const ecartStr = (ecart >= 0 ? "+" : "") + ecart.toLocaleString("fr-FR") + " FCFA";
+    const ecartColor = ecart === 0 ? "var(--text)" : (ecart > 0 ? "#1f6f4a" : "var(--danger)");
+    return `
+      <tr>
+        <td>${dateStr}</td>
+        <td>${escapeHtml(nomEtab)}</td>
+        <td>${escapeHtml(c.gerantNom || "—")}</td>
+        <td>${Number(c.totalVentes || 0).toLocaleString("fr-FR")} FCFA</td>
+        <td style="color:${ecartColor}; font-weight:600;">${ecartStr}</td>
+        <td>${escapeHtml(c.statut || "envoyee")}</td>
+        <td><button type="button" class="icon-btn btn-voir-cloture" data-idx="${i}">Voir</button></td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".btn-voir-cloture").forEach((btn) => {
+    btn.addEventListener("click", () => afficherDetailCloture(filtrees[Number(btn.dataset.idx)]));
+  });
+}
+
+function ligneVentilation(obj) {
+  const entrees = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
+  if (entrees.length === 0) return "<p class=\"empty-msg\">Aucune donnée.</p>";
+  return "<ul>" + entrees.map(([k, v]) => `<li>${escapeHtml(k)} : ${Number(v).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>";
+}
+
+function ligneStock(stockParMarque) {
+  const entrees = Object.entries(stockParMarque || {});
+  if (entrees.length === 0) return "<p class=\"empty-msg\">Aucune donnée.</p>";
+  return "<ul>" + entrees.map(([marque, produits]) => {
+    const detail = (produits || []).map((p) => `${escapeHtml(p.nom)} : ${p.stock}`).join(", ");
+    return `<li><strong>${escapeHtml(marque)}</strong> — ${detail}</li>`;
+  }).join("") + "</ul>";
+}
+
+function afficherDetailCloture(c) {
+  const zone = document.getElementById("clotDetailZone");
+  if (!zone) return;
+  const d = c.date && c.date.toDate ? c.date.toDate() : new Date();
+  const dateStr = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const nomEtab = c.etablissementNom || cloturesEtabMapCache[c.estId] || "—";
+  const caisse = c.caisse || {};
+  const facturesManuelles = c.facturesManuelles || [];
+  const facturesNumeriques = c.facturesNumeriques || [];
+
+  zone.innerHTML = `
+    <div class="cloture-fiche" id="cloture-fiche-impression">
+      <h3>Fiche de clôture — ${escapeHtml(nomEtab)}</h3>
+      <p><strong>Gérant :</strong> ${escapeHtml(c.gerantNom || "—")} &nbsp;|&nbsp; <strong>Date :</strong> ${dateStr}</p>
+      <p><strong>Ventes :</strong> ${Number(c.totalVentes || 0).toLocaleString("fr-FR")} FCFA (${c.nombreVentes || 0} vente(s))</p>
+
+      <h4>Caisse</h4>
+      <ul>
+        <li>Fond de départ : ${Number(caisse.fondDepart || 0).toLocaleString("fr-FR")} FCFA</li>
+        <li>Théorique (fond + ventes + factures manuelles) : ${Number(caisse.theorique || 0).toLocaleString("fr-FR")} FCFA</li>
+        <li>Compté réellement : ${Number(caisse.recetteReelle || 0).toLocaleString("fr-FR")} FCFA</li>
+        <li><strong>Écart : ${Number(caisse.ecart || 0) >= 0 ? "+" : ""}${Number(caisse.ecart || 0).toLocaleString("fr-FR")} FCFA</strong></li>
+      </ul>
+
+      <h4>Ventilation par catégorie</h4>
+      ${ligneVentilation(c.parCategorie)}
+
+      <h4>Ventilation par marque</h4>
+      ${ligneVentilation(c.parMarque)}
+
+      <h4>Stock restant par marque</h4>
+      ${ligneStock(c.stockParMarque)}
+
+      <h4>Factures numériques du jour (${facturesNumeriques.length})</h4>
+      ${facturesNumeriques.length ? "<ul>" + facturesNumeriques.map((f) => `<li>Facture n°${f.numero || "?"} — ${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>" : "<p class=\"empty-msg\">Aucune.</p>"}
+
+      <h4>Factures manuelles / papier (${facturesManuelles.length})</h4>
+      ${facturesManuelles.length ? "<ul>" + facturesManuelles.map((f) => `<li>${escapeHtml(f.description || "—")} — ${Number(f.montant || 0).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>" : "<p class=\"empty-msg\">Aucune.</p>"}
+
+      ${c.commentaire ? `<h4>Commentaire du gérant</h4><p>${escapeHtml(c.commentaire)}</p>` : ""}
+    </div>
+    <button type="button" class="auth-btn-primary" id="btnImprimerCloture" style="margin-top:12px;">🖨️ Imprimer / Archiver cette fiche</button>
+  `;
+
+  const btnImprimer = document.getElementById("btnImprimerCloture");
+  if (btnImprimer) btnImprimer.addEventListener("click", () => window.print());
+
+  zone.scrollIntoView({ behavior: "smooth", block: "start" });
 }
