@@ -126,13 +126,13 @@ service cloud.firestore {
     }
 
     match /invitations/{token} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
       allow create: if isSignedIn() && request.resource.data.estId == request.auth.uid;
       allow update, delete: if false;
     }
 
     match /gerant_logins/{telephone} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
       allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.estId;
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
     }
