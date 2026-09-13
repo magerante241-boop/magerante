@@ -1,4 +1,8 @@
 import { initNotifications } from "./notifications.js";
+function estExpressionArithmetiqueSure(expr) {
+  return /^[0-9+\-*/().\s]*$/.test(expr);
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -185,7 +189,7 @@ function appliquerPrixMarque(prix) {
   let valeur = 0;
   try {
     const safeExpr = expr.replace(/×/g, "*").replace(/,/g, ".");
-    valeur = Function(`"use strict"; return (${safeExpr})`)();
+    valeur = estExpressionArithmetiqueSure(safeExpr) ? Function(`"use strict"; return (${safeExpr})`)() : 0;
   } catch {
     valeur = 0;
   }
@@ -220,7 +224,7 @@ function renderCalc() {
       .replace(/÷/g, "/")
       .replace(/,/g, ".");
     // eslint-disable-next-line no-new-func
-    const value = safeExpr.trim() === "" ? 0 : Function(`"use strict"; return (${safeExpr})`)();
+    const value = (safeExpr.trim() === "" || !estExpressionArithmetiqueSure(safeExpr)) ? 0 : Function(`"use strict"; return (${safeExpr})`)();
     calcValeurNumerique = isFinite(value) ? value : 0;
   } catch {
     calcValeurNumerique = 0;
@@ -301,7 +305,7 @@ document.getElementById("numpad").addEventListener("click", (e) => {
             .replace(/\u00d7/g, "*")
             .replace(/\u00f7/g, "/")
             .replace(/,/g, ".");
-          valeur = Function("\"use strict\"; return (" + safeExpr + ")")();
+          valeur = estExpressionArithmetiqueSure(safeExpr) ? Function("\"use strict\"; return (" + safeExpr + ")")() : 0;
         } catch {
           valeur = 0;
         }
