@@ -304,6 +304,44 @@ async function chargerFinanceEtRapports() {
 }
 
 
+
+async function supprimerSousCollection(estId, sousCollection) {
+  const snap = await getDocs(collection(db, "establishments", estId, sousCollection));
+  if (snap.empty) return;
+  const docsArray = snap.docs;
+  const TAILLE_LOT = 400;
+  for (let i = 0; i < docsArray.length; i += TAILLE_LOT) {
+    const lot = docsArray.slice(i, i + TAILLE_LOT);
+    const batch = writeBatch(db);
+    lot.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
+}
+
+async function supprimerEtablissement(estId, nom, callbackApresRefresh) {
+  const confirmation = prompt(
+    "ATTENTION : suppression definitive et irreversible de \"" + nom + "\" et de toutes ses donnees (produits, ventes, factures, mouvements...).\n\nTape le nom exact de l etablissement pour confirmer :"
+  );
+  if (confirmation !== nom) {
+    if (confirmation !== null) alert("Nom incorrect, suppression annulee.");
+    return;
+  }
+
+  try {
+    const sousCollections = ["produits", "ventes", "factures", "mouvements", "gerants", "meta", "journal", "rapports", "clotures", "notifications"];
+    for (const sc of sousCollections) {
+      await supprimerSousCollection(estId, sc);
+    }
+    await deleteDoc(doc(db, "establishments", estId));
+    alert("Etablissement \"" + nom + "\" supprime avec succes.");
+    _cacheEstablishmentsSnap = null;
+    if (callbackApresRefresh) callbackApresRefresh();
+  } catch (err) {
+    console.error("Erreur suppression etablissement:", err);
+    alert("Erreur lors de la suppression : " + err.message);
+  }
+}
+
 async function chargerEtablissementsParZone() {
   const listeZonesEl = document.getElementById("listeZones");
   if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(listeZonesEl);
@@ -367,6 +405,7 @@ async function chargerEtablissementsParZone() {
           <div><strong>${escapeHtml(e.nom)}</strong> (${escapeHtml(e.type)})</div>
           <div>${mapsLien} — ${whatsappLien}</div>
           <button class="btn-edit-etab" data-id="${escapeHtml(e.id)}">✏️ Modifier</button>
+          <button class="btn-delete-etab" data-id="${escapeHtml(e.id)}" data-nom="${escapeHtml(e.nom)}">🗑️ Supprimer</button>
         </div>`;
       }).join("");
       return `<div class="zone-groupe"><h3>${escapeHtml(zone)}</h3>${items}</div>`;
@@ -374,6 +413,10 @@ async function chargerEtablissementsParZone() {
 
     document.querySelectorAll(".btn-edit-etab").forEach((btn) => {
       btn.addEventListener("click", () => ouvrirEditionEtablissement(btn.dataset.id, etablissements));
+    });
+
+    document.querySelectorAll(".btn-delete-etab").forEach((btn) => {
+      btn.addEventListener("click", () => supprimerEtablissement(btn.dataset.id, btn.dataset.nom, chargerEtablissementsParZone));
     });
   }
 
