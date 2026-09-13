@@ -1651,3 +1651,28 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .collapsible-section:has(#secConnexions) { border-left: 4px solid #8f6b1f; }
 .collapsible-section:has(#secMonEtablissement) { border-left: 4px solid #4a9970; }
 .collapsible-section:has(#secCourbeCA) { border-left: 4px solid #d4a94a; }
+
+/* ===== Ajouts UX : badge stock bas, indicateur connexion, cloture rapide ===== */
+.marque-cell {
+  position: relative;
+}
+.marque-stock-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+}
+.conn-indicator {
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  transition: opacity 0.3s;
+}
+.conn-indicator.offline {
+  filter: grayscale(1);
+}

@@ -914,6 +914,7 @@ if (btnFactureValider) {
     if (erreurs.length) {
       alert("Facture partiellement enregistrée. Erreurs :\n" + erreurs.join("\n"));
     } else {
+      feedbackConfirmationVente();
       alert("Facture enregistrée avec succès !");
     }
   });
@@ -1022,3 +1023,87 @@ function moveNavIndicator() {
 }
 window.addEventListener("load", moveNavIndicator);
 window.addEventListener("resize", moveNavIndicator);
+
+// ===== UX additions: badge stock bas, indicateur connexion, cloture rapide, feedback vente =====
+const SEUIL_STOCK_BAS = 5;
+
+async function mettreAJourBadgesStock() {
+  if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return;
+  try {
+    const produits = await window.InventaireModule.getTousLesProduits();
+    Object.keys(MARQUES_TAILLES).forEach((marque) => {
+      const badge = document.getElementById("badge-" + marque);
+      if (!badge) return;
+      const tailles = MARQUES_TAILLES[marque];
+      const stockTotal = Object.values(tailles).reduce((acc, nomProduit) => {
+        const p = produits.find((x) => x.nom === nomProduit);
+        return acc + (p ? Number(p.stock || 0) : 0);
+      }, 0);
+      badge.hidden = stockTotal > SEUIL_STOCK_BAS;
+    });
+  } catch (e) { /* silencieux : pas bloquant pour l'affichage principal */ }
+}
+window.addEventListener("load", () => setTimeout(mettreAJourBadgesStock, 1500));
+document.addEventListener("DOMContentLoaded", () => {
+  const origSwitchView = window.switchView;
+  if (origSwitchView) {
+    window.switchView = function(view) {
+      origSwitchView(view);
+      if (view === "calc") setTimeout(mettreAJourBadgesStock, 300);
+    };
+  }
+});
+
+// --- Indicateur de connexion en ligne/hors-ligne ---
+function majIndicateurConnexion() {
+  const el = document.getElementById("connIndicator");
+  if (!el) return;
+  if (navigator.onLine) {
+    el.textContent = "🟢";
+    el.title = "En ligne";
+    el.classList.remove("offline");
+  } else {
+    el.textContent = "🔴";
+    el.title = "Hors ligne";
+    el.classList.add("offline");
+  }
+}
+window.addEventListener("online", majIndicateurConnexion);
+window.addEventListener("offline", majIndicateurConnexion);
+document.addEventListener("DOMContentLoaded", majIndicateurConnexion);
+
+// --- Bouton cloture rapide dans la nav du bas ---
+document.addEventListener("DOMContentLoaded", () => {
+  const navBtnCloture = document.getElementById("navBtnClotureRapide");
+  if (navBtnCloture) {
+    navBtnCloture.addEventListener("click", () => {
+      const menuCloture = document.getElementById("menuClotureGerant");
+      if (menuCloture) {
+        menuCloture.click();
+      } else {
+        alert("Cloture indisponible pour ce compte.");
+      }
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+    });
+  }
+});
+
+// --- Vibration/son de confirmation a la validation d'une vente ---
+function feedbackConfirmationVente() {
+  try {
+    if (navigator.vibrate) navigator.vibrate(80);
+  } catch (e) { /* ignore */ }
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch (e) { /* ignore */ }
+}
+window.feedbackConfirmationVente = feedbackConfirmationVente;
