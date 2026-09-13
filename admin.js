@@ -1123,7 +1123,7 @@ function afficherDetailCloture(c) {
       ${ligneStock(c.stockParMarque)}
 
       <h4>Factures numériques du jour (${facturesNumeriques.length})</h4>
-      ${facturesNumeriques.length ? "<ul>" + facturesNumeriques.map((f) => `<li>Facture n°${f.numero || "?"} — ${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>" : "<p class=\"empty-msg\">Aucune.</p>"}
+      ${facturesNumeriques.length ? "<ul>" + facturesNumeriques.map((f) => `<li>Facture n°${escapeHtml(String(f.numero || "?"))} — ${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>" : "<p class=\"empty-msg\">Aucune.</p>"}
 
       <h4>Factures manuelles / papier (${facturesManuelles.length})</h4>
       ${facturesManuelles.length ? "<ul>" + facturesManuelles.map((f) => `<li>${escapeHtml(f.description || "—")} — ${Number(f.montant || 0).toLocaleString("fr-FR")} FCFA</li>`).join("") + "</ul>" : "<p class=\"empty-msg\">Aucune.</p>"}
