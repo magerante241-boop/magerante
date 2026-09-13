@@ -116,7 +116,7 @@ async function chargerOutilsSuivi() {
 
   gridEl.innerHTML = `
     <div class="inv-outil-tuile">
-      <div class="inv-outil-titre">📈 Chiffre d'affaires (14 derniers jours)</div>
+      <div class="inv-outil-titre">📈 Chiffre d affaires (14 derniers jours)</div>
       <canvas id="invCaChart" height="160"></canvas>
       <p class="inv-empty" id="invCaEmpty" hidden>Aucune vente enregistrée sur les 14 derniers jours.</p>
     </div>
@@ -146,8 +146,6 @@ async function chargerOutilsSuivi() {
     console.error("Erreur chargement produits (outils suivi):", err);
   }
 
-  const debugTitreEl = gridEl.querySelector(".inv-outil-titre");
-  if (debugTitreEl) debugTitreEl.textContent = "DEBUG estId: " + estId;
   const debutPeriode = new Date();
   debutPeriode.setDate(debutPeriode.getDate() - 14);
   let ventesData = [];
@@ -156,12 +154,7 @@ async function chargerOutilsSuivi() {
     ventesData = ventesSnap.docs.map((d) => d.data());
   } catch (err) {
     console.error("Erreur chargement ventes (outils suivi):", err);
-    const caEmptyDebug = document.getElementById("invCaEmpty");
-    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG ventes: " + err.message; caEmptyDebug.style.color = "red"; }
-    return;
   }
-
-  try {
 
   const parJour = {};
   const parProduit = {};
@@ -179,73 +172,59 @@ async function chargerOutilsSuivi() {
   });
 
   try {
-  const labelsJour = Object.keys(parJour).sort();
-  const canvasCa = document.getElementById("invCaChart");
-  const caEmptyEl = document.getElementById("invCaEmpty");
-  if (labelsJour.length === 0) {
-    if (canvasCa) canvasCa.hidden = true;
-    if (caEmptyEl) caEmptyEl.hidden = false;
-  } else {
-    if (canvasCa) canvasCa.hidden = false;
-    if (caEmptyEl) caEmptyEl.hidden = true;
-    const ctxCa = canvasCa?.getContext("2d");
-    if (ctxCa) {
-      attendreChartInv(() => {
-        try {
-          if (invCaChartInstance) invCaChartInstance.destroy();
-          invCaChartInstance = new Chart(ctxCa, {
-            type: "line",
-            data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
-            options: { responsive: true, plugins: { legend: { display: false } } },
-          });
-        } catch (err) {
-          console.error("Erreur creation Chart CA:", err);
-          if (caEmptyEl) { caEmptyEl.hidden = false; caEmptyEl.textContent = "DEBUG chart CA: " + err.message; caEmptyEl.style.color = "red"; }
-          if (canvasCa) canvasCa.hidden = true;
-        }
-      });
+    const labelsJour = Object.keys(parJour).sort();
+    const canvasCa = document.getElementById("invCaChart");
+    const caEmptyEl = document.getElementById("invCaEmpty");
+    if (labelsJour.length === 0) {
+      if (canvasCa) canvasCa.hidden = true;
+      if (caEmptyEl) caEmptyEl.hidden = false;
+    } else {
+      if (canvasCa) canvasCa.hidden = false;
+      if (caEmptyEl) caEmptyEl.hidden = true;
+      const ctxCa = canvasCa?.getContext("2d");
+      if (ctxCa) {
+        attendreChartInv(() => {
+          try {
+            if (invCaChartInstance) invCaChartInstance.destroy();
+            invCaChartInstance = new Chart(ctxCa, {
+              type: "line",
+              data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
+              options: { responsive: true, plugins: { legend: { display: false } } },
+            });
+          } catch (err) {
+            console.error("Erreur creation Chart CA:", err);
+          }
+        });
+      }
     }
-  }
 
-  } catch (err) {
-    console.error("Erreur traitement ventes (outils suivi):", err);
-    const caEmptyDebug = document.getElementById("invCaEmpty");
-    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG traitement: " + err.message; caEmptyDebug.style.color = "red"; }
-    return;
-  }
-
-  const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
-  const canvasTop = document.getElementById("invTopChart");
-  const topEmptyEl = document.getElementById("invTopEmpty");
-  if (topProduits.length === 0) {
-    if (canvasTop) canvasTop.hidden = true;
-    if (topEmptyEl) topEmptyEl.hidden = false;
-  } else {
-    if (canvasTop) canvasTop.hidden = false;
-    if (topEmptyEl) topEmptyEl.hidden = true;
-    const ctxTop = canvasTop?.getContext("2d");
-    if (ctxTop) {
-      attendreChartInv(() => {
-        try {
-          if (invTopChartInstance) invTopChartInstance.destroy();
-          invTopChartInstance = new Chart(ctxTop, {
-            type: "bar",
-            data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
-            options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
-          });
-        } catch (err) {
-          console.error("Erreur creation Chart Top:", err);
-          if (topEmptyEl) { topEmptyEl.hidden = false; topEmptyEl.textContent = "DEBUG chart Top: " + err.message; topEmptyEl.style.color = "red"; }
-          if (canvasTop) canvasTop.hidden = true;
-        }
-      });
+    const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
+    const canvasTop = document.getElementById("invTopChart");
+    const topEmptyEl = document.getElementById("invTopEmpty");
+    if (topProduits.length === 0) {
+      if (canvasTop) canvasTop.hidden = true;
+      if (topEmptyEl) topEmptyEl.hidden = false;
+    } else {
+      if (canvasTop) canvasTop.hidden = false;
+      if (topEmptyEl) topEmptyEl.hidden = true;
+      const ctxTop = canvasTop?.getContext("2d");
+      if (ctxTop) {
+        attendreChartInv(() => {
+          try {
+            if (invTopChartInstance) invTopChartInstance.destroy();
+            invTopChartInstance = new Chart(ctxTop, {
+              type: "bar",
+              data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
+              options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
+            });
+          } catch (err) {
+            console.error("Erreur creation Chart Top:", err);
+          }
+        });
+      }
     }
-  }
-
   } catch (err) {
     console.error("Erreur rendu graphiques (outils suivi):", err);
-    const caEmptyDebug = document.getElementById("invCaEmpty");
-    if (caEmptyDebug) { caEmptyDebug.hidden = false; caEmptyDebug.textContent = "DEBUG rendu: " + err.message; caEmptyDebug.style.color = "red"; }
   }
 
   const deficitParCategorie = {};
