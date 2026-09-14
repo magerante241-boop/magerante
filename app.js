@@ -716,7 +716,7 @@ if (btnAbcEntree) {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      if (!localStorage.getItem("sw_force_cleared_v2")) {
+      if (!localStorage.getItem("sw_force_cleared_v3")) {
         const regs = await navigator.serviceWorker.getRegistrations();
         for (const reg of regs) {
           await reg.unregister();
@@ -725,7 +725,7 @@ if ("serviceWorker" in navigator) {
           const keys = await caches.keys();
           await Promise.all(keys.map((k) => caches.delete(k)));
         }
-        localStorage.setItem("sw_force_cleared_v2", "1");
+        localStorage.setItem("sw_force_cleared_v3", "1");
       }
     } catch (err) {
       console.warn("Purge de l'ancien Service Worker impossible :", err);
