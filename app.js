@@ -977,7 +977,7 @@ if (btnFactureValider) {
     const lignesValidees = [];
     const erreurs = [];
     for (const ligne of lignesAValider) {
-      const res = await window.VentesModule.enregistrerVenteLigne(ligne.produitId, ligne.quantite);
+      const res = await window.VentesModule.enregistrerVenteLigne(ligne.produitId, ligne.quantite, { nom: ligne.nom, prixVente: ligne.prixUnitaire, prixAchat: ligne.prixAchat });
       if (!res.success) {
         erreurs.push(ligne.nom + " : " + res.message);
       } else {

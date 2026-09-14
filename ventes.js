@@ -183,7 +183,7 @@ export function ouvrirModaleVente(montantInitial) {
   });
 }
 
-export async function enregistrerVenteLigne(produitId, quantite) {
+export async function enregistrerVenteLigne(produitId, quantite, infosProduitEphemere) {
   if (!appState.establishmentId) {
     return { success: false, message: "Initialisation en cours, réessaie dans un instant." };
   }
@@ -193,7 +193,21 @@ export async function enregistrerVenteLigne(produitId, quantite) {
   try {
     const auteurId = auth.currentUser ? auth.currentUser.uid : null;
     const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
-    const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produitId);
+    let produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produitId);
+    // Produit venant du stock de session (jamais ecrit en base) : on le cree
+    // silencieusement dans le vrai inventaire avant de traiter la vente.
+    if (produitId.startsWith("eph_") && infosProduitEphemere) {
+      produitDocRef = await addDoc(produitsRef(), {
+        nom: infosProduitEphemere.nom || "",
+        categorie: infosProduitEphemere.categorie || "Bar",
+        prixAchat: Number(infosProduitEphemere.prixAchat) || 0,
+        prixVente: Number(infosProduitEphemere.prixVente) || 0,
+        stock: quantite,
+        stockDepart: quantite,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
     const venteDocRef = doc(ventesRef());
     let produitNom = "";
     let montant = 0;
@@ -210,7 +224,7 @@ export async function enregistrerVenteLigne(produitId, quantite) {
       produitNom = data.nom || "";
       montant = Number(data.prixVente || 0) * quantite;
       tx.set(venteDocRef, {
-        montant, type: "produit", produitId, produitNom,
+        montant, type: "produit", produitId: produitDocRef.id, produitNom,
         quantite, date: serverTimestamp(), auteurId
       });
       tx.update(produitDocRef, { stock: increment(-quantite) });
@@ -221,7 +235,7 @@ export async function enregistrerVenteLigne(produitId, quantite) {
     }).catch(() => {});
     creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "ventes" });
     if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produitNom);
-    return { success: true, montant, produitNom };
+    return { success: true, montant, produitNom, produitId: produitDocRef.id };
   } catch (err) {
     return { success: false, message: err.message };
   }
