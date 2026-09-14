@@ -505,7 +505,7 @@ async function openStockDepartModal() {
       ${parCategorie.get(cat).map((p) => {
         const benefUnitaire = (Number(p.prixVente) || 0) - (Number(p.prixAchat) || 0);
         return `
-        <div class="stock-depart-ligne-detail" data-id="${p.id}" data-benef-unit="${benefUnitaire}">
+        <div class="stock-depart-ligne-detail" data-id="${p.id}" data-benef-unit="${benefUnitaire}" data-prix-vente="${Number(p.prixVente)||0}">
           <button type="button" class="sdl-header">
             <span class="sdl-nom">${escapeHtml(p.nom)}</span>
             <span class="sdl-header-right">
@@ -529,6 +529,7 @@ async function openStockDepartModal() {
             </div>
             <div class="sdl-resultats">
               <span class="sdl-total-bouteilles">= 0 bouteille(s)</span>
+              <span class="sdl-total-valeur">Total : 0 FCFA</span>
               <span class="sdl-total-benef">Bénéfice : 0 FCFA</span>
             </div>
             <button type="button" class="sdl-btn-save">💾 Enregistrer</button>
@@ -556,6 +557,9 @@ async function openStockDepartModal() {
     const benefUnit = parseFloat(ligneEl.dataset.benefUnit) || 0;
     const totalBenef = totalBouteilles * benefUnit;
     ligneEl.querySelector(".sdl-total-bouteilles").textContent = `= ${totalBouteilles} bouteille(s)`;
+    const prixVenteL = parseFloat(ligneEl.dataset.prixVente) || 0;
+    const totalValeur = totalBouteilles * prixVenteL;
+    ligneEl.querySelector(".sdl-total-valeur").textContent = `Total : ${totalValeur.toLocaleString("fr-FR")} FCFA`;
     ligneEl.querySelector(".sdl-total-benef").textContent = `Bénéfice : ${totalBenef.toLocaleString("fr-FR")} FCFA`;
     ligneEl.querySelector(".sdl-header-total").textContent = `${totalBouteilles} bouteille(s)`;
     ligneEl.dataset.totalBouteilles = totalBouteilles;
