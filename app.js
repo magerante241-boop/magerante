@@ -528,7 +528,7 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
   calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
     item.addEventListener("click", () => {
       const pf1 = tousLesProduits.find((x) => x.nom === item.dataset.nom);
-      if (modeFacturier) { ajouterLigneFacture(pf1); return; }
+      if (modeFacturier) { ajouterLigneFacture(pf1); fermerListeProduits(); return; }
       appliquerPrixMarque(item.dataset.prix);
       produitSelectionne = {
         nom: item.dataset.nom,
