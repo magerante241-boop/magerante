@@ -510,6 +510,21 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
       <span class="calc-produit-prix">${p.prixVente} FCFA</span>
     </button>
   `).join("");
+  {
+    const btnAutres = document.getElementById("btnMarqueAutres");
+    const rectBtn = btnAutres.getBoundingClientRect();
+    const popupW = Math.min(window.innerWidth - 8, 360);
+    calcProduitsListe.style.width = popupW + "px";
+    const popupH = calcProduitsListe.offsetHeight;
+    const spaceBelow = window.innerHeight - rectBtn.bottom;
+    const placerEnHaut = spaceBelow < (popupH + 8) && rectBtn.top >= (popupH + 8);
+    const topCalcule = placerEnHaut ? (rectBtn.top - popupH - 4) : (rectBtn.bottom + 4);
+    const topClampe = Math.min(Math.max(4, topCalcule), window.innerHeight - 40);
+    calcProduitsListe.style.top = topClampe + "px";
+    const centreLeft = rectBtn.left + (rectBtn.width / 2) - (popupW / 2);
+    const maxLeft = Math.max(4, window.innerWidth - popupW - 4);
+    calcProduitsListe.style.left = Math.min(Math.max(4, centreLeft), maxLeft) + "px";
+  }
   calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
     item.addEventListener("click", () => {
       const pf1 = tousLesProduits.find((x) => x.nom === item.dataset.nom);

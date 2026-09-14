@@ -1759,3 +1759,36 @@ button[data-produit="Djino Ananas"] { background: linear-gradient(145deg, #c99a1
 button[data-produit="Djino Pamplemousse"] { color: #fdfaf3; }
 button[data-produit="Djino Cocktail"] { color: #fdfaf3; }
 button[data-produit="Djino Ananas"] { color: #2b1c00; }
+
+/* Liste "Autres" : meme protection anti-debordement que le popup de tailles (fixed + clamp ecran) */
+#calcProduitsListe {
+  position: fixed !important;
+  z-index: 9999 !important;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  border-radius: 10px;
+  background: var(--surface2, #1c1f23);
+}
+
+/* Liste "Autres" : meme protection anti-debordement que le popup de tailles (fixed + clamp ecran) */
+#calcProduitsListe {
+  position: fixed !important;
+  z-index: 9999 !important;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  border-radius: 10px;
+  background: var(--surface2, #1c1f23);
+}
+
+/* Liste "Autres" : meme protection anti-debordement que le popup de tailles (fixed + clamp ecran) */
+#calcProduitsListe {
+  position: fixed !important;
+  z-index: 9999 !important;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  border-radius: 10px;
+  background: var(--surface2, #1c1f23);
+}
