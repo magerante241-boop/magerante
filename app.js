@@ -641,7 +641,7 @@ function afficherResultatsRecherche() {
   calcProduitsListe.querySelectorAll(".calc-produit-item").forEach((item) => {
     item.addEventListener("click", () => {
       const pf2 = tousProduits.find((x) => x.nom === item.dataset.nom);
-      if (modeFacturier) { ajouterLigneFacture(pf2); return; }
+      if (modeFacturier) { ajouterLigneFacture(pf2); fermerListeProduits(); quitterModeRecherche(); return; }
       appliquerPrixMarque(item.dataset.prix);
       produitSelectionne = {
         nom: item.dataset.nom,
