@@ -11,6 +11,7 @@ const nomAuteurCache = new Map();
 
 const TYPES_NOTIF = [
   { type: "stock_bas", label: "Stock bas", icone: "📦" },
+  { type: "stock_ajout", label: "Stock ajouté", icone: "➕" },
   { type: "vente", label: "Vente", icone: "🛒" },
   { type: "gerant", label: "Gérant", icone: "👤" },
   { type: "cloture", label: "Clôture", icone: "🧾" },
@@ -70,7 +71,7 @@ export async function creerNotification({ type, titre, message, factureNumero, c
 }
 
 function iconePourType(type) {
-  const icones = { stock_bas: "📦", vente: "🛒", gerant: "👤", cloture: "🧾", invitation: "📨", info: "ℹ️" };
+  const icones = { stock_bas: "📦", stock_ajout: "➕", vente: "🛒", gerant: "👤", cloture: "🧾", invitation: "📨", info: "ℹ️" };
   return icones[type] || "🔔";
 }
 

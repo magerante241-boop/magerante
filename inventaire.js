@@ -30,17 +30,35 @@ export function render(container) {
     return;
   }
 
+  const accountType = (window.AuthState && window.AuthState.accountType) || null;
+  const role = (window.AuthState && window.AuthState.role) || null;
+  const estProprietaire = accountType === "enregistre" && role === "PROPRIETAIRE";
+  const estGerant = accountType === "enregistre" && role === "GERANT";
+
+  const boutonsStockHtml = estProprietaire
+    ? `<button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>`
+    : estGerant
+    ? `<button class="inv-stock-depart-btn" id="invRenouvelerBtn">🔄 Renouvellement de stock</button>
+       <button class="inv-stock-depart-btn inv-ajout-stock-btn" id="invAjoutStockBtn">➕ Ajouter au stock établissement</button>`
+    : "";
+
   container.innerHTML = `
     <div class="inv-toolbar">
       <span class="inv-title">Produits</span>
       <button class="inv-add-btn" id="invAddBtn">+ Ajouter</button>
     </div>
-    <button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>
+    ${boutonsStockHtml}
     <div class="inv-outils-grid" id="invOutilsGrid"></div>
     <div class="inv-list" id="invList"><p class="inv-empty">Chargement...</p></div>
   `;
   document.getElementById("invAddBtn").addEventListener("click", () => openModal(null));
-  document.getElementById("invStockDepartBtn").addEventListener("click", () => openStockDepartModal());
+  if (estProprietaire) {
+    document.getElementById("invStockDepartBtn").addEventListener("click", () => openStockDepartModal());
+  }
+  if (estGerant) {
+    document.getElementById("invRenouvelerBtn").addEventListener("click", () => renouvellerStock());
+    document.getElementById("invAjoutStockBtn").addEventListener("click", () => openAjoutStockModal());
+  }
   chargerOutilsSuivi();
 
   if (unsubscribe) unsubscribe();
@@ -336,6 +354,105 @@ function afficherBadgeSurTuileMarque(nomProduit, quantite) {
     tuile.appendChild(badge);
   }
   badge.textContent = quantite;
+}
+
+async function renouvellerStock() {
+  if (!confirm("Réinitialiser le stock au niveau du stock de départ défini par le propriétaire ?")) return;
+  try {
+    const snap = await getDocs(produitsRef());
+    const batch = writeBatch(db);
+    let nbProduits = 0;
+    snap.forEach((docSnap) => {
+      const p = docSnap.data();
+      const stockDepart = Number(p.stockDepart) || 0;
+      batch.update(doc(db, "establishments", appState.establishmentId, "produits", docSnap.id), { stock: stockDepart, updatedAt: serverTimestamp() });
+      nbProduits += 1;
+    });
+    await batch.commit();
+    alert(`Stock renouvelé pour ${nbProduits} produit(s).`);
+    chargerOutilsSuivi();
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  }
+}
+
+async function openAjoutStockModal() {
+  const overlay = document.createElement("div");
+  overlay.className = "inv-modal-overlay";
+  overlay.innerHTML = `
+    <div class="inv-modal">
+      <div class="inv-modal-header">
+        <span>➕ Ajouter au stock établissement</span>
+        <button class="icon-btn" id="ajoutStockClose" aria-label="Fermer">✕</button>
+      </div>
+      <p class="inv-hint">Quantités qui viennent en plus du stock de départ actuel (augmente la référence de l'établissement).</p>
+      <div id="ajoutStockListe"><p class="inv-empty">Chargement des produits...</p></div>
+      <p class="inv-error" id="ajoutStockError"></p>
+      <div class="inv-modal-actions">
+        <button class="inv-btn-secondary" id="ajoutStockCancel">Annuler</button>
+        <button class="inv-btn-primary" id="ajoutStockSave">Valider l'ajout</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const fermer = () => overlay.remove();
+  document.getElementById("ajoutStockClose").addEventListener("click", fermer);
+  document.getElementById("ajoutStockCancel").addEventListener("click", fermer);
+
+  const listeEl = document.getElementById("ajoutStockListe");
+  const snap = await getDocs(produitsRef());
+  if (snap.empty) {
+    listeEl.innerHTML = `<p class="inv-empty">Aucun produit à configurer.</p>`;
+    return;
+  }
+  const produits = [];
+  snap.forEach((d) => produits.push({ id: d.id, ...d.data() }));
+  produits.sort((a, b) => (a.nom || "").localeCompare(b.nom || ""));
+
+  listeEl.innerHTML = produits.map((p) => `
+    <div class="ajout-stock-ligne" data-id="${p.id}" data-nom="${escapeHtml(p.nom || "")}">
+      <span class="ajout-stock-nom">${escapeHtml(p.nom || "")}</span>
+      <input type="number" min="0" class="ajout-stock-qte" placeholder="0" value="0">
+    </div>
+  `).join("");
+
+  document.getElementById("ajoutStockSave").addEventListener("click", async () => {
+    const saveBtn = document.getElementById("ajoutStockSave");
+    const errorEl = document.getElementById("ajoutStockError");
+    saveBtn.disabled = true;
+    errorEl.textContent = "";
+    try {
+      const batch = writeBatch(db);
+      const ajouts = [];
+      listeEl.querySelectorAll(".ajout-stock-ligne").forEach((ligneEl) => {
+        const qte = Number(ligneEl.querySelector(".ajout-stock-qte").value) || 0;
+        if (qte > 0) {
+          batch.update(
+            doc(db, "establishments", appState.establishmentId, "produits", ligneEl.dataset.id),
+            { stock: increment(qte), stockDepart: increment(qte), updatedAt: serverTimestamp() }
+          );
+          ajouts.push(`${ligneEl.dataset.nom} +${qte}`);
+        }
+      });
+      if (ajouts.length === 0) {
+        errorEl.textContent = "Renseigne au moins une quantité.";
+        saveBtn.disabled = false;
+        return;
+      }
+      await batch.commit();
+      await creerNotification({
+        type: "stock_ajout",
+        titre: "Stock ajouté par le gérant",
+        message: ajouts.join(", "),
+        cible: "cloture"
+      });
+      fermer();
+      chargerOutilsSuivi();
+    } catch (err) {
+      errorEl.textContent = "Erreur : " + err.message;
+      saveBtn.disabled = false;
+    }
+  });
 }
 
 async function openStockDepartModal() {

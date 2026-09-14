@@ -1689,3 +1689,9 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .facture-bar-item-right { align-items: flex-end; text-align: right; }
 .facture-bar .fb-label { font-size: 10px; color: var(--muted); }
 .facture-bar .fb-value { font-size: 13px; font-weight: 700; color: var(--text); }
+
+/* Chantier : bouton ajout stock etablissement + modale (gerant) */
+.inv-ajout-stock-btn { margin-top: 6px; }
+.ajout-stock-ligne { display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid #eee; }
+.ajout-stock-nom { font-size: 13px; }
+.ajout-stock-qte { width: 70px; text-align: right; }
