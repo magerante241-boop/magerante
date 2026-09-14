@@ -39,17 +39,21 @@ async function chargerResumeJour(estId, uid) {
   ]);
 
   const categorieParProduit = {};
+  const prixAchatParProduit = {};
   const stockRestant = [];
   produitsSnap.forEach((docSnap) => {
     const p = docSnap.data();
     categorieParProduit[docSnap.id] = p.categorie || "Autres";
+    prixAchatParProduit[docSnap.id] = Number(p.prixAchat || 0);
     stockRestant.push({ nom: p.nom || "(sans nom)", categorie: p.categorie || "Autres", stock: Number(p.stock || 0) });
   });
   const marqueParNom = construireMarqueParNom();
 
-  let total = 0, nombre = 0;
+  let total = 0, nombre = 0, totalBenefice = 0;
   const parCategorie = {};
+  const parCategorieBenefice = {};
   const parMarque = {};
+  const parMarqueBenefice = {};
   const parProduit = {};
 
   ventesSnap.forEach((docSnap) => {
@@ -57,19 +61,25 @@ async function chargerResumeJour(estId, uid) {
     if (v.auteurId !== uid) return;
     const montant = v.montant || 0;
     const quantite = v.quantite || 0;
+    const prixAchat = prixAchatParProduit[v.produitId] || 0;
+    const benefice = montant - (prixAchat * quantite);
     total += montant;
+    totalBenefice += benefice;
     nombre += 1;
 
     const categorie = categorieParProduit[v.produitId] || "Autres";
     parCategorie[categorie] = (parCategorie[categorie] || 0) + montant;
+    parCategorieBenefice[categorie] = (parCategorieBenefice[categorie] || 0) + benefice;
 
     const marque = marqueParNom[v.produitNom] || "Autre";
     parMarque[marque] = (parMarque[marque] || 0) + montant;
+    parMarqueBenefice[marque] = (parMarqueBenefice[marque] || 0) + benefice;
 
     const nomProduit = v.produitNom || "Produit inconnu";
-    if (!parProduit[nomProduit]) parProduit[nomProduit] = { quantite: 0, montant: 0 };
+    if (!parProduit[nomProduit]) parProduit[nomProduit] = { quantite: 0, montant: 0, benefice: 0 };
     parProduit[nomProduit].quantite += quantite;
     parProduit[nomProduit].montant += montant;
+    parProduit[nomProduit].benefice += benefice;
   });
 
   const facturesJour = [];
@@ -79,7 +89,6 @@ async function chargerResumeJour(estId, uid) {
     facturesJour.push({ numero: f.numero || null, total: Number(f.total || 0) });
   });
 
-  // Stock restant regroupe par marque (via MARQUES_TAILLES), le reste par catégorie
   const stockParMarque = {};
   stockRestant.forEach((p) => {
     const marque = marqueParNom[p.nom] || p.categorie;
@@ -87,20 +96,27 @@ async function chargerResumeJour(estId, uid) {
     stockParMarque[marque].push({ nom: p.nom, stock: p.stock });
   });
 
-  return { total, nombre, parCategorie, parMarque, parProduit, facturesJour, stockParMarque };
+  return { total, nombre, totalBenefice, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, parProduit, facturesJour, stockParMarque };
 }
 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function construireTuilesVentilation(obj) {
+function construireTuilesVentilation(obj, beneficeObj) {
   const entrees = Object.entries(obj).sort((a, b) => b[1] - a[1]);
   if (entrees.length === 0) return "";
-  return `<div class="cloture-tuiles">${entrees.map(([cle, montant]) => `
-    <div class="cloture-tuile"><span>${escapeHtml(cle)}</span><span class="cloture-tuile-val">${montant.toLocaleString("fr-FR")} FCFA</span></div>
-  `).join("")}</div>`;
+  return `<div class="cloture-tuiles">${entrees.map(([cle, montant]) => {
+    const benefice = beneficeObj ? (beneficeObj[cle] || 0) : null;
+    return `
+    <div class="cloture-tuile">
+      <span>${escapeHtml(cle)}</span>
+      <span class="cloture-tuile-val">${montant.toLocaleString("fr-FR")} FCFA${benefice !== null ? `<small class="cloture-tuile-benefice">+${benefice.toLocaleString("fr-FR")} béné.</small>` : ""}</span>
+    </div>
+  `;
+  }).join("")}</div>`;
 }
+
 
 function construireStockHtml(stockParMarque) {
   const entrees = Object.entries(stockParMarque);
@@ -196,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const resume = await chargerResumeJour(estId, uid);
       resumeCourant = resume;
-      const { total, nombre, parCategorie, parMarque, facturesJour, stockParMarque } = resume;
+            const { total, nombre, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, facturesJour, stockParMarque, totalBenefice } = resume;
 
       const estSnap = await getDoc(doc(db, "establishments", estId));
       etablissementNomCourant = estSnap.exists() ? (estSnap.data().name || "") : "";
@@ -205,20 +221,24 @@ document.addEventListener("DOMContentLoaded", () => {
       let htmlResume = `
         <div class="cloture-summary-card">
           ${etablissementNomCourant ? `<div class="cloture-summary-etab">${escapeHtml(etablissementNomCourant)}</div>` : ""}
-          <div class="cloture-summary-total">${total.toLocaleString("fr-FR")} FCFA</div>
+          <div class="cloture-summary-row">
+            <div><div class="cloture-summary-label">Chiffre d'affaires</div><div class="cloture-summary-total">${total.toLocaleString("fr-FR")} FCFA</div></div>
+            <div><div class="cloture-summary-label">Bénéfice</div><div class="cloture-summary-total cloture-summary-benefice">${totalBenefice.toLocaleString("fr-FR")} FCFA</div></div>
+          </div>
           <div class="cloture-summary-sub">${nombre} vente(s) · ${facturesJour.length} facture(s) numérique(s)</div>
         </div>
       `;
       if (Object.keys(parCategorie).length) {
-        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par catégorie</div>${construireTuilesVentilation(parCategorie)}</div>`;
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par catégorie</div>${construireTuilesVentilation(parCategorie, parCategorieBenefice)}</div>`;
       }
       if (Object.keys(parMarque).length) {
-        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par marque</div>${construireTuilesVentilation(parMarque)}</div>`;
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par marque</div>${construireTuilesVentilation(parMarque, parMarqueBenefice)}</div>`;
       }
       if (Object.keys(stockParMarque).length) {
         htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant</div>${construireStockHtml(stockParMarque)}</div>`;
       }
       resumeEl.innerHTML = htmlResume;
+
 
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;

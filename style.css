@@ -1808,3 +1808,26 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
 .cloture-stock-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .cloture-stock-table td { padding: 2px 4px; border-bottom: 1px solid var(--surface2); }
 .cloture-stock-table td.stock-zero { color: var(--danger); font-weight: bold; }
+
+/* --- Boutons texte pleine largeur (distinct de .icon-btn carre 38px) --- */
+.text-btn{
+  width:100%; padding:10px 14px; margin-top:8px;
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:10px; font-size:14px; cursor:pointer; text-align:center;
+}
+.text-btn.active{ background:var(--primary); color:#fdfaf3; border-color:var(--primary); }
+
+/* --- Clôture : couleur + bénéfices --- */
+.cloture-summary-card{
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color:#fdfaf3;
+}
+.cloture-summary-etab{ color:#fdfaf3; }
+.cloture-summary-row{ display:flex; gap:16px; margin-top:4px; }
+.cloture-summary-label{ font-size:12px; opacity:0.85; }
+.cloture-summary-total{ color:#fdfaf3; }
+.cloture-summary-benefice{ color:var(--accent); }
+.cloture-summary-sub{ color:rgba(253,250,243,0.8); }
+.cloture-tuile{ border-left:3px solid var(--primary); }
+.cloture-tuile-benefice{ display:block; color:var(--accent); font-weight:normal; font-size:11px; }
+.cloture-stock-marque{ padding-left:6px; border-left:3px solid var(--info); }
