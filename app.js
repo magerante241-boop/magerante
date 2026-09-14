@@ -1210,12 +1210,15 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
   });
 });
 
-
-// ===== Tuiles marques : reordonnancement progressif selon la popularite des clics =====
-// - Comptes anonymes (session ephemere) : compteur en sessionStorage, efface a la deconnexion/fermeture d'onglet.
-// - Comptes inscrits (session permanente) : compteur persiste dans Firestore (establishments/{id}.clicsTuiles),
-//   recharge a chaque reconnexion.
-// Par defaut (aucun clic connu) : ordre de creation du stock de depart, inchange.
+// ===== Tuiles marques : reordonnancement selon les ventes reellement facturees =====
+// - Le comptage ne se declenche plus au simple clic sur une tuile, mais uniquement quand une
+//   vente est reellement validee (mode calculatrice classique ET mode Facturier), pour refleter
+//   les boissons vraiment consommees et non la simple consultation.
+// - Comptes anonymes (session ephemere) : compteur en sessionStorage, efface a la deconnexion.
+// - Comptes inscrits (session permanente) : compteur persiste dans Firestore
+//   (establishments/{id}.clicsTuiles), recharge a chaque reconnexion.
+// - Le reordonnancement s'applique en silence, uniquement au (re)affichage de l'ecran Calculer,
+//   jamais pendant que le gerant est en train d'utiliser l'ecran.
 (function initTuilesPopularite() {
   const CLICS_SESSION_KEY = "mg_clics_tuiles_session";
   const marqueGridEl = document.getElementById("marqueGrid");
@@ -1231,9 +1234,22 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
   const boutonParId = {};
   tuilesInitiales.forEach((btn) => { boutonParId[getTileId(btn)] = btn; });
 
+  const marqueParNomProduit = {};
+  if (window.MARQUES_TAILLES) {
+    Object.keys(window.MARQUES_TAILLES).forEach((marque) => {
+      const tailles = window.MARQUES_TAILLES[marque];
+      if (tailles.petite) marqueParNomProduit[tailles.petite] = marque;
+      if (tailles.grande) marqueParNomProduit[tailles.grande] = marque;
+    });
+  }
+  tuilesInitiales.forEach((btn) => {
+    if (btn.dataset.produit) marqueParNomProduit[btn.dataset.produit] = btn.dataset.produit;
+  });
+
   let clicsTuiles = {};
   let deltaEnAttente = {};
   let timerEnvoiFirestore = null;
+  let reordonnancementEnAttente = false;
 
   function appliquerOrdreTuiles() {
     const idsTries = ordreDefaut.slice().sort((a, b) => {
@@ -1267,10 +1283,11 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
     }, 3000);
   }
 
-  function incrementerClic(id) {
-    if (!id) return;
+  function enregistrerVenteTuile(nomProduit) {
+    const id = marqueParNomProduit[nomProduit];
+    if (!id || !ordreDefaut.includes(id)) return;
     clicsTuiles[id] = (clicsTuiles[id] || 0) + 1;
-    appliquerOrdreTuiles();
+    reordonnancementEnAttente = true;
     if (window.AuthState && window.AuthState.accountType === "enregistre") {
       deltaEnAttente[id] = (deltaEnAttente[id] || 0) + 1;
       planifierEnvoiFirestore();
@@ -1278,10 +1295,18 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
       try { sessionStorage.setItem(CLICS_SESSION_KEY, JSON.stringify(clicsTuiles)); } catch (e) { /* ignore */ }
     }
   }
+  window.enregistrerClicPopulariteVente = enregistrerVenteTuile;
 
-  tuilesInitiales.forEach((btn) => {
-    btn.addEventListener("click", () => incrementerClic(getTileId(btn)));
-  });
+  const origSwitchViewTuiles = window.switchView;
+  if (origSwitchViewTuiles) {
+    window.switchView = function (view) {
+      origSwitchViewTuiles(view);
+      if (view === "calc" && reordonnancementEnAttente) {
+        appliquerOrdreTuiles();
+        reordonnancementEnAttente = false;
+      }
+    };
+  }
 
   async function chargerCompteursInitiaux() {
     let tries = 0;

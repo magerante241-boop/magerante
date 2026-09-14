@@ -173,6 +173,7 @@ export function ouvrirModaleVente(montantInitial) {
 
         addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
         creerNotification({ type: "vente", titre: "Nouvelle vente", message: `${qte} x ${produit.nom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom2 ? " par " + auteurNom2 : ""}.`, cible: "ventes" });
+        if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produit.nom);
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -219,6 +220,7 @@ export async function enregistrerVenteLigne(produitId, quantite) {
       date: serverTimestamp(), auteurId, auteurNom, source: "facture"
     }).catch(() => {});
     creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "ventes" });
+    if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produitNom);
     return { success: true, montant, produitNom };
   } catch (err) {
     return { success: false, message: err.message };
