@@ -431,8 +431,8 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
     marqueTaillesEl.hidden = false;
     if (marqueTaillesTimer) clearTimeout(marqueTaillesTimer);
     marqueTaillesTimer = setTimeout(() => { marqueTaillesEl.hidden = true; marqueTaillesTimer = null; }, 5000);
-    marqueTaillesEl.style.top = (btn.offsetTop + btn.offsetHeight + 4) + "px";
     marqueTaillesEl.style.left = "0px";
+    marqueTaillesEl.style.top = "0px";
     marqueTaillesEl.dataset.openFor = marque;
     const tousLesProduits = await chargerTousProduitsSurs();
     marqueTaillesEl.innerHTML = Object.entries(tailles).map(([taille, nomProduit]) => {
@@ -443,8 +443,18 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
       const suffixe = prixAffiche != null ? ` · ${prixAffiche} FCFA` : " (non configuré)";
       return `<button class="marque-taille-item" data-nom="${escapeHtml(nomProduit)}">${escapeHtml(label)}${suffixe}</button>`;
     }).join("");
-    const maxLeft = Math.max(0, btn.parentElement.offsetWidth - marqueTaillesEl.offsetWidth - 4);
-    marqueTaillesEl.style.left = Math.min(btn.offsetLeft, maxLeft) + "px";
+    // Positionnement dynamique : bas par defaut, bascule au-dessus si ca deborde, centre horizontalement.
+    const conteneur = btn.offsetParent || btn.parentElement;
+    const popupH = marqueTaillesEl.offsetHeight;
+    const popupW = marqueTaillesEl.offsetWidth;
+    const spaceBelow = conteneur.clientHeight - (btn.offsetTop + btn.offsetHeight);
+    const placerEnHaut = spaceBelow < (popupH + 8) && btn.offsetTop >= (popupH + 8);
+    marqueTaillesEl.style.top = placerEnHaut
+      ? (btn.offsetTop - popupH - 4) + "px"
+      : (btn.offsetTop + btn.offsetHeight + 4) + "px";
+    const centreLeft = btn.offsetLeft + (btn.offsetWidth / 2) - (popupW / 2);
+    const maxLeft = Math.max(0, conteneur.clientWidth - popupW - 4);
+    marqueTaillesEl.style.left = Math.min(Math.max(0, centreLeft), maxLeft) + "px";
     marqueTaillesEl.querySelectorAll(".marque-taille-item").forEach((item) => {
       item.addEventListener("click", () => {
         const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
