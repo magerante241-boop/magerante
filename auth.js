@@ -346,10 +346,10 @@ function updateAccountStatusBadge() {
   }
 
   const navBtnInventaire = document.getElementById("navBtnInventaire");
-  if (navBtnInventaire) navBtnInventaire.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+  if (navBtnInventaire) navBtnInventaire.hidden = false;
 
   const sideMenuBtnInventaire = document.getElementById("sideMenuBtnInventaire");
-  if (sideMenuBtnInventaire) sideMenuBtnInventaire.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+  if (sideMenuBtnInventaire) sideMenuBtnInventaire.hidden = false;
 
   const estProprietaireOuAdmin = (window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE") || window.AuthState.email === window.ADMIN_EMAIL;
   const menuToggleDemoVisiteur = document.getElementById("menuToggleDemoVisiteur");

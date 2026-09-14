@@ -61,8 +61,14 @@ function switchView(view) {
     if (abcKeyboardElement) abcKeyboardElement.hidden = true;
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
-    if (window.InventaireModule) {
-      window.InventaireModule.render(viewContainer);
+    if (estProprietaireReel()) {
+      if (window.InventaireModule) {
+        window.InventaireModule.render(viewContainer);
+      } else {
+        viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
+      }
+    } else if (window.InventaireEphemereModule) {
+      window.InventaireEphemereModule.render(viewContainer);
     } else {
       viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
     }
@@ -409,10 +415,22 @@ let marqueTaillesTimer = null;
 // le popup mal placé / les flèches qui débordaient sur la grille. Ce popup n'a
 // de toute façon jamais plus de 2 entrées (petite/grande) : pas besoin de scroll.
 
+function estProprietaireReel() {
+  return !!(window.AuthState && window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+}
+
 async function chargerTousProduitsSurs() {
-  if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
+  if (estProprietaireReel()) {
+    if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
+    try {
+      return await window.InventaireModule.getTousLesProduits();
+    } catch (err) {
+      return [];
+    }
+  }
+  if (!window.InventaireEphemereModule || !window.InventaireEphemereModule.getTousLesProduits) return [];
   try {
-    return await window.InventaireModule.getTousLesProduits();
+    return await window.InventaireEphemereModule.getTousLesProduits();
   } catch (err) {
     return [];
   }
@@ -461,7 +479,10 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
       item.addEventListener("click", () => {
         const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
         if (!p) {
-          alert("Ce produit n'est pas encore configuré dans l'inventaire.");
+          if (confirm("Ce produit n'est pas encore configuré. Voulez-vous l'ajouter au stock maintenant ?")) {
+            window._inventaireEphemereFocusNom = item.dataset.nom;
+            switchView("inventaire");
+          }
           return;
         }
         if (modeFacturier) {
@@ -1192,7 +1213,10 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
     const tousLesProduits = await chargerTousProduitsSurs();
     const p = tousLesProduits.find((x) => x.nom === nomProduit);
     if (!p) {
-      alert("Ce produit n'est pas encore configuré dans l'inventaire.");
+      if (confirm("Ce produit n'est pas encore configuré. Voulez-vous l'ajouter au stock maintenant ?")) {
+        window._inventaireEphemereFocusNom = nomProduit;
+        switchView("inventaire");
+      }
       return;
     }
     if (modeFacturier) {
