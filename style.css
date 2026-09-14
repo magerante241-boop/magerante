@@ -1696,3 +1696,36 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .ajout-stock-ligne { display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid #eee; }
 .ajout-stock-nom { font-size: 13px; }
 .ajout-stock-qte { width: 70px; text-align: right; }
+
+/* Chantier : panneau facturation compact et progressif (remplace les anciennes regles eparpillees) */
+.facture-panel {
+  padding: 4px;
+  margin: 2px 4px 2px;
+}
+.facture-bar {
+  margin: 4px 2px 4px;
+}
+.facture-lignes {
+  max-height: 90px;
+  overflow-y: auto;
+}
+.facture-lignes[data-count="0"] {
+  max-height: 26px;
+}
+.facture-lignes .placeholder-msg {
+  padding: 3px 8px;
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.25;
+}
+.facture-lignes[data-count="1"] .facture-ligne { font-size: 13px; padding: 5px 4px; }
+.facture-lignes[data-count="2"] .facture-ligne { font-size: 12px; padding: 4px 4px; }
+.facture-lignes[data-count="3"] .facture-ligne { font-size: 11px; padding: 3px 3px; }
+.facture-lignes[data-count="4"] .facture-ligne { font-size: 10px; padding: 2.5px 3px; }
+.facture-lignes[data-count="5"] .facture-ligne { font-size: 9px; padding: 2px 2px; }
+.facture-lignes.many .facture-ligne { font-size: 9px; padding: 2px 2px; }
+.facture-total {
+  padding: 4px 4px;
+  margin-top: 2px;
+  font-size: 14px;
+}
