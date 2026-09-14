@@ -1737,3 +1737,17 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .facture-lignes[data-count="4"] .facture-ligne-suppr { width: 16px; height: 16px; font-size: 9px; }
 .facture-lignes[data-count="5"] .facture-ligne-suppr { width: 14px; height: 14px; font-size: 8px; }
 .facture-lignes.many .facture-ligne-suppr { width: 14px; height: 14px; font-size: 8px; }
+
+/* Chantier : clavier numerique plus compact pour liberer de la place aux tuiles marques */
+.numpad {
+  gap: 1px;
+  padding: 1px;
+}
+.numpad button {
+  min-height: 26px;
+  padding: 2px 0;
+  font-size: 13px;
+}
+.numpad .key-equal {
+  font-size: 18px;
+}
