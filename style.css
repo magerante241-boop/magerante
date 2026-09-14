@@ -721,8 +721,8 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
 /* Sélecteur de taille (grande/petite), affiché après clic sur une marque */
 .marque-tailles[hidden]{ display:none; }
 .marque-tailles{
-  position: absolute;
-  z-index: 20;
+  position: fixed;
+  z-index: 9999;
   min-width: 140px;
   display:flex; gap:8px; padding:8px 6px;
   background: var(--surface2, #1c1f23);

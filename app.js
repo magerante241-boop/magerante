@@ -443,18 +443,18 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
       const suffixe = prixAffiche != null ? ` · ${prixAffiche} FCFA` : " (non configuré)";
       return `<button class="marque-taille-item" data-nom="${escapeHtml(nomProduit)}">${escapeHtml(label)}${suffixe}</button>`;
     }).join("");
-    // Positionnement dynamique : bas par defaut, bascule au-dessus si ca deborde, centre horizontalement.
-    const conteneur = btn.offsetParent || btn.parentElement;
+    // Positionnement dynamique (fixed, coordonnees ecran) : bas par defaut, bascule au-dessus si ca deborde, centre horizontalement, jamais hors ecran.
+    const rectBtn = btn.getBoundingClientRect();
     const popupH = marqueTaillesEl.offsetHeight;
     const popupW = marqueTaillesEl.offsetWidth;
-    const spaceBelow = conteneur.clientHeight - (btn.offsetTop + btn.offsetHeight);
-    const placerEnHaut = spaceBelow < (popupH + 8) && btn.offsetTop >= (popupH + 8);
-    marqueTaillesEl.style.top = placerEnHaut
-      ? (btn.offsetTop - popupH - 4) + "px"
-      : (btn.offsetTop + btn.offsetHeight + 4) + "px";
-    const centreLeft = btn.offsetLeft + (btn.offsetWidth / 2) - (popupW / 2);
-    const maxLeft = Math.max(0, conteneur.clientWidth - popupW - 4);
-    marqueTaillesEl.style.left = Math.min(Math.max(0, centreLeft), maxLeft) + "px";
+    const spaceBelow = window.innerHeight - rectBtn.bottom;
+    const placerEnHaut = spaceBelow < (popupH + 8) && rectBtn.top >= (popupH + 8);
+    const topCalcule = placerEnHaut ? (rectBtn.top - popupH - 4) : (rectBtn.bottom + 4);
+    const topClampe = Math.min(Math.max(4, topCalcule), window.innerHeight - popupH - 4);
+    marqueTaillesEl.style.top = topClampe + "px";
+    const centreLeft = rectBtn.left + (rectBtn.width / 2) - (popupW / 2);
+    const maxLeft = Math.max(4, window.innerWidth - popupW - 4);
+    marqueTaillesEl.style.left = Math.min(Math.max(4, centreLeft), maxLeft) + "px";
     marqueTaillesEl.querySelectorAll(".marque-taille-item").forEach((item) => {
       item.addEventListener("click", () => {
         const p = tousLesProduits.find((x) => x.nom === item.dataset.nom);
