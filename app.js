@@ -452,7 +452,12 @@ document.querySelectorAll(".marque-cell:not(.marque-cell-autres)").forEach((btn)
           alert("Ce produit n'est pas encore configuré dans l'inventaire.");
           return;
         }
-        if (modeFacturier) { ajouterLigneFacture(p); return; }
+        if (modeFacturier) {
+          ajouterLigneFacture(p);
+          if (marqueTaillesTimer) { clearTimeout(marqueTaillesTimer); marqueTaillesTimer = null; }
+          marqueTaillesEl.hidden = true;
+          return;
+        }
         appliquerPrixMarque(p.prixVente);
         produitSelectionne = {
           nom: p.nom,
@@ -688,7 +693,12 @@ if (btnAbcEntree) {
     const resultats = tousProduits.filter((p) => (p.nom || "").toLowerCase().includes(texte));
     if (resultats.length === 1) {
       const p = resultats[0];
-      if (modeFacturier) { ajouterLigneFacture(p); return; }
+      if (modeFacturier) {
+          ajouterLigneFacture(p);
+          if (marqueTaillesTimer) { clearTimeout(marqueTaillesTimer); marqueTaillesTimer = null; }
+          marqueTaillesEl.hidden = true;
+          return;
+        }
       appliquerPrixMarque(p.prixVente);
       produitSelectionne = {
         nom: p.nom,
