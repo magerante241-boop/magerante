@@ -1831,3 +1831,45 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
 .cloture-tuile{ border-left:3px solid var(--primary); }
 .cloture-tuile-benefice{ display:block; color:var(--accent); font-weight:normal; font-size:11px; }
 .cloture-stock-marque{ padding-left:6px; border-left:3px solid var(--info); }
+
+/* --- Regroupement menu admin (side-menu-group) --- */
+.side-menu-group summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 600;
+  list-style: none;
+}
+.side-menu-group summary::-webkit-details-marker { display: none; }
+.side-menu-group summary::after { content: "▾"; float: right; }
+.side-menu-group[open] summary::after { content: "▴"; }
+.side-menu-group ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 12px;
+}
+.side-menu-group .side-menu-item {
+  padding-left: 24px;
+  font-weight: 400;
+}
+
+/* --- Regroupement boutons rapport gérant --- */
+.rapport-toggle-group {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #d8d0c0;
+}
+.rapport-toggle-btn {
+  flex: 1;
+  border: none;
+  background: #f3ede0;
+  padding: 10px 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+.rapport-toggle-btn:not(:last-child) {
+  border-right: 1px solid #d8d0c0;
+}
+.rapport-toggle-btn:hover {
+  background: #e5dcc8;
+}
