@@ -486,7 +486,15 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
     calcProduitsListe.innerHTML = `<p class="placeholder-msg">Aucun produit dans l'inventaire.</p>`;
     return;
   }
-  calcProduitsListe.innerHTML = tousLesProduits.map((p) => `
+  const nomsSurTuiles = new Set();
+  Object.values(MARQUES_TAILLES).forEach((t) => { nomsSurTuiles.add(t.petite); nomsSurTuiles.add(t.grande); });
+  document.querySelectorAll(".marque-cell-single[data-produit]").forEach((b) => nomsSurTuiles.add(b.dataset.produit));
+  const produitsAutres = tousLesProduits.filter((p) => !nomsSurTuiles.has(p.nom));
+  if (!produitsAutres.length) {
+    calcProduitsListe.innerHTML = `<p class="placeholder-msg">Tous les produits sont déjà accessibles via les tuiles.</p>`;
+    return;
+  }
+  calcProduitsListe.innerHTML = produitsAutres.map((p) => `
     <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${escapeHtml(p.nom || "")}">
       <span class="calc-produit-nom">${escapeHtml(p.nom || "")}</span>
       <span class="calc-produit-prix">${p.prixVente} FCFA</span>
