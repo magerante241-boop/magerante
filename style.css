@@ -1729,3 +1729,11 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   margin-top: 2px;
   font-size: 14px;
 }
+
+/* Chantier : bouton croix suppression, taille progressive comme le reste de la ligne */
+.facture-lignes[data-count="1"] .facture-ligne-suppr { width: 22px; height: 22px; font-size: 12px; }
+.facture-lignes[data-count="2"] .facture-ligne-suppr { width: 20px; height: 20px; font-size: 11px; }
+.facture-lignes[data-count="3"] .facture-ligne-suppr { width: 18px; height: 18px; font-size: 10px; }
+.facture-lignes[data-count="4"] .facture-ligne-suppr { width: 16px; height: 16px; font-size: 9px; }
+.facture-lignes[data-count="5"] .facture-ligne-suppr { width: 14px; height: 14px; font-size: 8px; }
+.facture-lignes.many .facture-ligne-suppr { width: 14px; height: 14px; font-size: 8px; }
