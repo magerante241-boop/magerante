@@ -738,6 +738,7 @@ let modeFacturier = false;
 
 let lignesFacture = [];
 let ligneFactureSelectionnee = null;
+let dernierProduitFacturier = null;
 
 function afficherToastFacture(message) {
   let toast = document.getElementById("factureToast");
@@ -769,6 +770,7 @@ function ajouterLigneFacture(p) {
     return;
   }
   const prixUnitaire = Number(p.prixVente) || 0;
+  const prixAchat = Number(p.prixAchat) || 0;
   const ligneExistante = lignesFacture.find(l => l.produitId === p.id);
   if (ligneExistante) {
     ligneExistante.quantite += quantite;
@@ -778,10 +780,12 @@ function ajouterLigneFacture(p) {
       produitId: p.id,
       nom: p.nom,
       prixUnitaire,
+      prixAchat,
       quantite,
       totalLigne: quantite * prixUnitaire,
     });
   }
+  dernierProduitFacturier = p;
   calcExpr = "";
   produitSelectionne = null;
   renderCalc();
@@ -809,6 +813,26 @@ function renderFacture() {
   }
   const total = lignesFacture.reduce((acc, l) => acc + l.totalLigne, 0);
   factureTotalEl.textContent = total.toLocaleString("fr-FR") + " FCFA";
+  updateFactureBar();
+}
+
+function updateFactureBar() {
+  const barBenefice = document.getElementById("factureBarBenefice");
+  const barStock = document.getElementById("factureBarStock");
+  const barStockLabel = document.getElementById("factureBarStockLabel");
+  if (!barBenefice || !barStock) return;
+  const beneficeTotal = lignesFacture.reduce((acc, l) => acc + l.quantite * (l.prixUnitaire - (l.prixAchat || 0)), 0);
+  barBenefice.textContent = beneficeTotal.toLocaleString("fr-FR") + " FCFA";
+  if (dernierProduitFacturier) {
+    const ligne = lignesFacture.find(l => l.produitId === dernierProduitFacturier.id);
+    const dejaPris = ligne ? ligne.quantite : 0;
+    const stockRestant = Number(dernierProduitFacturier.stock || 0) - dejaPris;
+    barStock.textContent = stockRestant.toLocaleString("fr-FR") + " u.";
+    if (barStockLabel) barStockLabel.textContent = "stock " + (dernierProduitFacturier.nom || "bouteilles");
+  } else {
+    barStock.textContent = "—";
+    if (barStockLabel) barStockLabel.textContent = "stock bouteilles";
+  }
 }
 
 const btnToggleFacturier = document.getElementById("btnToggleFacturier");
@@ -865,6 +889,7 @@ if (btnFactureAnnuler) {
   btnFactureAnnuler.addEventListener("click", () => {
     if (lignesFacture.length && !confirm("Annuler toute la facture en cours ?")) return;
     lignesFacture = [];
+    dernierProduitFacturier = null;
     renderFacture();
   });
 }
@@ -910,6 +935,7 @@ if (btnFactureValider) {
     }
     btnFactureValider.disabled = false;
     btnFactureValider.textContent = "✅ Valider la facture";
+    dernierProduitFacturier = null;
     renderFacture();
     if (erreurs.length) {
       alert("Facture partiellement enregistrée. Erreurs :\n" + erreurs.join("\n"));

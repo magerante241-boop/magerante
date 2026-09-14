@@ -1676,3 +1676,16 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .conn-indicator.offline {
   filter: grayscale(1);
 }
+
+/* Chantier : barre dynamique benefice total + stock bouteilles en mode Facturier */
+.facture-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 2px 10px;
+  padding: 4px 2px;
+}
+.facture-bar-item { display: flex; flex-direction: column; }
+.facture-bar-item-right { align-items: flex-end; text-align: right; }
+.facture-bar .fb-label { font-size: 10px; color: var(--muted); }
+.facture-bar .fb-value { font-size: 13px; font-weight: 700; color: var(--text); }
