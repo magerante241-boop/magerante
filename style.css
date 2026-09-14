@@ -1792,3 +1792,19 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
   border-radius: 10px;
   background: var(--surface2, #1c1f23);
 }
+
+/* --- Clôture : synthèse structurée --- */
+.cloture-summary-card { background: var(--surface2); border-radius: var(--radius); padding: 14px; margin: 8px 0 14px; text-align: left; }
+.cloture-summary-etab { font-weight: bold; color: var(--text); margin-bottom: 4px; }
+.cloture-summary-total { font-size: 24px; font-weight: bold; color: var(--primary-dark); }
+.cloture-summary-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.cloture-section { margin-bottom: 14px; text-align: left; }
+.cloture-section-title { font-weight: bold; color: var(--text); margin-bottom: 6px; font-size: 14px; }
+.cloture-tuiles { display: flex; flex-wrap: wrap; gap: 6px; }
+.cloture-tuile { background: var(--surface); border: 1px solid var(--surface2); border-radius: 10px; padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; min-width: 110px; }
+.cloture-tuile-val { font-weight: bold; color: var(--primary-dark); margin-left: auto; }
+.cloture-stock-groupe { margin-bottom: 8px; }
+.cloture-stock-marque { font-weight: bold; font-size: 13px; color: var(--info); margin-bottom: 2px; }
+.cloture-stock-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cloture-stock-table td { padding: 2px 4px; border-bottom: 1px solid var(--surface2); }
+.cloture-stock-table td.stock-zero { color: var(--danger); font-weight: bold; }

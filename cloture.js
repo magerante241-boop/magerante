@@ -90,21 +90,29 @@ async function chargerResumeJour(estId, uid) {
   return { total, nombre, parCategorie, parMarque, parProduit, facturesJour, stockParMarque };
 }
 
-function formaterVentilation(titre, obj) {
-  const entrees = Object.entries(obj).sort((a, b) => b[1] - a[1]);
-  if (entrees.length === 0) return "";
-  const lignes = entrees.map(([cle, montant]) => `  • ${cle} : ${montant.toLocaleString("fr-FR")} FCFA`).join("\n");
-  return `\n${titre} :\n${lignes}`;
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function formaterStock(stockParMarque) {
+function construireTuilesVentilation(obj) {
+  const entrees = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  if (entrees.length === 0) return "";
+  return `<div class="cloture-tuiles">${entrees.map(([cle, montant]) => `
+    <div class="cloture-tuile"><span>${escapeHtml(cle)}</span><span class="cloture-tuile-val">${montant.toLocaleString("fr-FR")} FCFA</span></div>
+  `).join("")}</div>`;
+}
+
+function construireStockHtml(stockParMarque) {
   const entrees = Object.entries(stockParMarque);
   if (entrees.length === 0) return "";
-  const lignes = entrees.map(([marque, produits]) => {
-    const detail = produits.map((p) => `${p.nom} : ${p.stock}`).join(", ");
-    return `  • ${marque} — ${detail}`;
-  }).join("\n");
-  return `\nStock restant :\n${lignes}`;
+  return entrees.map(([marque, produits]) => `
+    <div class="cloture-stock-groupe">
+      <div class="cloture-stock-marque">${escapeHtml(marque)}</div>
+      <table class="cloture-stock-table"><tbody>
+        ${produits.map((p) => `<tr><td>${escapeHtml(p.nom)}</td><td class="${p.stock === 0 ? "stock-zero" : ""}">${p.stock}</td></tr>`).join("")}
+      </tbody></table>
+    </div>
+  `).join("");
 }
 
 // --- Gestion des lignes de factures manuelles (ajoutées dynamiquement) ---
@@ -194,13 +202,23 @@ document.addEventListener("DOMContentLoaded", () => {
       etablissementNomCourant = estSnap.exists() ? (estSnap.data().name || "") : "";
       const telephoneProprietaire = estSnap.exists() ? estSnap.data().telephone : null;
 
-      let texteResume = `${etablissementNomCourant ? etablissementNomCourant + " — " : ""}Aujourd'hui : ${nombre} vente(s) pour un total de ${total.toLocaleString("fr-FR")} FCFA.`;
-      texteResume += `\n${facturesJour.length} facture(s) numérique(s) émise(s).`;
-      texteResume += formaterVentilation("Par catégorie", parCategorie);
-      texteResume += formaterVentilation("Par marque", parMarque);
-      texteResume += formaterStock(stockParMarque);
-      resumeEl.textContent = texteResume;
-      resumeEl.style.whiteSpace = "pre-line";
+      let htmlResume = `
+        <div class="cloture-summary-card">
+          ${etablissementNomCourant ? `<div class="cloture-summary-etab">${escapeHtml(etablissementNomCourant)}</div>` : ""}
+          <div class="cloture-summary-total">${total.toLocaleString("fr-FR")} FCFA</div>
+          <div class="cloture-summary-sub">${nombre} vente(s) · ${facturesJour.length} facture(s) numérique(s)</div>
+        </div>
+      `;
+      if (Object.keys(parCategorie).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par catégorie</div>${construireTuilesVentilation(parCategorie)}</div>`;
+      }
+      if (Object.keys(parMarque).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par marque</div>${construireTuilesVentilation(parMarque)}</div>`;
+      }
+      if (Object.keys(stockParMarque).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant</div>${construireStockHtml(stockParMarque)}</div>`;
+      }
+      resumeEl.innerHTML = htmlResume;
 
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;
