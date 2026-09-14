@@ -1,4 +1,4 @@
-const CACHE_NAME = "magerante-v110"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
+const CACHE_NAME = "magerante-v111"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
 const CORE_ASSETS = [
   "./index.html",
   "./dashboard.html",
@@ -7,6 +7,7 @@ const CORE_ASSETS = [
   "./auth.js",
   "./firebase-config.js",
   "./inventaire.js",
+  "./inventaire-ephemere.js",
   "./invitation.js",
   "./cloture.js",
   "./ventes.js",
