@@ -1663,7 +1663,7 @@ select.btn-toggle-facturier:not(.btn-blinking) {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #e53935;
+  background: #1e88e5;
   box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
 }
 .conn-indicator {
