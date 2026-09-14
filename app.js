@@ -1,4 +1,6 @@
 import { initNotifications } from "./notifications.js";
+import { db, doc, getDoc, setDoc, increment as incrementFirestore } from "./firebase-config.js";
+import { appState } from "./state.js";
 function estExpressionArithmetiqueSure(expr) {
   return /^[0-9+\-*/().\s]*$/.test(expr);
 }
@@ -1207,3 +1209,106 @@ document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => 
     renderCalc();
   });
 });
+
+
+// ===== Tuiles marques : reordonnancement progressif selon la popularite des clics =====
+// - Comptes anonymes (session ephemere) : compteur en sessionStorage, efface a la deconnexion/fermeture d'onglet.
+// - Comptes inscrits (session permanente) : compteur persiste dans Firestore (establishments/{id}.clicsTuiles),
+//   recharge a chaque reconnexion.
+// Par defaut (aucun clic connu) : ordre de creation du stock de depart, inchange.
+(function initTuilesPopularite() {
+  const CLICS_SESSION_KEY = "mg_clics_tuiles_session";
+  const marqueGridEl = document.getElementById("marqueGrid");
+  const btnAutresEl = document.getElementById("btnMarqueAutres");
+  if (!marqueGridEl || !btnAutresEl) return;
+
+  function getTileId(btn) {
+    return btn.dataset.marque || btn.dataset.produit || "";
+  }
+
+  const tuilesInitiales = Array.from(marqueGridEl.querySelectorAll(".marque-cell:not(.marque-cell-autres)"));
+  const ordreDefaut = tuilesInitiales.map(getTileId);
+  const boutonParId = {};
+  tuilesInitiales.forEach((btn) => { boutonParId[getTileId(btn)] = btn; });
+
+  let clicsTuiles = {};
+  let deltaEnAttente = {};
+  let timerEnvoiFirestore = null;
+
+  function appliquerOrdreTuiles() {
+    const idsTries = ordreDefaut.slice().sort((a, b) => {
+      const diff = (clicsTuiles[b] || 0) - (clicsTuiles[a] || 0);
+      if (diff !== 0) return diff;
+      return ordreDefaut.indexOf(a) - ordreDefaut.indexOf(b);
+    });
+    idsTries.forEach((id) => {
+      const btn = boutonParId[id];
+      if (btn) marqueGridEl.insertBefore(btn, btnAutresEl);
+    });
+  }
+
+  function planifierEnvoiFirestore() {
+    if (timerEnvoiFirestore) clearTimeout(timerEnvoiFirestore);
+    timerEnvoiFirestore = setTimeout(async () => {
+      const deltas = deltaEnAttente;
+      deltaEnAttente = {};
+      if (!appState.establishmentId) return;
+      try {
+        const champs = {};
+        Object.keys(deltas).forEach((id) => {
+          champs["clicsTuiles." + id] = incrementFirestore(deltas[id]);
+        });
+        if (Object.keys(champs).length) {
+          await setDoc(doc(db, "establishments", appState.establishmentId), champs, { merge: true });
+        }
+      } catch (err) {
+        console.warn("Sauvegarde clics tuiles impossible :", err);
+      }
+    }, 3000);
+  }
+
+  function incrementerClic(id) {
+    if (!id) return;
+    clicsTuiles[id] = (clicsTuiles[id] || 0) + 1;
+    appliquerOrdreTuiles();
+    if (window.AuthState && window.AuthState.accountType === "enregistre") {
+      deltaEnAttente[id] = (deltaEnAttente[id] || 0) + 1;
+      planifierEnvoiFirestore();
+    } else {
+      try { sessionStorage.setItem(CLICS_SESSION_KEY, JSON.stringify(clicsTuiles)); } catch (e) { /* ignore */ }
+    }
+  }
+
+  tuilesInitiales.forEach((btn) => {
+    btn.addEventListener("click", () => incrementerClic(getTileId(btn)));
+  });
+
+  async function chargerCompteursInitiaux() {
+    let tries = 0;
+    while (!(window.AuthState && window.AuthState.hasEstablishment) && tries < 25) {
+      await new Promise((r) => setTimeout(r, 300));
+      tries++;
+    }
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) return;
+
+    if (window.AuthState.accountType === "enregistre" && appState.establishmentId) {
+      try {
+        const snap = await getDoc(doc(db, "establishments", appState.establishmentId));
+        const data = snap.exists() ? snap.data() : null;
+        clicsTuiles = (data && data.clicsTuiles) || {};
+      } catch (err) {
+        console.warn("Lecture clics tuiles impossible :", err);
+        clicsTuiles = {};
+      }
+    } else {
+      try {
+        clicsTuiles = JSON.parse(sessionStorage.getItem(CLICS_SESSION_KEY) || "{}");
+      } catch (e) {
+        clicsTuiles = {};
+      }
+    }
+    appliquerOrdreTuiles();
+  }
+
+  chargerCompteursInitiaux();
+})();
