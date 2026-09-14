@@ -1751,3 +1751,7 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .numpad .key-equal {
   font-size: 18px;
 }
+
+/* Tuiles Djino (parfums uniques, ajout direct sans popup tailles) */
+button[data-produit="Djino Pamplemousse"] { background: linear-gradient(145deg, #d6672a, #8f3f13); }
+button[data-produit="Djino Cocktail"] { background: linear-gradient(145deg, #b23a6b, #6e2040); }

@@ -1143,3 +1143,34 @@ function feedbackConfirmationVente() {
   } catch (e) { /* ignore */ }
 }
 window.feedbackConfirmationVente = feedbackConfirmationVente;
+
+// --- Tuiles "single" (produit unique, sans popup de tailles) : Djino Pamplemousse, Djino Cocktail ---
+document.querySelectorAll(".marque-cell-single[data-produit]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    if (!(window.AuthState && window.AuthState.hasEstablishment)) {
+      alert("Initialisation en cours, réessaie dans un instant.");
+      return;
+    }
+    fermerListeProduits();
+    if (!marqueTaillesEl.hidden) { marqueTaillesEl.hidden = true; marqueTaillesEl.dataset.openFor = ""; }
+    const nomProduit = btn.dataset.produit;
+    const tousLesProduits = await chargerTousProduitsSurs();
+    const p = tousLesProduits.find((x) => x.nom === nomProduit);
+    if (!p) {
+      alert("Ce produit n'est pas encore configuré dans l'inventaire.");
+      return;
+    }
+    if (modeFacturier) {
+      ajouterLigneFacture(p);
+      return;
+    }
+    appliquerPrixMarque(p.prixVente);
+    produitSelectionne = {
+      nom: p.nom,
+      prixVente: Number(p.prixVente) || 0,
+      prixAchat: Number(p.prixAchat) || 0,
+      stock: Number(p.stock) || 0,
+    };
+    renderCalc();
+  });
+});
