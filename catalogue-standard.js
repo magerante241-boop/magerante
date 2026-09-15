@@ -36,4 +36,7 @@ export const CATALOGUE_STANDARD = [
   { nom: "Label 5 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 10 },
   { nom: "Ricard 70cl", categorie: "Bar", prixAchat: 7000, prixVente: 13000, stock: 10 },
   { nom: "Ricard 1L", categorie: "Bar", prixAchat: 9000, prixVente: 17000, stock: 10 },
+  { nom: "Djino Pamplemousse", categorie: "Bar", prixAchat: 400, prixVente: 500, stock: 10 },
+  { nom: "Djino Cocktail", categorie: "Bar", prixAchat: 400, prixVente: 500, stock: 10 },
+  { nom: "Djino Ananas", categorie: "Bar", prixAchat: 400, prixVente: 500, stock: 10 },
 ];
