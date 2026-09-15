@@ -29,6 +29,7 @@ export async function genererCatalogueDemarrage() {
     const newDocRef = doc(ref);
     batch.set(newDocRef, {
       ...p,
+      stockDepart: p.stock,
       isCatalogueDemarrage: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
