@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const estSnap = await getDoc(doc(db, "establishments", estId));
       etablissementNomCourant = estSnap.exists() ? (estSnap.data().name || "") : "";
-      const telephoneProprietaire = estSnap.exists() ? estSnap.data().telephone : null;
+      const telephoneProprietaire = estSnap.exists() ? (estSnap.data().telephone || estSnap.data().whatsappEtablissement) : null;
 
       let htmlResume = `
         <div class="cloture-summary-card">
