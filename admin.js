@@ -119,6 +119,7 @@ onAuthStateChanged(auth, (user) => {
     chargerClotures();
     chargerEtablissementsParZone();
     chargerGestionProduits();
+    remplirSelectVidageUnitaire();
     chargerConnexions();
   } else {
     loginBox.hidden = false;
@@ -555,124 +556,6 @@ function renderInventaireGlobalImpl(produits) {
   }
 }
 
-// --- Import catalogue CSV vers tous les etablissements ---
-function parserCSV(text) {
-  const lignes = text.split(/\r?\n/).filter((l) => l.trim() !== "");
-  const entetes = lignes[0].split(",").map((h) => h.trim());
-  return lignes.slice(1).map((ligne) => {
-    const valeurs = ligne.split(",");
-    const obj = {};
-    entetes.forEach((h, i) => { obj[h] = (valeurs[i] || "").trim(); });
-    return obj;
-  });
-}
-
-document.getElementById("btnImporterCatalogue").addEventListener("click", async () => {
-  const fileInput = document.getElementById("catalogueFileInput");
-  const statusEl = document.getElementById("importStatus");
-  const file = fileInput.files[0];
-  if (!file) {
-    statusEl.textContent = "Choisis d'abord un fichier CSV.";
-    return;
-  }
-  if (!confirm("Importer ce catalogue vers TOUS les etablissements ? Cette action ajoutera des produits a chaque etablissement existant.")) {
-    return;
-  }
-  statusEl.textContent = "Lecture du fichier...";
-  try {
-    const texte = await file.text();
-    const lignes = parserCSV(texte);
-    const produits = lignes.map((l) => ({
-      nom: l["Nom"] || "",
-      categorie: l["Catégorie"] || l["Categorie"] || "",
-      prixAchat: Number(l["Prix achat"]) || 0,
-      prixVente: Number(l["Prix vente"]) || 0,
-      stock: Number(l["Stock"]) || 0,
-    })).filter((p) => p.nom);
-
-    if (!produits.length) {
-      statusEl.textContent = "Aucun produit valide trouve dans le fichier.";
-      return;
-    }
-
-    statusEl.textContent = "Lecture des etablissements...";
-    const estSnap = await getEstablishmentsSnap();
-    const etablissementIds = estSnap.docs.map((d) => d.id);
-
-    if (!etablissementIds.length) {
-      statusEl.textContent = "Aucun etablissement trouve.";
-      return;
-    }
-
-    const progressWrap = document.getElementById("importProgressWrap");
-    const progressBar = document.getElementById("importProgressBar");
-    const progressPercent = document.getElementById("importProgressPercent");
-    const totalAFaire = produits.length * etablissementIds.length;
-    progressWrap.hidden = false;
-    progressPercent.hidden = false;
-    progressWrap.classList.remove("fade-out");
-    progressPercent.classList.remove("fade-out");
-    progressBar.style.width = "0%";
-    progressPercent.textContent = "0%";
-
-    const TAILLE_LOT = 450;
-    let total = 0;
-    for (const estId of etablissementIds) {
-      let batch = writeBatch(db);
-      let compteurLot = 0;
-      for (const p of produits) {
-        const nouveauDocRef = doc(collection(db, "establishments", estId, "produits"));
-        batch.set(nouveauDocRef, {
-          ...p,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        compteurLot++;
-        total++;
-        if (compteurLot >= TAILLE_LOT) {
-          await batch.commit();
-          batch = writeBatch(db);
-          compteurLot = 0;
-        }
-        const pct = Math.round((total / totalAFaire) * 100);
-        progressBar.style.width = pct + "%";
-        progressPercent.textContent = pct + "%";
-      }
-      if (compteurLot > 0) {
-        await batch.commit();
-      }
-      statusEl.textContent = `Import en cours... (${total} produits crees)`;
-    }
-    statusEl.textContent = `Import termine : ${produits.length} produits ajoutes a ${etablissementIds.length} etablissement(s), soit ${total} documents crees.`;
-    progressBar.style.width = "100%";
-    progressPercent.textContent = "100%";
-    setTimeout(() => {
-      progressWrap.classList.add("fade-out");
-      progressPercent.classList.add("fade-out");
-      setTimeout(() => {
-        progressWrap.hidden = true;
-        progressPercent.hidden = true;
-      }, 800);
-    }, 1200);
-  } catch (err) {
-    statusEl.textContent = "Erreur : " + err.message;
-    console.error(err);
-    const pw = document.getElementById("importProgressWrap");
-    const pp = document.getElementById("importProgressPercent");
-    if (pw) pw.hidden = true;
-    if (pp) pp.hidden = true;
-  }
-});
-
-document.getElementById("catalogueFileInput").addEventListener("change", (e) => {
-  const label = document.getElementById("catalogueFileLabel");
-  if (e.target.files.length) {
-    label.textContent = "📄 " + e.target.files[0].name;
-  } else {
-    label.textContent = "📄 Choisir un fichier CSV";
-  }
-});
-
 // --- Vider l'inventaire de tous les etablissements ---
 document.getElementById("btnViderInventaire").addEventListener("click", async () => {
   const statusEl = document.getElementById("importStatus");
@@ -706,6 +589,65 @@ document.getElementById("btnViderInventaire").addEventListener("click", async ()
     console.error(err);
   }
 });
+
+// --- Vider l'inventaire d'un etablissement en particulier ---
+async function remplirSelectVidageUnitaire() {
+  const select = document.getElementById("selectEtablissementVidage");
+  if (!select) return;
+  try {
+    const estSnap = await getEstablishmentsSnap();
+    const valeurActuelle = select.value;
+    select.innerHTML = '<option value="">Choisir un etablissement...</option>';
+    estSnap.forEach((d) => {
+      const data = d.data();
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = (data.name || "Etablissement") + " (" + d.id.slice(0, 6) + ")";
+      select.appendChild(opt);
+    });
+    if ([...select.options].some((o) => o.value === valeurActuelle)) {
+      select.value = valeurActuelle;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+document.getElementById("btnViderInventaireUnitaire").addEventListener("click", async () => {
+  const select = document.getElementById("selectEtablissementVidage");
+  const statusEl = document.getElementById("importStatus");
+  const estId = select.value;
+  if (!estId) {
+    statusEl.textContent = "Choisis d'abord un etablissement.";
+    return;
+  }
+  const nomEtab = select.options[select.selectedIndex].textContent;
+  const confirmation1 = confirm('Ceci va SUPPRIMER tous les produits de "' + nomEtab + '". Cette action est irreversible. Continuer ?');
+  if (!confirmation1) return;
+  const confirmation2 = confirm("Es-tu vraiment sur ? Tape OK une derniere fois pour confirmer la suppression definitive.");
+  if (!confirmation2) return;
+
+  statusEl.textContent = "Suppression en cours...";
+  try {
+    const produitsSnap = await getDocs(collection(db, "establishments", estId, "produits"));
+    const docs = produitsSnap.docs;
+    const TAILLE_LOT = 450;
+    let totalSupprime = 0;
+    for (let i = 0; i < docs.length; i += TAILLE_LOT) {
+      const lot = docs.slice(i, i + TAILLE_LOT);
+      const batch = writeBatch(db);
+      lot.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      totalSupprime += lot.length;
+      statusEl.textContent = "Suppression en cours... (" + totalSupprime + " produits supprimes)";
+    }
+    statusEl.textContent = 'Nettoyage termine : ' + totalSupprime + ' produits supprimes pour "' + nomEtab + '".';
+  } catch (err) {
+    statusEl.textContent = "Erreur : " + err.message;
+    console.error(err);
+  }
+});
+
 
 // --- Tuiles stats cliquables : defilement vers la section correspondante ---
 document.querySelectorAll(".stat-card[data-target], .quick-tile[data-target]").forEach((card) => {

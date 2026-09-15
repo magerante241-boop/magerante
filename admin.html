@@ -397,19 +397,19 @@ button:active {
         <canvas id="stockTopProduitsChart" height="260"></canvas>
       </div>
 
-      <section class="admin-import" id="secImport">
-      <h2 class="section-title">📥 Importer un catalogue CSV</h2>
-      <p class="import-hint">Colonnes attendues : Nom, Prix achat, Prix vente, Stock, Catégorie</p>
-      <label for="catalogueFileInput" class="file-label" id="catalogueFileLabel">📄 Choisir un fichier CSV</label>
-      <input type="file" id="catalogueFileInput" accept=".csv" class="file-input-hidden">
-      <button id="btnImporterCatalogue" class="import-btn">Importer vers tous les établissements</button>
+          <section class="admin-import" id="secImport">
+      <h2 class="section-title">🗑️ Gestion de l'inventaire</h2>
       <p id="importStatus" class="import-status"></p>
-      <div class="import-progress-wrap" id="importProgressWrap" hidden>
-        <div class="import-progress-bar" id="importProgressBar"></div>
-      </div>
-      <p class="import-progress-percent" id="importProgressPercent" hidden>0%</p>
       <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
+      <div class="import-vidage-unitaire" style="margin-top:16px;">
+        <label for="selectEtablissementVidage" class="import-hint" style="display:block;margin-bottom:6px;">Vider l'inventaire d'un établissement en particulier :</label>
+        <select id="selectEtablissementVidage" class="filtre-select">
+          <option value="">Choisir un établissement...</option>
+        </select>
+        <button id="btnViderInventaireUnitaire" class="import-btn danger-btn" style="margin-top:8px;">🗑️ Vider l'inventaire de cet établissement</button>
+      </div>
     </section>
+
 
       <details class="collapsible-section">
         <summary class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</summary>
