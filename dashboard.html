@@ -9,7 +9,9 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body { margin:0; font-family: var(--font-main); background:var(--bg); color:var(--text); }
+  body { margin:0; font-family: var(--font-main); background:var(--bg); color:var(--text); overflow-x:hidden; }
+  .dash-close-btn { position:fixed; top:14px; right:14px; background:var(--surface); border:1px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:16px; color:var(--muted); cursor:pointer; z-index:20; box-shadow:var(--shadow-sm); }
+  .tabs { padding-right:44px; }
   .tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
   .tab-btn { flex:1; padding:14px 4px; text-align:center; background:transparent; color:var(--muted); border:none; cursor:pointer; font-size:13px; }
   .tab-btn.active { color:var(--primary); border-bottom:3px solid var(--accent); font-weight:bold; }
@@ -23,6 +25,7 @@
 </head>
 <body>
 
+<button class="dash-close-btn" id="btnCloseDashboard" title="Fermer" aria-label="Fermer">✕</button>
 <div class="tabs">
   <button class="tab-btn active" data-tab="ventes">Ventes</button>
   <button class="tab-btn" data-tab="gerants">Gérants</button>
@@ -110,6 +113,7 @@
   </div>
 </div>
 
+<script>document.getElementById("btnCloseDashboard").addEventListener("click", () => { window.location.href = "index.html"; });</script>
 <script type="module" src="dashboard.js"></script>
 </body>
 </html>
