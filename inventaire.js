@@ -32,8 +32,8 @@ export function render(container) {
 
   const accountType = (window.AuthState && window.AuthState.accountType) || null;
   const role = (window.AuthState && window.AuthState.role) || null;
-  const estProprietaire = accountType === "enregistre" && role === "PROPRIETAIRE";
-  const estGerant = accountType === "enregistre" && role === "GERANT";
+  const estProprietaire = accountType === "enregistre" && (role === "PROPRIETAIRE" || role === "GERANT_PROPRIETAIRE");
+  const estGerant = (accountType === "enregistre" && role === "GERANT_PROPRIETAIRE") || ((accountType === "enregistre" || accountType === "invite") && role === "GERANT");
 
   const boutonsStockHtml = estProprietaire
     ? `<button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>`

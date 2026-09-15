@@ -416,7 +416,7 @@ let marqueTaillesTimer = null;
 // de toute façon jamais plus de 2 entrées (petite/grande) : pas besoin de scroll.
 
 function estProprietaireReel() {
-  return !!(window.AuthState && window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+  return !!(window.AuthState && window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE"));
 }
 
 async function chargerTousProduitsSurs() {

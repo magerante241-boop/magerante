@@ -228,6 +228,25 @@ document.getElementById("linkForgotPassword")?.addEventListener("click", async (
   }
 });
 
+const btnToggleGP = document.getElementById("menuToggleGerantProprietaire");
+if (btnToggleGP) {
+  btnToggleGP.addEventListener("click", async () => {
+    const roleActuel = window.AuthState.role;
+    const nouveauRole = roleActuel === "GERANT_PROPRIETAIRE" ? "PROPRIETAIRE" : "GERANT_PROPRIETAIRE";
+    const confirmMsg = nouveauRole === "GERANT_PROPRIETAIRE"
+      ? "Passer en Gérant-Propriétaire : tu gardes toutes tes fonctions propriétaire, avec en plus les outils rapides de gestion de stock au quotidien. Continuer ?"
+      : "Revenir au profil Propriétaire classique ?";
+    if (!confirm(confirmMsg)) return;
+    try {
+      await setDoc(doc(db, "users", auth.currentUser.uid), { role: nouveauRole, updatedAt: serverTimestamp() }, { merge: true });
+      window.AuthState.role = nouveauRole;
+      location.reload();
+    } catch (err) {
+      alert("Erreur lors du changement de profil : " + err.message);
+    }
+  });
+}
+
 document.getElementById("menuLogout").addEventListener("click", async () => {
   try {
     localStorage.removeItem("magerante_wasGerant");
@@ -277,9 +296,10 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
     const credential = EmailAuthProvider.credential(email, password);
     await linkWithCredential(auth.currentUser, credential);
 
+    const roleChoisi = (document.querySelector('input[name="regRole"]:checked') || {}).value || "PROPRIETAIRE";
     await setDoc(doc(db, "users", uid), {
       nom, prenom, telephone, email,
-      role: "PROPRIETAIRE",
+      role: roleChoisi,
       accountType: "enregistre",
       validated: false,
       establishmentId: uid,
@@ -342,7 +362,7 @@ function updateAccountStatusBadge() {
 
   const menuRename = document.getElementById("menuRenameEstablishment");
   if (menuRename) {
-    menuRename.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE");
+    menuRename.hidden = !(window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE"));
   }
 
   const navBtnInventaire = document.getElementById("navBtnInventaire");
@@ -351,7 +371,7 @@ function updateAccountStatusBadge() {
   const sideMenuBtnInventaire = document.getElementById("sideMenuBtnInventaire");
   if (sideMenuBtnInventaire) sideMenuBtnInventaire.hidden = false;
 
-  const estProprietaireOuAdmin = (window.AuthState.accountType === "enregistre" && window.AuthState.role === "PROPRIETAIRE") || window.AuthState.email === window.ADMIN_EMAIL;
+  const estProprietaireOuAdmin = (window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE")) || window.AuthState.email === window.ADMIN_EMAIL;
   const menuToggleDemoVisiteur = document.getElementById("menuToggleDemoVisiteur");
   if (menuToggleDemoVisiteur) menuToggleDemoVisiteur.hidden = estProprietaireOuAdmin;
   const menuGenererDemoVisiteur = document.getElementById("menuGenererDemoVisiteur");

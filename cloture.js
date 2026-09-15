@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
     errorEl.textContent = "";
     lienWhatsapp.hidden = true;
     btnConfirmer.disabled = false;
-    btnConfirmer.textContent = "Envoyer mes comptes au propriétaire";
+    btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
     btnConfirmer.hidden = !(window.AuthState && window.AuthState.accountType === "enregistre");
     resumeEl.textContent = "Chargement du résumé...";
     if (inputFondDepart) inputFondDepart.value = "0";
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (telephoneProprietaire) {
         const texte = `Bonjour, voici mes comptes du jour (${etablissementNomCourant}) : ${nombre} vente(s), ${total.toLocaleString("fr-FR")} FCFA au total.`;
         lienWhatsapp.href = `https://wa.me/${telephoneProprietaire}?text=${encodeURIComponent(texte)}`;
-        lienWhatsapp.hidden = !(window.AuthState && window.AuthState.accountType === "enregistre");
+        lienWhatsapp.hidden = !(window.AuthState && window.AuthState.accountType === "enregistre" && window.AuthState.role !== "GERANT_PROPRIETAIRE");
       }
     } catch (e) {
       resumeEl.textContent = "Erreur lors du chargement du résumé.";
@@ -302,16 +302,18 @@ document.addEventListener("DOMContentLoaded", () => {
           statut: "envoyee",
           date: serverTimestamp(),
         });
-        creerNotification({
-          type: "cloture",
-          titre: "Clôture reçue",
-          message: `${nomGerantCl} (${etablissementNomCourant}) a envoyé ses comptes : ${Number(btnConfirmer.dataset.nombre || 0)} vente(s), ${totalVentes.toLocaleString("fr-FR")} FCFA. Écart caisse : ${ecart >= 0 ? "+" : ""}${ecart.toLocaleString("fr-FR")} FCFA.`
-        });
-        btnConfirmer.textContent = "Comptes envoyés ✅";
+        if (!(window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE")) {
+          creerNotification({
+            type: "cloture",
+            titre: "Clôture reçue",
+            message: `${nomGerantCl} (${etablissementNomCourant}) a envoyé ses comptes : ${Number(btnConfirmer.dataset.nombre || 0)} vente(s), ${totalVentes.toLocaleString("fr-FR")} FCFA. Écart caisse : ${ecart >= 0 ? "+" : ""}${ecart.toLocaleString("fr-FR")} FCFA.`
+          });
+        }
+        btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Journée enregistrée ✅" : "Comptes envoyés ✅";
       } catch (e) {
         errorEl.textContent = "Erreur lors de l'envoi : " + (e.code || e.message);
         btnConfirmer.disabled = false;
-        btnConfirmer.textContent = "Envoyer mes comptes au propriétaire";
+        btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
     btnConfirmer.hidden = !(window.AuthState && window.AuthState.accountType === "enregistre");
       }
     });
@@ -319,6 +321,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   onAuthStateChanged(auth, (user) => {
     if (!user) { menuBtn.hidden = true; return; }
-    menuBtn.hidden = !(window.AuthState && window.AuthState.role === "GERANT");
+    menuBtn.hidden = !(window.AuthState && (window.AuthState.role === "GERANT" || window.AuthState.role === "GERANT_PROPRIETAIRE"));
   });
 });

@@ -45,6 +45,10 @@
       <input type="text" id="regEtablissementNom" placeholder="Nom de l'établissement" autocomplete="off">
       <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
       <input type="text" id="regWhatsappEtablissement" placeholder="WhatsApp de l'établissement (ex: 24177123456)">
+      <div class="auth-role-choice" style="margin:10px 0; text-align:left;">
+        <label style="display:block; margin-bottom:6px;"><input type="radio" name="regRole" value="PROPRIETAIRE" checked> Propriétaire (j'aurai des gérants à distance)</label>
+        <label style="display:block;"><input type="radio" name="regRole" value="GERANT_PROPRIETAIRE"> Gérant-Propriétaire (je gère seul mon établissement)</label>
+      </div>
       <div style="display:flex; gap:8px; align-items:center;">
         <input type="text" id="regGpsAffichage" placeholder="Position GPS non definie" readonly style="flex:1;">
         <button type="button" class="auth-btn" id="btnUtiliserPosition">📍 Utiliser ma position</button>
@@ -328,6 +332,7 @@
           <button class="side-menu-quick-btn" data-view="apropos"><span class="side-menu-quick-icon">ℹ️</span><span>À propos</span></button>
         </li>
         <li><button class="side-menu-item" id="menuRenameEstablishment">✏️ Renommer mon établissement</button></li>
+        <li><button class="side-menu-item" id="menuToggleGerantProprietaire" hidden>🔄 Devenir Gérant-Propriétaire</button></li>
         <li>
           <button class="side-menu-item" id="menuLogin">🔑 Connexion propriétaire</button>
           <small class="side-menu-hint">(l'administrateur utilise aussi ce bouton)</small>
