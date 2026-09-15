@@ -132,7 +132,12 @@ service cloud.firestore {
     }
 
     match /gerant_logins/{telephone} {
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
+      // Lecture ouverte à tout utilisateur connecté (y compris anonyme) :
+      // le champ sensible "code" n'est plus stocké ici depuis la migration
+      // vers gerant_codes (protégé, allow read: if false). Le gérant doit
+      // pouvoir lire ce document via une session anonyme fraîche pour se
+      // connecter (voir invitation.js).
+      allow read: if isSignedIn();
       allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.estId;
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.estId || isAdmin());
     }
