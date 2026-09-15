@@ -196,10 +196,31 @@ function chargerComptesEnAttente() {
           "<strong>" + escapeHtml((d.nom || "") + " " + (d.prenom || "")) + "</strong>" +
           "<div class='meta'>Email : " + escapeHtml(d.email || "") + "</div>" +
           "<div class='meta'>Telephone : " + escapeHtml(d.telephone || "") + "</div>" +
-          "<button data-uid='" + escapeHtml(docSnap.id) + "'>Valider ce compte</button>";
-        card.querySelector("button").addEventListener("click", async (e) => {
+          "<button class='btn-valider' data-uid='" + escapeHtml(docSnap.id) + "'>Valider ce compte</button>" +
+          "<button class='btn-refuser' data-uid='" + escapeHtml(docSnap.id) + "' data-est='" + escapeHtml(docSnap.id) + "'>Refuser</button>";
+        card.querySelector(".btn-valider").addEventListener("click", async (e) => {
           const uid = e.target.getAttribute("data-uid");
           await updateDoc(doc(db, "users", uid), { validated: true });
+        });
+        card.querySelector(".btn-refuser").addEventListener("click", async (e) => {
+          const uid = e.target.getAttribute("data-uid");
+          const estId = e.target.getAttribute("data-est");
+          if (!confirm("Refuser definitivement ce compte ?")) return;
+          await updateDoc(doc(db, "users", uid), { statut: "refuse" });
+          try {
+            await addDoc(collection(db, "establishments", estId, "notifications"), {
+              type: "info",
+              titre: "Compte refuse",
+              message: "Ton compte a ete refuse par l administrateur. Tu ne pourras plus acceder a l application.",
+              lu: false,
+              createdAt: serverTimestamp(),
+              auteurId: null,
+              auteurRole: "ADMIN",
+              auteurAccountType: null
+            });
+          } catch (errNotif) {
+            console.warn("Notification de refus non creee :", errNotif.message);
+          }
         });
         pendingList.appendChild(card);
       });

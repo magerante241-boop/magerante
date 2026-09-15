@@ -15,6 +15,8 @@ import { genererProduitsDemo } from "./demo.js";
 import { enregistrerConnexion } from "./connexions.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";
+const ADMIN_PHONE = "24160141924";
+window.ADMIN_PHONE = ADMIN_PHONE;
 window.ADMIN_EMAIL = ADMIN_EMAIL;
 
 const authGate = document.getElementById("authGate");
@@ -319,6 +321,13 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
       updatedAt: serverTimestamp()
     }, { merge: true });
 
+    try {
+      const texteAdmin = `Nouveau compte MAGERANTE cree :\n${nom} ${prenom} (${roleChoisi})\nEtablissement : ${etablissementNom}\nTelephone : ${telephone}\n\nValider ou refuser depuis le panneau admin.`;
+      window.open(`https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(texteAdmin)}`, "_blank");
+    } catch (errWa) {
+      console.warn("Ouverture WhatsApp admin impossible :", errWa);
+    }
+
     localStorage.removeItem("magerante_wasGerant");
     try {
       await genererProduitsDemo();
@@ -512,6 +521,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   const userData = userSnap.data();
+  if (userData.statut === "refuse") {
+    alert("Ton compte a ete refuse par l administrateur. Acces impossible.");
+    await signOut(auth);
+    location.reload();
+    return;
+  }
   const accountTypeReel = user.isAnonymous ? "anonyme" : "enregistre";
   window.AuthState.accountType = accountTypeReel;
   if (userData.accountType !== accountTypeReel) {
