@@ -319,6 +319,13 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
       updatedAt: serverTimestamp()
     }, { merge: true });
 
+    localStorage.removeItem("magerante_wasGerant");
+    try {
+      await genererProduitsDemo();
+    } catch (errDemo) {
+      console.warn("Génération du catalogue de démarrage impossible :", errDemo);
+    }
+
     window.AuthState.accountType = "enregistre";
     window.AuthState.validated = false;
     updateAccountStatusBadge();

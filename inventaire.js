@@ -652,6 +652,7 @@ function openModal(produit) {
   backdrop.innerHTML = `
     <div class="inv-modal">
       <h2>${produit ? "Modifier le produit" : "Nouveau produit"}</h2>
+      <button class="icon-btn" id="invModalClose" aria-label="Fermer">✕</button>
       <p class="inv-error" id="invModalError"></p>
       <div class="inv-field">
         <label>Nom du produit</label>
@@ -687,6 +688,7 @@ function openModal(produit) {
 
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
   document.getElementById("invCancelBtn").addEventListener("click", closeModal);
+  document.getElementById("invModalClose").addEventListener("click", closeModal);
   document.getElementById("invSaveBtn").addEventListener("click", saveProduit);
   const delBtn = document.getElementById("invDeleteBtn");
   if (delBtn) delBtn.addEventListener("click", supprimerProduit);
