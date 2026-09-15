@@ -364,6 +364,12 @@ function updateAccountStatusBadge() {
   if (menuRename) {
     menuRename.hidden = !(window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE"));
   }
+  const menuToggleGP = document.getElementById("menuToggleGerantProprietaire");
+  if (menuToggleGP) {
+    const peutBasculer = window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE");
+    menuToggleGP.hidden = !peutBasculer;
+    menuToggleGP.textContent = window.AuthState.role === "GERANT_PROPRIETAIRE" ? "🔄 Revenir à Propriétaire classique" : "🔄 Devenir Gérant-Propriétaire";
+  }
 
   const navBtnInventaire = document.getElementById("navBtnInventaire");
   if (navBtnInventaire) navBtnInventaire.hidden = false;
