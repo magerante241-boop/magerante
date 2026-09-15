@@ -419,8 +419,16 @@ function estProprietaireReel() {
   return !!(window.AuthState && window.AuthState.accountType === "enregistre" && (window.AuthState.role === "PROPRIETAIRE" || window.AuthState.role === "GERANT_PROPRIETAIRE"));
 }
 
+// Tout compte enregistre (proprietaire) ou invite (vrai gerant WhatsApp+code)
+// a acces au vrai inventaire Firestore de l'etablissement (autorise par les
+// regles estGerantDe). Seuls les visiteurs anonymes non invites utilisent le
+// stock de session ephemere.
+function aAccesInventaireReel() {
+  return !!(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
+}
+
 async function chargerTousProduitsSurs() {
-  if (estProprietaireReel()) {
+  if (aAccesInventaireReel()) {
     if (!window.InventaireModule || !window.InventaireModule.getTousLesProduits) return [];
     try {
       return await window.InventaireModule.getTousLesProduits();
