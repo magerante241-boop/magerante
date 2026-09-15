@@ -36,7 +36,9 @@ export function render(container) {
   const estGerant = (accountType === "enregistre" && role === "GERANT_PROPRIETAIRE") || ((accountType === "enregistre" || accountType === "invite") && role === "GERANT");
 
   const boutonsStockHtml = estProprietaire
-    ? `<button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>`
+    ? `<button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>
+       <button class="inv-stock-depart-btn" id="invDevisRestaurationBtn">🧾 Devis de restauration du stock</button>
+       <button class="inv-stock-depart-btn inv-ajout-stock-btn" id="invAjoutStockBtnProprio">➕ Augmenter le stock permanent</button>`
     : estGerant
     ? `<button class="inv-stock-depart-btn" id="invRenouvelerBtn">🔄 Renouvellement de stock</button>
        <button class="inv-stock-depart-btn inv-ajout-stock-btn" id="invAjoutStockBtn">➕ Ajouter au stock établissement</button>`
@@ -54,8 +56,10 @@ export function render(container) {
   document.getElementById("invAddBtn").addEventListener("click", () => openModal(null));
   if (estProprietaire) {
     document.getElementById("invStockDepartBtn").addEventListener("click", () => openStockDepartModal());
+    document.getElementById("invDevisRestaurationBtn").addEventListener("click", () => openDevisRestaurationModal());
+    document.getElementById("invAjoutStockBtnProprio").addEventListener("click", () => openAjoutStockModal());
   }
-  if (estGerant) {
+  if (estGerant && !estProprietaire) {
     document.getElementById("invRenouvelerBtn").addEventListener("click", () => renouvellerStock());
     document.getElementById("invAjoutStockBtn").addEventListener("click", () => openAjoutStockModal());
   }
@@ -374,6 +378,80 @@ async function renouvellerStock() {
   } catch (err) {
     alert("Erreur : " + err.message);
   }
+}
+
+async function openDevisRestaurationModal() {
+  const overlay = document.createElement("div");
+  overlay.className = "inv-modal-overlay";
+  overlay.innerHTML = `
+    <div class="inv-modal">
+      <div class="inv-modal-header">
+        <span>🧾 Devis de restauration du stock</span>
+        <button class="icon-btn" id="devisRestaurationClose" aria-label="Fermer">✕</button>
+      </div>
+      <p class="inv-hint">Quantités consommées depuis la dernière restauration, à racheter pour revenir au stock de référence de l'établissement.</p>
+      <div id="devisRestaurationListe"><p class="inv-empty">Calcul en cours...</p></div>
+      <p class="inv-error" id="devisRestaurationError"></p>
+      <div class="inv-modal-actions">
+        <button class="inv-btn-secondary" id="devisRestaurationCancel">Fermer</button>
+        <button class="inv-btn-primary" id="devisRestaurationConfirm">Confirmer la restauration</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const fermer = () => overlay.remove();
+  document.getElementById("devisRestaurationClose").addEventListener("click", fermer);
+  document.getElementById("devisRestaurationCancel").addEventListener("click", fermer);
+
+  const listeEl = document.getElementById("devisRestaurationListe");
+  const snap = await getDocs(produitsRef());
+  const manquants = [];
+  snap.forEach((d) => {
+    const p = d.data();
+    const stockDepart = Number(p.stockDepart) || 0;
+    const stockActuel = Number(p.stock) || 0;
+    const manquant = stockDepart - stockActuel;
+    if (manquant > 0) {
+      manquants.push({ id: d.id, nom: p.nom || "", stockActuel, stockDepart, manquant });
+    }
+  });
+  manquants.sort((a, b) => (a.nom || "").localeCompare(b.nom || ""));
+
+  if (manquants.length === 0) {
+    listeEl.innerHTML = `<p class="inv-empty">Aucune restauration nécessaire, le stock est déjà au niveau de référence.</p>`;
+    document.getElementById("devisRestaurationConfirm").disabled = true;
+    return;
+  }
+
+  listeEl.innerHTML = manquants.map((m) => `
+    <div class="devis-restauration-ligne">
+      <span class="devis-restauration-nom">${escapeHtml(m.nom)}</span>
+      <span class="devis-restauration-detail">${m.stockActuel} / ${m.stockDepart} — <strong>+${m.manquant}</strong> à racheter</span>
+    </div>
+  `).join("");
+
+  document.getElementById("devisRestaurationConfirm").addEventListener("click", async () => {
+    const confirmBtn = document.getElementById("devisRestaurationConfirm");
+    const errorEl = document.getElementById("devisRestaurationError");
+    confirmBtn.disabled = true;
+    errorEl.textContent = "";
+    try {
+      const batch = writeBatch(db);
+      manquants.forEach((m) => {
+        batch.update(
+          doc(db, "establishments", appState.establishmentId, "produits", m.id),
+          { stock: m.stockDepart, updatedAt: serverTimestamp() }
+        );
+      });
+      await batch.commit();
+      alert(`Stock restauré pour ${manquants.length} produit(s).`);
+      fermer();
+      chargerOutilsSuivi();
+    } catch (err) {
+      errorEl.textContent = "Erreur : " + err.message;
+      confirmBtn.disabled = false;
+    }
+  });
 }
 
 async function openAjoutStockModal() {
