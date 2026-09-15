@@ -1,4 +1,4 @@
-const CACHE_NAME = "magerante-v125"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
+const CACHE_NAME = "magerante-v126"; // ⚠️ à incrémenter à CHAQUE nouvelle livraison
 const CORE_ASSETS = [
   "./index.html",
   "./dashboard.html",

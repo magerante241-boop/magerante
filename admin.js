@@ -93,6 +93,13 @@ document.getElementById("btnDiffuserNotif").addEventListener("click", async () =
   }
 });
 
+const btnMenuAdminDeconnexion = document.getElementById("menuAdminDeconnexion");
+if (btnMenuAdminDeconnexion) {
+  btnMenuAdminDeconnexion.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+}
+
 document.getElementById("btnLogoutAdmin").addEventListener("click", async () => {
   settingsOverlay.hidden = true;
   await signOut(auth);

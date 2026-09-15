@@ -213,6 +213,10 @@ button:active {
 }
 .btn-supprimer-ligne:active { filter: brightness(0.85); }
 .embedded-dashboard-frame { width: 100%; height: 80vh; border: none; border-radius: var(--radius, 8px); background: #fff; }
+/* Correctifs menu lateral admin : sort a gauche (sous le hamburger), au-dessus du header */
+#adminSideMenu { z-index: 700; }
+#adminSideMenu .side-menu-panel { left: 0; right: auto; box-shadow: 4px 0 24px rgba(43,38,32,0.18); animation: slideInMenuLeft .2s ease-out; }
+@keyframes slideInMenuLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 </style>
 </head>
 <body>
@@ -510,6 +514,7 @@ button:active {
         </li>
         <li><button class="side-menu-item" data-target="secHistorique">📜 Historique global</button></li>
         <li><button class="side-menu-item" id="menuAdminRetourApp">🏠 Retour a l'application</button></li>
+        <li><button class="side-menu-item danger" id="menuAdminDeconnexion">🚪 Se deconnecter</button></li>
       </ul>
     </nav>
   </div>
