@@ -114,6 +114,7 @@
 </div>
 
 <script>document.getElementById("btnCloseDashboard").addEventListener("click", () => { window.location.href = "index.html"; });</script>
+<script>window.addEventListener("error",(e)=>{alert("DEBUG erreur globale: "+e.message+" ("+(e.filename||"")+":"+(e.lineno||"")+")");});</script>
 <script type="module" src="dashboard.js"></script>
 </body>
 </html>
