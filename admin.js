@@ -776,8 +776,21 @@ function majHauteurHeader() {
 window.addEventListener("resize", majHauteurHeader);
 majHauteurHeader();
 
+const GROUPES_ADMIN = {
+  grpFinances: ["secCA", "secVentes", "secClotures"],
+  grpComptes: ["secComptesAttente", "secConnexions"],
+  grpProduits: ["secGestionProduits", "secInventaireGlobal", "secImport"],
+  grpEtablissement: ["secMonEtablissement", "secZones", "secHistorique"],
+};
+
 function afficherOngletAdmin(idCible) {
   majHauteurHeader();
+  Object.keys(GROUPES_ADMIN).forEach((grpId) => {
+    const grpEl = document.getElementById(grpId);
+    if (!grpEl) return;
+    const appartientAuGroupe = GROUPES_ADMIN[grpId].includes(idCible);
+    grpEl.classList.toggle("admin-tab-hidden", !appartientAuGroupe);
+  });
   TOUTES_SECTIONS_ADMIN.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
