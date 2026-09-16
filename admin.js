@@ -767,7 +767,7 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique","secClotures"];
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique","secClotures","secInventaireGlobal"];
 
 function majHauteurHeader() {
   const h = document.querySelector("header");

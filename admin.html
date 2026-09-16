@@ -75,6 +75,39 @@ header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
 
 h2.section-title { font-size: 17px; margin: 24px 0 10px; color: var(--primary-dark); font-weight: 700; }
 .collapsible-section summary.section-title { color: var(--primary-dark); font-weight: 700; }
+
+.admin-group-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--primary);
+  font-weight: 800;
+  margin: 30px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary);
+}
+.admin-group-title:first-of-type { margin-top: 4px; }
+
+.collapsible-section {
+  display: block;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 10px 0;
+}
+.collapsible-section summary.section-title {
+  cursor: pointer;
+  list-style: none;
+}
+.collapsible-section summary.section-title::-webkit-details-marker { display: none; }
+.collapsible-section summary.section-title::after {
+  content: "▸";
+  float: right;
+  transition: transform 0.2s;
+}
+.collapsible-section[open] summary.section-title::after {
+  transform: rotate(90deg);
+}
 .admin-tab-hidden { display: none !important; }
 .admin-tab-back { display: none; align-items: center; gap: 6px; background: none; border: none; color: var(--primary-dark); font-weight: 700; font-size: 15px; margin: 8px 0 4px; cursor: pointer; padding: 4px 0; }
 .admin-tab-back.show { display: flex; }
@@ -377,7 +410,7 @@ button:active {
       </details>
 
 
-      <h2 class="section-title">Inventaire global</h2>
+      <details class="collapsible-section"><summary class="section-title" id="secInventaireGlobal">Inventaire global</summary>
       <div class="stats-grid">
         <div class="stat-card" data-target="secImport">
           <div class="icon">📦</div>
@@ -399,6 +432,7 @@ button:active {
         <div class="table-wrap">
           <canvas id="stockTopProduitsChart" height="260"></canvas>
         </div>
+      </details>
       </div>
 
 
