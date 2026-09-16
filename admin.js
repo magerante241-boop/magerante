@@ -676,7 +676,7 @@ async function chargerGestionProduits() {
     estSnap.forEach((d) => {
       const data = d.data();
       const nomAffiche = (data.name || "Etablissement") + " (" + d.id.slice(0, 6) + ")";
-      _cacheEtablissementsNoms[d.id] = data.name || "Etablissement";
+      _cacheEtablissementsNoms[d.id] = nomAffiche;
       const opt = document.createElement("option");
       opt.value = d.id;
       opt.textContent = nomAffiche;
