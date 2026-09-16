@@ -1,4 +1,4 @@
-import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
+import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, limit, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
 
@@ -8,6 +8,18 @@ function calculerDebutFinJour() {
   const fin = new Date(debut);
   fin.setDate(fin.getDate() + 1);
   return { debut, fin };
+}
+
+export async function clotureExisteAujourdhui(estId) {
+  const { debut, fin } = calculerDebutFinJour();
+  const q = query(
+    collection(db, "establishments", estId, "clotures"),
+    where("date", ">=", debut),
+    where("date", "<", fin),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
 }
 
 function construireMarqueParNom() {
@@ -265,6 +277,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const estId = appState.establishmentId;
       const uid = auth.currentUser?.uid;
       if (!estId || !uid || !resumeCourant) return;
+      if (await clotureExisteAujourdhui(estId)) {
+        errorEl.textContent = "Une clôture a déjà été envoyée aujourd'hui pour cet établissement.";
+        return;
+      }
       btnConfirmer.disabled = true;
       btnConfirmer.textContent = "Envoi...";
       const nomGerantCl = (window.AuthState && window.AuthState.nomGerant) || "Un gérant";

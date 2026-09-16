@@ -5,6 +5,7 @@ import {
   db, doc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { clotureExisteAujourdhui } from "./cloture.js";
 
 let unsubscribeFactures = null;
 let facturesCache = [];
