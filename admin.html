@@ -91,6 +91,13 @@ h2.section-title { font-size: 17px; margin: 24px 0 10px; color: var(--primary-da
 }
 .empty-msg { color: var(--muted); font-size: 14px; }
 
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.chart-grid .table-wrap { margin: 0; }
+
 .table-wrap {
   background: var(--surface); border-radius: var(--radius); padding: 8px;
   box-shadow: var(--shadow-sm); overflow-x: auto; border: 1px solid var(--border);
@@ -304,26 +311,24 @@ button:active {
         <iframe src="dashboard.html" class="embedded-dashboard-frame" title="Mon établissement"></iframe>
       </details>
 
-      <details class="collapsible-section">
-        <summary class="section-title" id="secCourbeCA">Évolution du chiffre d'affaires (global, 14 derniers jours)</summary>
-        <canvas id="caCourbeChart" height="220"></canvas>
-      </details>
-
-      <details class="collapsible-section">
-        <summary class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</summary>
-        <div id="pendingList" class="empty-msg">Chargement...</div>
-      </details>
-
-      <details class="collapsible-section">
-        <summary class="section-title" id="secCA">Chiffre d'affaires par etablissement</summary>
-        <div class="table-wrap">
+            <details class="collapsible-section">
+        <summary class="section-title" id="secCA">Évolution du chiffre d'affaires (global, 14 derniers jours) / par etablissement</summary>
+        <div class="chart-grid">
+          <div class="table-wrap">
+            <canvas id="caCourbeChart" height="220"></canvas>
+          </div>
+          <div class="table-wrap">
+            <canvas id="caBarChart" height="220"></canvas>
+          </div>
+        </div>
+        <div class="table-wrap" style="margin-top:12px;">
           <table class="data-table">
             <thead><tr><th>Etablissement</th><th>Ventes</th><th>CA</th></tr></thead>
             <tbody id="caTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
           </table>
         </div>
-        <canvas id="caBarChart" height="220"></canvas>
       </details>
+
       <details class="collapsible-section">
         <summary class="section-title" id="secHistorique">Historique global (factures &amp; mouvements)</summary>
         <select id="histFiltrePeriode" class="filtre-select">
@@ -388,14 +393,16 @@ button:active {
         </div>
       </div>
 
-      <p style="font-size:13px;color:var(--muted);margin:4px 0;">Repartition du stock par categorie</p>
-      <div class="table-wrap">
-        <canvas id="stockCategorieChart" height="220"></canvas>
+            <p style="font-size:13px;color:var(--muted);margin:4px 0;">Repartition du stock par categorie / Top 8 produits par valeur de stock</p>
+      <div class="chart-grid">
+        <div class="table-wrap">
+          <canvas id="stockCategorieChart" height="220"></canvas>
+        </div>
+        <div class="table-wrap">
+          <canvas id="stockTopProduitsChart" height="260"></canvas>
+        </div>
       </div>
-      <p style="font-size:13px;color:var(--muted);margin:16px 0 4px;">Top 8 produits par valeur de stock</p>
-      <div class="table-wrap">
-        <canvas id="stockTopProduitsChart" height="260"></canvas>
-      </div>
+
 
           <section class="admin-import" id="secImport">
       <h2 class="section-title">🗑️ Gestion de l'inventaire</h2>
