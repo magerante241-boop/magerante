@@ -199,9 +199,13 @@ async function resolverAuteurs() {
 export async function marquerToutLu() {
   const nonLus = notifsCache.filter(n => !n.lu);
   if (nonLus.length === 0) return;
-  const batch = writeBatch(db);
-  nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
-  await batch.commit();
+  try {
+    const batch = writeBatch(db);
+    nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
+    await batch.commit();
+  } catch (err) {
+    console.warn("Marquage tout lu echoue :", err.message, nonLus.map(n => n.id));
+  }
 }
 
 export async function marquerUneLu(id) {
