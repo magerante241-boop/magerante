@@ -1865,3 +1865,4 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
 .rapport-toggle-btn:hover {
   background: #e5dcc8;
 }
+.notif-item-info{background:#eaf3ff;border-left:3px solid #1e88e5;}

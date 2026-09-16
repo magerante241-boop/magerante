@@ -96,7 +96,7 @@ function renderPanel() {
     return;
   }
   listEl.innerHTML = visibles.map(n => `
-    <div class="notif-item${n.lu ? "" : " non-lu"}${n.cible ? " notif-item-cliquable" : ""}"
+    <div class="notif-item${n.lu ? "" : " non-lu"}${n.cible ? " notif-item-cliquable" : ""}${n.type === "info" ? " notif-item-info" : ""}"
          data-notif-id="${n.id}"
          ${n.cible ? `data-cible="${n.cible}"` : ""}
          ${n.factureNumero ? `data-facture-numero="${n.factureNumero}"` : ""}>
