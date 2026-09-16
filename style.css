@@ -1659,16 +1659,6 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .marque-cell {
   position: relative;
 }
-.marque-stock-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #1e88e5;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
-}
 .conn-indicator {
   font-size: 10px;
   display: inline-flex;
