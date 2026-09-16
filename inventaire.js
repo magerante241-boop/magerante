@@ -8,8 +8,6 @@ import { creerNotification } from "./notifications.js";
 
 let unsubscribe = null;
 let produitEnEdition = null;
-let invCaChartInstance = null;
-let invTopChartInstance = null;
 
 import { CATALOGUE_STANDARD } from "./catalogue-standard.js";
 
@@ -138,16 +136,6 @@ async function chargerOutilsSuivi() {
 
   gridEl.innerHTML = `
     <div class="inv-outil-tuile">
-      <div class="inv-outil-titre">📈 Chiffre d affaires (14 derniers jours)</div>
-      <canvas id="invCaChart" height="160"></canvas>
-      <p class="inv-empty" id="invCaEmpty" hidden>Aucune vente enregistrée sur les 14 derniers jours.</p>
-    </div>
-    <div class="inv-outil-tuile">
-      <div class="inv-outil-titre">🏆 Produits les plus vendus</div>
-      <canvas id="invTopChart" height="160"></canvas>
-      <p class="inv-empty" id="invTopEmpty" hidden>Aucune vente de produit sur la période.</p>
-    </div>
-    <div class="inv-outil-tuile">
       <div class="inv-outil-titre">⚠️ Suivi déficit de stock</div>
       <div id="invDeficitListe"><p class="inv-empty">Chargement...</p></div>
     </div>
@@ -166,87 +154,6 @@ async function chargerOutilsSuivi() {
     produits = produitsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (err) {
     console.error("Erreur chargement produits (outils suivi):", err);
-  }
-
-  const debutPeriode = new Date();
-  debutPeriode.setDate(debutPeriode.getDate() - 14);
-  let ventesData = [];
-  try {
-    const ventesSnap = await getDocs(query(collection(db, "establishments", estId, "ventes"), where("date", ">=", debutPeriode)));
-    ventesData = ventesSnap.docs.map((d) => d.data());
-  } catch (err) {
-    console.error("Erreur chargement ventes (outils suivi):", err);
-  }
-
-  const parJour = {};
-  const parProduit = {};
-  ventesData.forEach((v) => {
-    const montant = Number(v.montant) || 0;
-    const dateObj = v.date && v.date.toDate ? v.date.toDate() : null;
-    if (dateObj) {
-      const cle = dateObj.toISOString().slice(0, 10);
-      parJour[cle] = (parJour[cle] || 0) + montant;
-    }
-    if (v.type === "produit" && v.produitId) {
-      if (!parProduit[v.produitId]) parProduit[v.produitId] = { nom: v.produitNom || "Produit", montant: 0 };
-      parProduit[v.produitId].montant += montant;
-    }
-  });
-
-  try {
-    const labelsJour = Object.keys(parJour).sort();
-    const canvasCa = document.getElementById("invCaChart");
-    const caEmptyEl = document.getElementById("invCaEmpty");
-    if (labelsJour.length === 0) {
-      if (canvasCa) canvasCa.hidden = true;
-      if (caEmptyEl) caEmptyEl.hidden = false;
-    } else {
-      if (canvasCa) canvasCa.hidden = false;
-      if (caEmptyEl) caEmptyEl.hidden = true;
-      const ctxCa = canvasCa?.getContext("2d");
-      if (ctxCa) {
-        attendreChartInv(() => {
-          try {
-            if (invCaChartInstance) invCaChartInstance.destroy();
-            invCaChartInstance = new Chart(ctxCa, {
-              type: "line",
-              data: { labels: labelsJour, datasets: [{ label: "CA (FCFA)", data: labelsJour.map((k) => parJour[k]), borderColor: "#1f6f4a", tension: 0.3 }] },
-              options: { responsive: true, plugins: { legend: { display: false } } },
-            });
-          } catch (err) {
-            console.error("Erreur creation Chart CA:", err);
-          }
-        });
-      }
-    }
-
-    const topProduits = Object.values(parProduit).sort((a, b) => b.montant - a.montant).slice(0, 5);
-    const canvasTop = document.getElementById("invTopChart");
-    const topEmptyEl = document.getElementById("invTopEmpty");
-    if (topProduits.length === 0) {
-      if (canvasTop) canvasTop.hidden = true;
-      if (topEmptyEl) topEmptyEl.hidden = false;
-    } else {
-      if (canvasTop) canvasTop.hidden = false;
-      if (topEmptyEl) topEmptyEl.hidden = true;
-      const ctxTop = canvasTop?.getContext("2d");
-      if (ctxTop) {
-        attendreChartInv(() => {
-          try {
-            if (invTopChartInstance) invTopChartInstance.destroy();
-            invTopChartInstance = new Chart(ctxTop, {
-              type: "bar",
-              data: { labels: topProduits.map((p) => p.nom), datasets: [{ label: "Ventes (FCFA)", data: topProduits.map((p) => p.montant), backgroundColor: "#b8902e" }] },
-              options: { responsive: true, indexAxis: "y", plugins: { legend: { display: false } } },
-            });
-          } catch (err) {
-            console.error("Erreur creation Chart Top:", err);
-          }
-        });
-      }
-    }
-  } catch (err) {
-    console.error("Erreur rendu graphiques (outils suivi):", err);
   }
 
   const deficitParCategorie = {};
