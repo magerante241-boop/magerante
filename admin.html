@@ -307,16 +307,8 @@ button:active {
         </div>
       </div>
 
-      <details class="collapsible-section">
-        <summary class="section-title" id="secMonEtablissement">🏪 Mon établissement (en tant que proprietaire)</summary>
-        <iframe src="dashboard.html" class="embedded-dashboard-frame" title="Mon établissement"></iframe>
-      </details>
-
-                  <details class="collapsible-section">
-        <summary class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</summary>
-        <div id="pendingList" class="empty-msg">Chargement...</div>
-      </details>
-
+      
+      <h2 class="section-title admin-group-title">💰 Finances</h2>
 <details class="collapsible-section">
         <summary class="section-title" id="secCA">Évolution du chiffre d'affaires (global, 14 derniers jours) / par etablissement</summary>
         <div class="chart-grid">
@@ -334,32 +326,11 @@ button:active {
           </table>
         </div>
       </details>
-
-      <details class="collapsible-section">
-        <summary class="section-title" id="secHistorique">Historique global (factures &amp; mouvements)</summary>
-        <select id="histFiltrePeriode" class="filtre-select">
-          <option value="jour">Aujourd'hui</option>
-          <option value="semaine">Cette semaine</option>
-          <option value="mois">Ce mois</option>
-          <option value="tout" selected>Tout</option>
-        </select>
-        <select id="histFiltreEtablissement" class="filtre-select"><option value="">Tous les établissements</option></select>
-        <input type="text" id="histFiltreGerant" class="filtre-select" placeholder="Filtrer par gérant...">
-        <select id="histFiltreType" class="filtre-select">
-          <option value="tout">Tout (factures + mouvements)</option>
-          <option value="facture">Factures uniquement</option>
-          <option value="mouvement">Mouvements uniquement</option>
-          <option value="vente">Ventes uniquement</option>
-        </select>
-        <div class="table-wrap scrollable-table">
-          <table class="data-table">
-            <thead><tr><th>Date</th><th>Etablissement</th><th>Gérant</th><th>Type</th><th>Détail</th><th>Montant</th></tr></thead>
-            <tbody id="histTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
-          </table>
-        </div>
+<details class="collapsible-section">
+        <summary class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</summary>
+        <div id="rapportList" class="empty-msg">Chargement...</div>
       </details>
-
-      <details class="collapsible-section">
+<details class="collapsible-section">
         <summary class="section-title" id="secClotures">Clôtures des gérants</summary>
         <select id="clotFiltrePeriode" class="filtre-select">
           <option value="tout">Toutes les dates</option>
@@ -377,13 +348,34 @@ button:active {
         </div>
         <div id="clotDetailZone"></div>
       </details>
-
-
-      <details class="collapsible-section">
-        <summary class="section-title" id="secZones">Établissements par zone / quartier</summary>
-        <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
-        <div id="listeZones"></div>
+      <h2 class="section-title admin-group-title">👥 Comptes &amp; Connexions</h2>
+<details class="collapsible-section">
+        <summary class="section-title" id="secComptesAttente">Comptes proprietaires en attente de validation</summary>
+        <div id="pendingList" class="empty-msg">Chargement...</div>
       </details>
+<details class="collapsible-section">
+        <summary class="section-title" id="secConnexions">Historique des connexions</summary>
+        <div class="table-wrap scrollable-table">
+          <table class="data-table">
+            <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
+            <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
+      <h2 class="section-title admin-group-title">📦 Produits &amp; Stock</h2>
+<details class="collapsible-section">
+        <summary class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</summary>
+        <select id="filtreEtablissementProduits" class="filtre-select">
+          <option value="tous">Tous les etablissements</option>
+        </select>
+        <div class="table-wrap scrollable-table">
+          <table class="data-table">
+            <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
+            <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
+
 
       <h2 class="section-title">Inventaire global</h2>
       <div class="stats-grid">
@@ -410,7 +402,8 @@ button:active {
       </div>
 
 
-          <section class="admin-import" id="secImport">
+          
+<section class="admin-import" id="secImport">
       <h2 class="section-title">🗑️ Gestion de l'inventaire</h2>
       <p id="importStatus" class="import-status"></p>
       <button id="btnViderInventaire" class="import-btn danger-btn">🗑️ Vider l'inventaire de tous les établissements</button>
@@ -422,34 +415,40 @@ button:active {
         <button id="btnViderInventaireUnitaire" class="import-btn danger-btn" style="margin-top:8px;">🗑️ Vider l'inventaire de cet établissement</button>
       </div>
     </section>
-
-
-      <details class="collapsible-section">
-        <summary class="section-title" id="secGestionProduits">Gestion des produits (tous etablissements)</summary>
-        <select id="filtreEtablissementProduits" class="filtre-select">
-          <option value="tous">Tous les etablissements</option>
+      <h2 class="section-title admin-group-title">🏢 Établissement</h2>
+<details class="collapsible-section">
+        <summary class="section-title" id="secMonEtablissement">🏪 Mon établissement (en tant que proprietaire)</summary>
+        <iframe src="dashboard.html" class="embedded-dashboard-frame" title="Mon établissement"></iframe>
+      </details>
+<details class="collapsible-section">
+        <summary class="section-title" id="secZones">Établissements par zone / quartier</summary>
+        <select id="filtreZone" class="filtre-select"><option value="">Toutes les zones</option></select>
+        <div id="listeZones"></div>
+      </details>
+<details class="collapsible-section">
+        <summary class="section-title" id="secHistorique">Historique global (factures &amp; mouvements)</summary>
+        <select id="histFiltrePeriode" class="filtre-select">
+          <option value="jour">Aujourd'hui</option>
+          <option value="semaine">Cette semaine</option>
+          <option value="mois">Ce mois</option>
+          <option value="tout" selected>Tout</option>
+        </select>
+        <select id="histFiltreEtablissement" class="filtre-select"><option value="">Tous les établissements</option></select>
+        <input type="text" id="histFiltreGerant" class="filtre-select" placeholder="Filtrer par gérant...">
+        <select id="histFiltreType" class="filtre-select">
+          <option value="tout">Tout (factures + mouvements)</option>
+          <option value="facture">Factures uniquement</option>
+          <option value="mouvement">Mouvements uniquement</option>
+          <option value="vente">Ventes uniquement</option>
         </select>
         <div class="table-wrap scrollable-table">
           <table class="data-table">
-            <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
-            <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
+            <thead><tr><th>Date</th><th>Etablissement</th><th>Gérant</th><th>Type</th><th>Détail</th><th>Montant</th></tr></thead>
+            <tbody id="histTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
           </table>
         </div>
       </details>
 
-      <details class="collapsible-section">
-        <summary class="section-title" id="secVentes">Dernieres ventes (toutes etablissements)</summary>
-        <div id="rapportList" class="empty-msg">Chargement...</div>
-      </details>
-      <details class="collapsible-section">
-        <summary class="section-title" id="secConnexions">Historique des connexions</summary>
-        <div class="table-wrap scrollable-table">
-          <table class="data-table">
-            <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
-            <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
-          </table>
-        </div>
-      </details>
     </div>
   </div>
 
