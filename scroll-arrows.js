@@ -43,7 +43,7 @@ function attachScrollArrows(el) {
 
   el.addEventListener("scroll", updateArrows);
   const mo = new MutationObserver(() => requestAnimationFrame(updateArrows));
-  mo.observe(el, { childList: true, subtree: false });
+  mo.observe(el, { childList: true, subtree: true });
   window.addEventListener("resize", updateArrows);
   requestAnimationFrame(updateArrows);
 }
