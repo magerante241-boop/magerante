@@ -96,8 +96,9 @@ h2.section-title { font-size: 17px; margin: 24px 0 10px; color: var(--primary-da
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
 }
-.chart-grid .table-wrap { margin: 0; }
+.table-wrap { margin: 0; }
 
+.table-wrap.scrollable-table { max-height: 60vh; overflow-y: auto; }
 .table-wrap {
   background: var(--surface); border-radius: var(--radius); padding: 8px;
   box-shadow: var(--shadow-sm); overflow-x: auto; border: 1px solid var(--border);
@@ -322,7 +323,7 @@ button:active {
           <div class="table-wrap">
             <canvas id="caCourbeChart" height="220"></canvas>
           </div>
-          <div class="table-wrap">
+          <div class="table-wrap scrollable-table">
             <canvas id="caBarChart" height="220"></canvas>
           </div>
         </div>
@@ -350,7 +351,7 @@ button:active {
           <option value="mouvement">Mouvements uniquement</option>
           <option value="vente">Ventes uniquement</option>
         </select>
-        <div class="table-wrap">
+        <div class="table-wrap scrollable-table">
           <table class="data-table">
             <thead><tr><th>Date</th><th>Etablissement</th><th>Gérant</th><th>Type</th><th>Détail</th><th>Montant</th></tr></thead>
             <tbody id="histTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
@@ -428,7 +429,7 @@ button:active {
         <select id="filtreEtablissementProduits" class="filtre-select">
           <option value="tous">Tous les etablissements</option>
         </select>
-        <div class="table-wrap">
+        <div class="table-wrap scrollable-table">
           <table class="data-table">
             <thead><tr><th>Etablissement</th><th>Nom</th><th>Categorie</th><th>Prix vente</th><th>Stock</th><th></th></tr></thead>
             <tbody id="produitsGestionTableBody"><tr><td colspan="6" class="empty-msg">Chargement...</td></tr></tbody>
@@ -442,7 +443,7 @@ button:active {
       </details>
       <details class="collapsible-section">
         <summary class="section-title" id="secConnexions">Historique des connexions</summary>
-        <div class="table-wrap">
+        <div class="table-wrap scrollable-table">
           <table class="data-table">
             <thead><tr><th>Utilisateur</th><th>Date/Heure</th><th>Lieu</th></tr></thead>
             <tbody id="connexionsTableBody"><tr><td colspan="3" class="empty-msg">Chargement...</td></tr></tbody>
