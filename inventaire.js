@@ -429,7 +429,7 @@ async function openAjoutStockModal() {
         type: "stock_ajout",
         titre: "Stock ajouté par le gérant",
         message: ajouts.join(", "),
-        cible: "cloture"
+        cible: "inventaire"
       });
       fermer();
       chargerOutilsSuivi();

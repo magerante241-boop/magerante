@@ -132,7 +132,7 @@ export function ouvrirModaleVente(montantInitial) {
         const auteurNom = (window.AuthState && window.AuthState.nomGerant) || null;
         await addDoc(ventesRef(), { montant, type: "libre", date: serverTimestamp(), auteurId });
         addDoc(journalRef(), { type: "vente", sousType: "libre", montant, date: serverTimestamp(), auteurId, auteurNom, source: "vente" }).catch(() => {});
-        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `Vente de ${montant.toLocaleString("fr-FR")} FCFA enregistrée${auteurNom ? " par " + auteurNom : ""}.`, cible: "ventes" });
+        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `Vente de ${montant.toLocaleString("fr-FR")} FCFA enregistrée${auteurNom ? " par " + auteurNom : ""}.`, cible: "factures" });
         closeModal();
       } catch (err) {
         errorEl.textContent = "Erreur : " + err.message;
@@ -172,7 +172,7 @@ export function ouvrirModaleVente(montantInitial) {
         });
 
         addDoc(journalRef(), { type: "vente", sousType: "produit", produitNom: produit.nom, quantite: qte, montant, date: serverTimestamp(), auteurId: auteurId2, auteurNom: auteurNom2, source: "vente" }).catch(() => {});
-        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `${qte} x ${produit.nom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom2 ? " par " + auteurNom2 : ""}.`, cible: "ventes" });
+        creerNotification({ type: "vente", titre: "Nouvelle vente", message: `${qte} x ${produit.nom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom2 ? " par " + auteurNom2 : ""}.`, cible: "factures" });
         if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produit.nom);
         closeModal();
       } catch (err) {
@@ -233,7 +233,7 @@ export async function enregistrerVenteLigne(produitId, quantite, infosProduitEph
       type: "vente", sousType: "produit", produitNom, quantite, montant,
       date: serverTimestamp(), auteurId, auteurNom, source: "facture"
     }).catch(() => {});
-    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "ventes" });
+    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "factures" });
     if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produitNom);
     return { success: true, montant, produitNom, produitId: produitDocRef.id };
   } catch (err) {

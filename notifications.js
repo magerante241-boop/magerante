@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cible) return;
     const factureNumero = item.dataset.factureNumero;
     panel.hidden = true;
-    if (window.switchView) window.switchView(cible);
+    if (cible === "cloture_modal") { const btnCloture = document.getElementById("menuClotureGerant"); if (btnCloture) btnCloture.click(); } else if (window.switchView) window.switchView(cible);
     if (factureNumero && window.FacturesModule && window.FacturesModule.ouvrirFacture) {
       setTimeout(() => window.FacturesModule.ouvrirFacture(factureNumero), 300);
     }

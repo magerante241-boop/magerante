@@ -322,7 +322,8 @@ document.addEventListener("DOMContentLoaded", () => {
           creerNotification({
             type: "cloture",
             titre: "Clôture reçue",
-            message: `${nomGerantCl} (${etablissementNomCourant}) a envoyé ses comptes : ${Number(btnConfirmer.dataset.nombre || 0)} vente(s), ${totalVentes.toLocaleString("fr-FR")} FCFA. Écart caisse : ${ecart >= 0 ? "+" : ""}${ecart.toLocaleString("fr-FR")} FCFA.`
+            message: `${nomGerantCl} (${etablissementNomCourant}) a envoyé ses comptes : ${Number(btnConfirmer.dataset.nombre || 0)} vente(s), ${totalVentes.toLocaleString("fr-FR")} FCFA. Écart caisse : ${ecart >= 0 ? "+" : ""}${ecart.toLocaleString("fr-FR")} FCFA.`,
+            cible: "cloture_modal"
           });
         }
         btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Journée enregistrée ✅" : "Comptes envoyés ✅";
