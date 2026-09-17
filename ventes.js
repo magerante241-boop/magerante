@@ -223,7 +223,6 @@ export async function enregistrerVenteLigne(produitId, quantite, infosProduitEph
         type: "vente", sousType: "produit", produitNom, quantite, montant,
         date: serverTimestamp(), auteurId, auteurNom, source: "facture"
       }).catch(() => {});
-      creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "factures" });
       if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produitNom);
       return { success: true, montant, produitNom, produitId };
     }
@@ -255,7 +254,6 @@ export async function enregistrerVenteLigne(produitId, quantite, infosProduitEph
       type: "vente", sousType: "produit", produitNom, quantite, montant,
       date: serverTimestamp(), auteurId, auteurNom, source: "facture"
     }).catch(() => {});
-    creerNotification({ type: "vente", titre: "Nouvelle vente (facture)", message: `${quantite} x ${produitNom} — ${montant.toLocaleString("fr-FR")} FCFA${auteurNom ? " par " + auteurNom : ""}.`, cible: "factures" });
     if (window.enregistrerClicPopulariteVente) window.enregistrerClicPopulariteVente(produitNom);
     return { success: true, montant, produitNom, produitId: produitDocRef.id };
   } catch (err) {
