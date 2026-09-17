@@ -354,11 +354,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (Object.keys(parMarque).length) {
         htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par marque</div>${construireTuilesVentilation(parMarque, parMarqueBenefice)}</div>`;
       }
-      if (Object.keys(stockParMarque).length) {
-        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant (inventaire enregistré)</div>${construireStockHtml(stockParMarque)}</div>`;
+      const estCompteEnregistre = window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite");
+      if (estCompteEnregistre && Object.keys(stockParMarque).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant</div>${construireStockHtml(stockParMarque)}</div>`;
       }
-      if (Object.keys(stockSessionParMarque).length) {
-        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock de session (visiteur)</div>${construireStockHtml(stockSessionParMarque)}</div>`;
+      if (!estCompteEnregistre && Object.keys(stockSessionParMarque).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant</div>${construireStockHtml(stockSessionParMarque)}</div>`;
       }
       if (Object.keys(devisRenouvellement).length) {
         htmlResume += `<div class="cloture-section"><div class="cloture-section-title-row"><div class="cloture-section-title">Devis de renouvellement de stock</div><button type="button" id="btnImprimerDevis" class="btn-imprimer-devis">Imprimer</button></div>${construireDevisHtml(devisRenouvellement, totalDevisRenouvellement)}</div>`;
