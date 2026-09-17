@@ -541,7 +541,7 @@ document.getElementById("btnMarqueAutres").addEventListener("click", async () =>
   calcProduitsListe.innerHTML = produitsAutres.map((p) => `
     <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${escapeHtml(p.nom || "")}">
       <span class="calc-produit-nom">${escapeHtml(p.nom || "")}</span>
-      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+      <span class="calc-produit-prix">${p.prixVente != null ? p.prixVente.toLocaleString("fr-FR") + " FCFA" : "Pas défini"}</span>
     </button>
   `).join("");
   {
@@ -668,7 +668,7 @@ function afficherResultatsRecherche() {
   calcProduitsListe.innerHTML = resultats.map((p) => `
     <button class="calc-produit-item" data-prix="${p.prixVente}" data-prix-achat="${p.prixAchat || 0}" data-stock="${p.stock || 0}" data-nom="${escapeHtml(p.nom || "")}">
       <span class="calc-produit-nom">${escapeHtml(p.nom || "")}</span>
-      <span class="calc-produit-prix">${p.prixVente} FCFA</span>
+      <span class="calc-produit-prix">${p.prixVente != null ? p.prixVente.toLocaleString("fr-FR") + " FCFA" : "Pas défini"}</span>
     </button>
   `).join("");
   calcProduitsListe.hidden = false;
