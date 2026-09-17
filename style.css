@@ -1866,3 +1866,52 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
   background: #e5dcc8;
 }
 .notif-item-info{background:#eaf3ff;border-left:3px solid #1e88e5;}
+
+/* --- Ticket imprimable : devis de renouvellement de stock --- */
+#ticketImpressionDevis { display: none; }
+
+.cloture-section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-imprimer-devis {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  #ticketImpressionDevis, #ticketImpressionDevis * { visibility: visible; }
+  #ticketImpressionDevis {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #000;
+    padding: 10px;
+  }
+  .ticket-entete { text-align: center; margin-bottom: 8px; }
+  .ticket-titre { font-weight: bold; font-size: 14px; }
+  .ticket-sous-titre { font-size: 12px; }
+  .ticket-date { font-size: 11px; color: #333; }
+  .ticket-separateur { border-top: 1px dashed #000; margin: 6px 0; }
+  .ticket-table { width: 100%; border-collapse: collapse; }
+  .ticket-produit-nom { font-weight: bold; padding-top: 4px; }
+  .ticket-produit-qte { text-align: left; }
+  .ticket-produit-montant { text-align: right; }
+  .ticket-total-ligne { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-top: 6px; }
+  .ticket-pied { text-align: center; font-size: 10px; margin-top: 10px; color: #555; }
+}
