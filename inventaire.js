@@ -34,9 +34,20 @@ export function render(container) {
   const estGerant = (accountType === "enregistre" && role === "GERANT_PROPRIETAIRE") || ((accountType === "enregistre" || accountType === "invite") && role === "GERANT");
 
   const boutonsStockHtml = estProprietaire
-    ? `<button class="inv-stock-depart-btn" id="invStockDepartBtn">📋 Définir stock de départ</button>
-       <button class="inv-stock-depart-btn" id="invDevisRestaurationBtn">🧾 Devis de restauration du stock</button>
-       <button class="inv-stock-depart-btn inv-ajout-stock-btn" id="invAjoutStockBtnProprio">➕ Augmenter le stock permanent</button>`
+    ? `<div class="inv-stock-tiles">
+         <button class="inv-stock-tile" id="invStockDepartBtn">
+           <span class="inv-stock-tile-icone">📋</span>
+           <span class="inv-stock-tile-label">Stock de départ</span>
+         </button>
+         <button class="inv-stock-tile" id="invDevisRestaurationBtn">
+           <span class="inv-stock-tile-icone">🧾</span>
+           <span class="inv-stock-tile-label">Devis de restauration</span>
+         </button>
+         <button class="inv-stock-tile inv-stock-tile-ajout" id="invAjoutStockBtnProprio">
+           <span class="inv-stock-tile-icone">➕</span>
+           <span class="inv-stock-tile-label">Augmenter le stock</span>
+         </button>
+       </div>`
     : estGerant
     ? `<button class="inv-stock-depart-btn" id="invRenouvelerBtn">🔄 Renouvellement de stock</button>
        <button class="inv-stock-depart-btn inv-ajout-stock-btn" id="invAjoutStockBtn">➕ Ajouter au stock établissement</button>`
@@ -287,6 +298,38 @@ async function renouvellerStock() {
   }
 }
 
+function imprimerDevisRestauration(manquants) {
+  const dateStr = new Date().toLocaleDateString("fr-FR");
+  const nomEtab = (window.AuthState && window.AuthState.nomEtablissement) || "Établissement";
+  const lignes = manquants.map((m) => `
+    <tr><td>${escapeHtml(m.nom)}</td><td>${m.stockActuel}</td><td>${m.stockDepart}</td><td>+${m.manquant}</td></tr>
+  `).join("");
+  const fenetre = window.open("", "_blank");
+  if (!fenetre) { alert("Autorise les pop-ups pour imprimer le devis."); return; }
+  fenetre.document.write(`
+    <html><head><title>Devis de restauration du stock</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; color:#222; }
+      h1 { font-size: 18px; margin-bottom:4px; }
+      p.meta { color:#555; margin-top:0; }
+      table { width:100%; border-collapse: collapse; margin-top:14px; }
+      th, td { border:1px solid #ccc; padding:6px 8px; text-align:left; font-size:13px; }
+      th { background:#f0f0f0; }
+    </style>
+    </head><body>
+    <h1>🧾 Devis de restauration du stock</h1>
+    <p class="meta">${nomEtab} — ${dateStr}</p>
+    <table>
+      <thead><tr><th>Produit</th><th>Stock actuel</th><th>Stock de référence</th><th>À racheter</th></tr></thead>
+      <tbody>${lignes}</tbody>
+    </table>
+    </body></html>
+  `);
+  fenetre.document.close();
+  fenetre.focus();
+  fenetre.print();
+}
+
 async function openDevisRestaurationModal() {
   const overlay = document.createElement("div");
   overlay.className = "inv-modal-overlay";
@@ -301,6 +344,7 @@ async function openDevisRestaurationModal() {
       <p class="inv-error" id="devisRestaurationError"></p>
       <div class="inv-modal-actions">
         <button class="inv-btn-secondary" id="devisRestaurationCancel">Fermer</button>
+        <button class="inv-btn-secondary" id="devisRestaurationPrint">🖨️ Imprimer</button>
         <button class="inv-btn-primary" id="devisRestaurationConfirm">Confirmer la restauration</button>
       </div>
     </div>
@@ -327,6 +371,7 @@ async function openDevisRestaurationModal() {
   if (manquants.length === 0) {
     listeEl.innerHTML = `<p class="inv-empty">Aucune restauration nécessaire, le stock est déjà au niveau de référence.</p>`;
     document.getElementById("devisRestaurationConfirm").disabled = true;
+    document.getElementById("devisRestaurationPrint").disabled = true;
     return;
   }
 
@@ -336,6 +381,10 @@ async function openDevisRestaurationModal() {
       <span class="devis-restauration-detail">${m.stockActuel} / ${m.stockDepart} — <strong>+${m.manquant}</strong> à racheter</span>
     </div>
   `).join("");
+
+  document.getElementById("devisRestaurationPrint").addEventListener("click", () => {
+    imprimerDevisRestauration(manquants);
+  });
 
   document.getElementById("devisRestaurationConfirm").addEventListener("click", async () => {
     const confirmBtn = document.getElementById("devisRestaurationConfirm");

@@ -1374,6 +1374,22 @@ body.mode-facturier-actif #appRoot {
   margin-bottom:14px; box-shadow:0 3px 10px rgba(21,101,192,0.3);
 }
 .inv-stock-depart-btn:active { transform:scale(0.98); }
+
+.inv-stock-tiles { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:14px; }
+.inv-stock-tile {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:14px 8px; border:none; border-radius:14px; cursor:pointer;
+  background:linear-gradient(135deg, #2f7d5c, #1f5c42); color:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15); transition:transform 0.15s ease;
+}
+.inv-stock-tile:active { transform:scale(0.96); }
+.inv-stock-tile-icone { font-size:26px; }
+.inv-stock-tile-label { font-size:12px; font-weight:600; text-align:center; line-height:1.25; }
+.inv-stock-tile-ajout { background:linear-gradient(135deg, #3f7fc4, #285a94); }
+@media (max-width: 400px) {
+  .inv-stock-tiles { grid-template-columns: 1fr 1fr; }
+}
+
 .inv-stock-depart-modal { gap:8px; }
 .inv-stock-depart-hint { font-size:12px; color:var(--muted); margin:0 0 8px; line-height:1.4; }
 .stock-depart-groupe { margin-bottom:14px; }
