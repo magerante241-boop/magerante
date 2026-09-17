@@ -176,6 +176,9 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     // on ne bloque plus jamais la navigation avec une modale. S'il n'est pas encore
     // prêt (connexion anonyme en cours, ~1s max), le module affiche son propre
     // état de chargement le temps que window.AuthState.hasEstablishment passe à true.
+    // Ferme tout panneau auth-gate ouvert (cloture, connexion, a propos, etc.)
+    // pour eviter qu'il reste affiche par-dessus la nouvelle vue.
+    document.querySelectorAll(".auth-gate:not([hidden])").forEach((gate) => { gate.hidden = true; });
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     moveNavIndicator();
