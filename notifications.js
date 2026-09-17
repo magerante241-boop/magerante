@@ -198,12 +198,15 @@ async function resolverAuteurs() {
 
 export async function marquerToutLu() {
   const nonLus = notifsCache.filter(n => !n.lu);
+  alert("DEBUG: " + nonLus.length + " notif(s) non lue(s) trouvee(s)");
   if (nonLus.length === 0) return;
   try {
     const batch = writeBatch(db);
     nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
     await batch.commit();
+    alert("DEBUG: batch.commit() reussi");
   } catch (err) {
+    alert("DEBUG ERREUR: " + err.message);
     console.warn("Marquage tout lu echoue :", err.message, nonLus.map(n => n.id));
   }
 }
