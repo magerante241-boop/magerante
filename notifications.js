@@ -213,10 +213,13 @@ export async function marquerToutLu() {
 
 export async function marquerUneLu(id) {
   const notif = notifsCache.find(n => n.id === id);
-  if (!notif || notif.lu) return;
+  if (!notif) { alert("DEBUG: notif " + id + " introuvable dans notifsCache"); return; }
+  if (notif.lu) { alert("DEBUG: notif " + id + " deja lu=true en cache, aucun appel Firestore"); return; }
   try {
     await updateDoc(doc(db, "establishments", appState.establishmentId, "notifications", id), { lu: true });
+    alert("DEBUG: updateDoc reussi pour " + id);
   } catch (err) {
+    alert("DEBUG ERREUR sur " + id + " : " + err.message);
     console.warn("Marquage notification lue echoue :", err.message);
   }
 }
