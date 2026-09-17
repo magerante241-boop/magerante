@@ -1122,7 +1122,12 @@ function afficherDetailCloture(c) {
   `;
 
   const btnImprimer = document.getElementById("btnImprimerCloture");
-  if (btnImprimer) btnImprimer.addEventListener("click", () => window.print());
+  if (btnImprimer) btnImprimer.addEventListener("click", () => {
+    const ancienTitre = document.title;
+    document.title = "Fiche_cloture_" + new Date().toISOString().slice(0,10).replace(/-/g,"");
+    window.onafterprint = () => { document.title = ancienTitre; window.onafterprint = null; };
+    window.print();
+  });
 
   zone.scrollIntoView({ behavior: "smooth", block: "start" });
 }

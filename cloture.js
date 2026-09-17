@@ -304,6 +304,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="ticket-pied">Genere par MAGERANTE</div>
     `;
 
+    const ancienTitre = document.title;
+    document.title = "Ticket_cloture_" + new Date().toISOString().slice(0,10).replace(/-/g,"");
+    window.onafterprint = () => { document.title = ancienTitre; window.onafterprint = null; };
     window.print();
   }
 
