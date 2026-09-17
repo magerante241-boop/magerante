@@ -1,6 +1,7 @@
 import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, limit, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
+import { getTousLesProduits as getProduitsEphemeres } from "./inventaire-ephemere.js";
 
 function calculerDebutFinJour() {
   const debut = new Date();
@@ -36,7 +37,7 @@ function construireMarqueParNom() {
 async function chargerResumeJour(estId, uid) {
   const { debut, fin } = calculerDebutFinJour();
 
-  const [ventesSnap, facturesSnap, produitsSnap] = await Promise.all([
+  const [ventesSnap, facturesSnap, produitsSnap, produitsSession] = await Promise.all([
     getDocs(query(
       collection(db, "establishments", estId, "ventes"),
       where("date", ">=", debut),
@@ -48,6 +49,7 @@ async function chargerResumeJour(estId, uid) {
       where("date", "<", fin)
     )),
     getDocs(collection(db, "establishments", estId, "produits")),
+    getProduitsEphemeres().catch(() => []),
   ]);
 
   const categorieParProduit = {};
@@ -59,6 +61,19 @@ async function chargerResumeJour(estId, uid) {
     prixAchatParProduit[docSnap.id] = Number(p.prixAchat || 0);
     stockRestant.push({ nom: p.nom || "(sans nom)", categorie: p.categorie || "Autres", stock: Number(p.stock || 0) });
   });
+
+  // Stock de session (mode visiteur / stock de secours) : catalogue local au
+  // navigateur, distinct de l'inventaire Firestore reel ci-dessus. On merge
+  // ses prix d'achat/categories (necessaires pour calculer le benefice des
+  // ventes eph_) et on l'affiche a part dans "Stock restant" pour ne pas
+  // confondre les deux catalogues.
+  const stockSession = [];
+  (produitsSession || []).forEach((p) => {
+    categorieParProduit[p.id] = p.categorie || "Autres";
+    prixAchatParProduit[p.id] = Number(p.prixAchat || 0);
+    stockSession.push({ nom: p.nom || "(sans nom)", categorie: p.categorie || "Autres", stock: Number(p.stock || 0) });
+  });
+
   const marqueParNom = construireMarqueParNom();
 
   let total = 0, nombre = 0, totalBenefice = 0;
@@ -67,6 +82,7 @@ async function chargerResumeJour(estId, uid) {
   const parMarque = {};
   const parMarqueBenefice = {};
   const parProduit = {};
+  const devisRenouvellement = {};
 
   ventesSnap.forEach((docSnap) => {
     const v = docSnap.data();
@@ -92,6 +108,12 @@ async function chargerResumeJour(estId, uid) {
     parProduit[nomProduit].quantite += quantite;
     parProduit[nomProduit].montant += montant;
     parProduit[nomProduit].benefice += benefice;
+
+    if (quantite > 0 && v.type === "produit") {
+      if (!devisRenouvellement[nomProduit]) devisRenouvellement[nomProduit] = { quantite: 0, coutTotal: 0 };
+      devisRenouvellement[nomProduit].quantite += quantite;
+      devisRenouvellement[nomProduit].coutTotal += prixAchat * quantite;
+    }
   });
 
   const facturesJour = [];
@@ -108,7 +130,16 @@ async function chargerResumeJour(estId, uid) {
     stockParMarque[marque].push({ nom: p.nom, stock: p.stock });
   });
 
-  return { total, nombre, totalBenefice, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, parProduit, facturesJour, stockParMarque };
+  const stockSessionParMarque = {};
+  stockSession.forEach((p) => {
+    const marque = marqueParNom[p.nom] || p.categorie;
+    if (!stockSessionParMarque[marque]) stockSessionParMarque[marque] = [];
+    stockSessionParMarque[marque].push({ nom: p.nom, stock: p.stock });
+  });
+
+  const totalDevisRenouvellement = Object.values(devisRenouvellement).reduce((acc, d) => acc + d.coutTotal, 0);
+
+  return { total, nombre, totalBenefice, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, parProduit, facturesJour, stockParMarque, stockSessionParMarque, devisRenouvellement, totalDevisRenouvellement };
 }
 
 function escapeHtml(str) {
@@ -141,6 +172,38 @@ function construireStockHtml(stockParMarque) {
       </tbody></table>
     </div>
   `).join("");
+}
+
+function construireDevisHtml(devis, totalDevis) {
+  const entrees = Object.entries(devis).sort((a, b) => b[1].coutTotal - a[1].coutTotal);
+  if (entrees.length === 0) return "";
+  return `
+    <table class="cloture-stock-table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:4px;">Produit</th>
+          <th style="text-align:center; padding:4px;">Qté vendue</th>
+          <th style="text-align:right; padding:4px;">Coût réappro</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${entrees.map(([nom, d]) => `
+          <tr>
+            <td style="padding:4px;">${escapeHtml(nom)}</td>
+            <td style="text-align:center; padding:4px;">${d.quantite}</td>
+            <td style="text-align:right; padding:4px;">${d.coutTotal.toLocaleString("fr-FR")} FCFA</td>
+          </tr>
+        `).join("")}
+      </tbody>
+      <tfoot>
+        <tr style="font-weight:bold; border-top:1px solid #ccc;">
+          <td style="padding:4px;">Total</td>
+          <td></td>
+          <td style="text-align:right; padding:4px;">${totalDevis.toLocaleString("fr-FR")} FCFA</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
 }
 
 // --- Gestion des lignes de factures manuelles (ajoutées dynamiquement) ---
@@ -225,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const resume = await chargerResumeJour(estId, uid);
       resumeCourant = resume;
-            const { total, nombre, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, facturesJour, stockParMarque, totalBenefice } = resume;
+      const { total, nombre, parCategorie, parCategorieBenefice, parMarque, parMarqueBenefice, facturesJour, stockParMarque, stockSessionParMarque, devisRenouvellement, totalDevisRenouvellement, totalBenefice } = resume;
 
       const estSnap = await getDoc(doc(db, "establishments", estId));
       etablissementNomCourant = estSnap.exists() ? (estSnap.data().name || "") : "";
@@ -248,10 +311,15 @@ document.addEventListener("DOMContentLoaded", () => {
         htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Par marque</div>${construireTuilesVentilation(parMarque, parMarqueBenefice)}</div>`;
       }
       if (Object.keys(stockParMarque).length) {
-        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant</div>${construireStockHtml(stockParMarque)}</div>`;
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock restant (inventaire enregistré)</div>${construireStockHtml(stockParMarque)}</div>`;
+      }
+      if (Object.keys(stockSessionParMarque).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Stock de session (visiteur)</div>${construireStockHtml(stockSessionParMarque)}</div>`;
+      }
+      if (Object.keys(devisRenouvellement).length) {
+        htmlResume += `<div class="cloture-section"><div class="cloture-section-title">Devis de renouvellement de stock</div>${construireDevisHtml(devisRenouvellement, totalDevisRenouvellement)}</div>`;
       }
       resumeEl.innerHTML = htmlResume;
-
 
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;
@@ -292,11 +360,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const commentaire = (inputCommentaire?.value || "").trim();
       const facturesManuelles = collecterFacturesManuelles();
       const totalFacturesManuelles = facturesManuelles.reduce((acc, f) => acc + f.montant, 0);
-
       const totalVentes = Number(btnConfirmer.dataset.total || 0);
       const theorique = fondDepart + totalVentes + totalFacturesManuelles;
       const ecart = recetteReelle - theorique;
-
       try {
         await addDoc(collection(db, "establishments", estId, "clotures"), {
           gerantUid: uid,
@@ -310,6 +376,9 @@ document.addEventListener("DOMContentLoaded", () => {
           facturesNumeriques: resumeCourant.facturesJour,
           facturesManuelles,
           stockParMarque: resumeCourant.stockParMarque,
+          stockSessionParMarque: resumeCourant.stockSessionParMarque,
+          devisRenouvellement: resumeCourant.devisRenouvellement,
+          totalDevisRenouvellement: resumeCourant.totalDevisRenouvellement,
           caisse: {
             fondDepart,
             theorique,
@@ -333,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
         errorEl.textContent = "Erreur lors de l'envoi : " + (e.code || e.message);
         btnConfirmer.disabled = false;
         btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
-    btnConfirmer.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
+        btnConfirmer.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
       }
     });
   }
