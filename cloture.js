@@ -201,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let etablissementNomCourant = "";
 
   menuBtn.addEventListener("click", async () => {
-    alert("DEBUG cloture.js: listener menuBtn declenche");
     const sideMenu = document.getElementById("sideMenu");
     if (sideMenu) sideMenu.hidden = true;
     errorEl.textContent = "";

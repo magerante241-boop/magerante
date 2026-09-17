@@ -1178,9 +1178,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (navBtnCloture) {
     navBtnCloture.addEventListener("click", () => {
       const menuCloture = document.getElementById("menuClotureGerant");
-      alert("DEBUG app.js: menuCloture trouve = " + sed -n '172,200p' app.jsmenuCloture);      if (menuCloture) {
+      if (menuCloture) {
         menuCloture.click();
-        alert("DEBUG app.js: click() appele sur menuCloture");
       } else {
         alert("Cloture indisponible pour ce compte.");
       }
