@@ -154,11 +154,6 @@ export function ouvrirModaleVente(montantInitial) {
         const produitDocRef = doc(db, "establishments", appState.establishmentId, "produits", produit.id);
         const venteDocRef = doc(ventesRef());
 
-        // Transaction atomique : on relit le stock réel au moment de l'écriture
-        // (pas le cache client, qui peut être périmé si un autre gérant a vendu
-        // entre-temps) et on refuse si ce n'est plus suffisant. Vente et
-        // décrément de stock réussissent ou échouent ensemble — jamais l'un
-        // sans l'autre.
         await runTransaction(db, async (tx) => {
           const produitSnap = await tx.get(produitDocRef);
           const stockActuel = produitSnap.exists() ? Number(produitSnap.data().stock || 0) : 0;
@@ -267,3 +262,106 @@ export async function enregistrerVenteLigne(produitId, quantite, infosProduitEph
     return { success: false, message: err.message };
   }
 }
+
+function closeModal() {
+  const backdrop = document.getElementById("venteModalBackdrop");
+  if (backdrop) backdrop.remove();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// --- Vue "Historique des ventes" (onglet bas) ---
+let unsubscribeVentes = null;
+let ventesCache = [];
+let filtrePeriodeActuel = "jour";
+
+export function render(container) {
+  if (!appState.establishmentId) {
+    container.innerHTML = `<p class="placeholder-msg">Chargement de l'établissement...</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="inv-toolbar">
+      <span class="inv-title">Ventes</span>
+      <select id="venteFiltrePeriode" class="filtre-select" style="width:auto; margin:0;">
+        <option value="jour">Aujourd'hui</option>
+        <option value="semaine">Cette semaine</option>
+        <option value="mois">Ce mois</option>
+        <option value="tout">Tout</option>
+      </select>
+    </div>
+    <div class="inv-list" id="venteTotalZone" style="padding:10px 14px; font-weight:bold;"></div>
+    <div class="inv-list" id="venteListZone"><p class="inv-empty">Chargement...</p></div>
+  `;
+
+  const selectEl = document.getElementById("venteFiltrePeriode");
+  selectEl.value = filtrePeriodeActuel;
+  selectEl.addEventListener("change", () => {
+    filtrePeriodeActuel = selectEl.value;
+    afficherVentesFiltrees();
+  });
+
+  if (unsubscribeVentes) unsubscribeVentes();
+  const q = query(ventesRef(), orderBy("date", "desc"), limit(300));
+  unsubscribeVentes = onSnapshot(q, (snap) => {
+    ventesCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    afficherVentesFiltrees();
+  }, (err) => {
+    const listEl = document.getElementById("venteListZone");
+    if (listEl) listEl.innerHTML = `<p class="inv-empty">Erreur : ${err.message}</p>`;
+  });
+}
+
+function afficherVentesFiltrees() {
+  const listEl = document.getElementById("venteListZone");
+  const totalEl = document.getElementById("venteTotalZone");
+  if (!listEl || !totalEl) return; // vue quittée entre-temps
+  const maintenant = new Date();
+  let seuil = null;
+  if (filtrePeriodeActuel === "jour") {
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
+  } else if (filtrePeriodeActuel === "semaine") {
+    const jour = maintenant.getDay() || 7;
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() - jour + 1);
+  } else if (filtrePeriodeActuel === "mois") {
+    seuil = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+  }
+
+  const filtrees = ventesCache.filter((v) => {
+    if (!seuil) return true;
+    if (!v.date || !v.date.toDate) return false;
+    return v.date.toDate() >= seuil;
+  });
+
+  const total = filtrees.reduce((acc, v) => acc + Number(v.montant || 0), 0);
+  totalEl.textContent = `Total : ${total.toLocaleString("fr-FR")} FCFA (${filtrees.length} vente${filtrees.length > 1 ? "s" : ""})`;
+
+  if (filtrees.length === 0) {
+    listEl.innerHTML = `<p class="inv-empty">Aucune vente pour cette période.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = filtrees.map((v) => {
+    const d = v.date && v.date.toDate ? v.date.toDate() : null;
+    const dateStr = d ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
+    const libelle = v.type === "produit" ? `${v.quantite} x ${escapeHtml(v.produitNom || "Produit")}` : "Vente (montant libre)";
+    return `
+      <div class="inv-row">
+        <div>
+          <div style="font-weight:700;color:var(--text);">${libelle}</div>
+          <small style="color:var(--muted);">${dateStr}</small>
+        </div>
+        <div style="font-weight:bold;">${Number(v.montant || 0).toLocaleString("fr-FR")} FCFA</div>
+      </div>
+    `;
+  }).join("");
+}
+
+export function cleanup() {
+  if (unsubscribeVentes) { unsubscribeVentes(); unsubscribeVentes = null; }
+}
+
+window.VentesModule = { ouvrirModaleVente, enregistrerVenteLigne, render, cleanup };
