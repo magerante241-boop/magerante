@@ -113,11 +113,7 @@ function renderPanel() {
 function updateBadge() {
   const badge = document.getElementById("notifBadge");
   if (!badge) return;
-  const nonLusListe = notifsCache.filter(n => !n.lu && typeActif(n.type));
-  const nonLus = nonLusListe.length;
-  if (nonLus > 0 && nonLus <= 2) {
-    alert("DEBUG badge=" + nonLus + " : " + nonLusListe.map(n => n.id + " | type=" + n.type + " | lu=" + n.lu).join(" || "));
-  }
+  const nonLus = notifsCache.filter(n => !n.lu && typeActif(n.type)).length;
   if (nonLus > 0) { badge.textContent = nonLus > 9 ? "9+" : String(nonLus); badge.hidden = false; }
   else { badge.hidden = true; }
 }
@@ -202,28 +198,22 @@ async function resolverAuteurs() {
 
 export async function marquerToutLu() {
   const nonLus = notifsCache.filter(n => !n.lu);
-  alert("DEBUG: " + nonLus.length + " notif(s) non lue(s) trouvee(s)");
   if (nonLus.length === 0) return;
   try {
     const batch = writeBatch(db);
     nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
     await batch.commit();
-    alert("DEBUG: batch.commit() reussi");
   } catch (err) {
-    alert("DEBUG ERREUR: " + err.message);
     console.warn("Marquage tout lu echoue :", err.message, nonLus.map(n => n.id));
   }
 }
 
 export async function marquerUneLu(id) {
   const notif = notifsCache.find(n => n.id === id);
-  if (!notif) { alert("DEBUG: notif " + id + " introuvable dans notifsCache"); return; }
-  if (notif.lu) { alert("DEBUG: notif " + id + " deja lu=true en cache, aucun appel Firestore"); return; }
+  if (!notif || notif.lu) return;
   try {
     await updateDoc(doc(db, "establishments", appState.establishmentId, "notifications", id), { lu: true });
-    alert("DEBUG: updateDoc reussi pour " + id);
   } catch (err) {
-    alert("DEBUG ERREUR sur " + id + " : " + err.message);
     console.warn("Marquage notification lue echoue :", err.message);
   }
 }
