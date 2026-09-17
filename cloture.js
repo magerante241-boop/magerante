@@ -268,6 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (btnClose) btnClose.addEventListener("click", () => { clotureGate.hidden = true; });
+  const btnCloseX = document.getElementById("btnCloseClotureX");
+  if (btnCloseX) btnCloseX.addEventListener("click", () => { clotureGate.hidden = true; });
   clotureGate.addEventListener("click", (e) => {
     if (e.target === clotureGate) clotureGate.hidden = true;
   });
