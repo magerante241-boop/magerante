@@ -113,7 +113,11 @@ function renderPanel() {
 function updateBadge() {
   const badge = document.getElementById("notifBadge");
   if (!badge) return;
-  const nonLus = notifsCache.filter(n => !n.lu && typeActif(n.type)).length;
+  const nonLusListe = notifsCache.filter(n => !n.lu && typeActif(n.type));
+  const nonLus = nonLusListe.length;
+  if (nonLus > 0 && nonLus <= 2) {
+    alert("DEBUG badge=" + nonLus + " : " + nonLusListe.map(n => n.id + " | type=" + n.type + " | lu=" + n.lu).join(" || "));
+  }
   if (nonLus > 0) { badge.textContent = nonLus > 9 ? "9+" : String(nonLus); badge.hidden = false; }
   else { badge.hidden = true; }
 }
