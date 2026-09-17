@@ -1,6 +1,7 @@
 import { initNotifications } from "./notifications.js";
 import { db, doc, getDoc, setDoc, increment as incrementFirestore } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 function estExpressionArithmetiqueSure(expr) {
   return /^[0-9+\-*/().\s]*$/.test(expr);
 }
@@ -270,8 +271,8 @@ function updateCoins() {
 
   elBenefice.querySelector(".coin-value").textContent = benefice.toLocaleString("fr-FR") + " FCFA";
   elValeurStock.querySelector(".coin-value").textContent = valeurStock.toLocaleString("fr-FR") + " FCFA";
-  elStockRestant.querySelector(".coin-value").textContent = stock + " u.";
-  elQuantite.querySelector(".coin-value").textContent = quantite > 0 ? quantite.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " u." : "—";
+  elStockRestant.querySelector(".coin-value").textContent = formaterQuantiteAvecCasiers(stock, produitSelectionne);
+  elQuantite.querySelector(".coin-value").textContent = quantite > 0 ? formaterQuantiteAvecCasiers(quantite, produitSelectionne) : "—";
 }
 
 document.getElementById("numpad").addEventListener("click", (e) => {
@@ -859,6 +860,7 @@ function ajouterLigneFacture(p) {
       prixUnitaire,
       prixAchat,
       quantite,
+      casierTaille: p.casierTaille,
       totalLigne: quantite * prixUnitaire,
     });
   }
@@ -904,7 +906,7 @@ function updateFactureBar() {
     const ligne = lignesFacture.find(l => l.produitId === dernierProduitFacturier.id);
     const dejaPris = ligne ? ligne.quantite : 0;
     const stockRestant = Number(dernierProduitFacturier.stock || 0) - dejaPris;
-    barStock.textContent = stockRestant.toLocaleString("fr-FR") + " u.";
+    barStock.textContent = formaterQuantiteAvecCasiers(stockRestant, dernierProduitFacturier);
     if (barStockLabel) barStockLabel.textContent = "stock " + (dernierProduitFacturier.nom || "bouteilles");
   } else {
     barStock.textContent = "—";

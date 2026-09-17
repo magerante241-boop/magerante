@@ -1,4 +1,5 @@
 import { auth, db, collection, getDocs, getDoc, query, orderBy, where, doc, setDoc, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 const canvas = document.getElementById("ventesChart");
 const ctx = canvas.getContext("2d");
@@ -129,6 +130,7 @@ async function agregerVentes(ownerUid, debut, fin) {
           nom: v.produitNom || produitsParId[v.produitId]?.nom || "Produit",
           quantite: 0,
           montant: 0,
+          casierTaille: produitsParId[v.produitId]?.casierTaille,
         };
       }
       parProduit[v.produitId].quantite += v.quantite || 0;
@@ -245,7 +247,7 @@ function afficherTopProduits(topProduits) {
   const aDesDonnees = topProduits.length > 0;
   topProduitsContentEl.innerHTML = aDesDonnees
     ? "<ol>" + topProduits.map((p) =>
-        `<li>${p.nom} — ${p.quantite} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
+        `<li>${p.nom} — ${formaterQuantiteAvecCasiers(p.quantite, p)} vendu(s), ${p.montant.toLocaleString("fr-FR")} FCFA</li>`
       ).join("") + "</ol>"
     : "<p>Aucune vente de produit sur la période.</p>";
 

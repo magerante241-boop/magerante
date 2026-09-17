@@ -54,11 +54,13 @@ async function chargerResumeJour(estId, uid) {
 
   const categorieParProduit = {};
   const prixAchatParProduit = {};
+  const casierTailleParProduit = {};
   const stockRestant = [];
   produitsSnap.forEach((docSnap) => {
     const p = docSnap.data();
     categorieParProduit[docSnap.id] = p.categorie || "Autres";
     prixAchatParProduit[docSnap.id] = Number(p.prixAchat || 0);
+    casierTailleParProduit[docSnap.id] = p.casierTaille;
     stockRestant.push({ nom: p.nom || "(sans nom)", categorie: p.categorie || "Autres", stock: Number(p.stock || 0) });
   });
 
@@ -110,7 +112,7 @@ async function chargerResumeJour(estId, uid) {
     parProduit[nomProduit].benefice += benefice;
 
     if (quantite > 0 && v.type === "produit") {
-      if (!devisRenouvellement[nomProduit]) devisRenouvellement[nomProduit] = { quantite: 0, coutTotal: 0 };
+      if (!devisRenouvellement[nomProduit]) devisRenouvellement[nomProduit] = { quantite: 0, coutTotal: 0, casierTaille: casierTailleParProduit[v.produitId] };
       devisRenouvellement[nomProduit].quantite += quantite;
       devisRenouvellement[nomProduit].coutTotal += prixAchat * quantite;
     }
@@ -291,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ${entrees.map(([nom, d]) => `
           <tr><td colspan="2" class="ticket-produit-nom">${escapeHtml(nom)}</td></tr>
           <tr>
-            <td class="ticket-produit-qte">${d.quantite} unite(s)</td>
+            <td class="ticket-produit-qte">${formaterQuantiteAvecCasiers(d.quantite, { nom, casierTaille: d.casierTaille })}</td>
             <td class="ticket-produit-montant">${d.coutTotal.toLocaleString("fr-FR")} FCFA</td>
           </tr>
         `).join("")}

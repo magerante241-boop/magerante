@@ -43,7 +43,7 @@ export async function enregistrerFacture(lignes, total) {
       numero, total, auteurId, auteurNom, date: serverTimestamp(),
       lignes: lignes.map((l) => ({
         produitId: l.produitId, nom: l.nom, prixUnitaire: l.prixUnitaire,
-        quantite: l.quantite, totalLigne: l.totalLigne
+        quantite: l.quantite, totalLigne: l.totalLigne, casierTaille: l.casierTaille
       }))
     });
     return { success: true, numero };
@@ -124,7 +124,7 @@ function afficherFacturesFiltrees() {
     const d = f.date && f.date.toDate ? f.date.toDate() : null;
     const dateStr = d ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
     const detailLignes = (f.lignes || []).map((l) =>
-      `${l.quantite} × ${escapeHtml(l.nom)} — ${Number(l.totalLigne || 0).toLocaleString("fr-FR")} FCFA`
+      `${formaterQuantiteAvecCasiers(l.quantite, l)} × ${escapeHtml(l.nom)} — ${Number(l.totalLigne || 0).toLocaleString("fr-FR")} FCFA`
     ).join("<br>");
     return `
       <details class="collapsible-section" id="facture-${f.numero}">
