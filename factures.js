@@ -5,7 +5,7 @@ import {
   db, doc, collection, addDoc, updateDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
-import { clotureExisteAujourdhui } from "./cloture.js";
+import { obtenirDerniereCloture } from "./cloture.js";
 import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 let unsubscribeFactures = null;
@@ -59,7 +59,10 @@ async function annulerFacture(numero, docId) {
   }
   const estId = appState.establishmentId;
   try {
-    if (await clotureExisteAujourdhui(estId)) {
+    const _derniereCloture = await obtenirDerniereCloture(estId);
+    const _clotureAujourdhui = _derniereCloture && _derniereCloture.date &&
+      (_derniereCloture.date.toDate ? _derniereCloture.date.toDate() : new Date(_derniereCloture.date)).toDateString() === new Date().toDateString();
+    if (_clotureAujourdhui) {
       return { success: false, message: "Impossible d'annuler : la journee est deja cloturee." };
     }
     await updateDoc(doc(db, "establishments", estId, "factures", docId), {
