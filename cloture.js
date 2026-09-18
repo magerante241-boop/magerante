@@ -412,7 +412,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const estId = appState.establishmentId;
       const uid = auth.currentUser?.uid;
       if (!estId || !uid || !resumeCourant) return;
-      if (await clotureExisteAujourdhui(estId)) {
+      const _derniereClotureCheck = await obtenirDerniereCloture(estId);
+      const _clotureAujourdhuiCheck = _derniereClotureCheck && _derniereClotureCheck.date &&
+        (_derniereClotureCheck.date.toDate ? _derniereClotureCheck.date.toDate() : new Date(_derniereClotureCheck.date)).toDateString() === new Date().toDateString();
+      if (_clotureAujourdhuiCheck) {
         errorEl.textContent = "Une clôture a déjà été envoyée aujourd'hui pour cet établissement.";
         return;
       }
@@ -431,9 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const fondDepart = Number(inputFondDepart?.value || 0);
       const recetteReelle = Number(inputRecetteReelle?.value || 0);
       const commentaire = (inputCommentaire?.value || "").trim();
-      const facturesManuelles = collecterFacturesManuelles();
-      const totalFacturesManuelles = facturesManuelles.reduce((acc, f) => acc + f.montant, 0);
-      const totalVentes = Number(btnConfirmer.dataset.total || 0);
       const theorique = fondDepart + totalVentes + totalFacturesManuelles;
       const ecart = recetteReelle - theorique;
       try {
