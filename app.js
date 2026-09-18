@@ -732,7 +732,7 @@ async function toggleModeRecherche() {
   }
 }
 if (btnToggleClavier) {
-  btnToggleClavier.addEventListener("click", toggleModeRecherche);
+  btnToggleClavier.addEventListener("click", () => switchView("guide"));
 }
 const btnAbcToggle = document.getElementById("btnAbcToggle");
 if (btnAbcToggle) {
