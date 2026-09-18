@@ -520,6 +520,8 @@ onAuthStateChanged(auth, async (user) => {
     }
     // Mode visiteur : on crée l'établissement par défaut tout seul,
     // aucune modale, aucune action requise de l'utilisateur.
+    window.AuthState.accountType = user.isAnonymous ? "anonyme" : "enregistre";
+    window.AuthState.email = user.email || null;
     if (window.AuthState._creationEnCours) { return; }
     window.AuthState._creationEnCours = true;
     try {
