@@ -1932,7 +1932,7 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
 body.mode-facturier-actif .calc-zone {
   flex: 0 0 auto !important;
 }
-body.mode-facturier-actif .facture-panel {
+body.mode-facturier-actif .facture-panel:not([hidden]) {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
