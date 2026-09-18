@@ -140,9 +140,28 @@ export function render(container) {
           ${produits.map((p) => p.id === editingId ? ligneEdition(p) : ligneAffichage(p)).join("")}
         </tbody>
       </table>
+      <div class="inv-scroll-arrow inv-scroll-arrow-left" id="ephScrollArrowLeft">‹</div>
+      <div class="inv-scroll-arrow inv-scroll-arrow-right" id="ephScrollArrowRight">›</div>
       </div>
     </div>
   `;
+  (function initEphScrollArrows() {
+    const wrap = document.getElementById("ephScrollWrap");
+    const arrowL = document.getElementById("ephScrollArrowLeft");
+    const arrowR = document.getElementById("ephScrollArrowRight");
+    if (!wrap || !arrowL || !arrowR) return;
+    function update() {
+      const max = wrap.scrollWidth - wrap.clientWidth;
+      const scrollable = max > 4;
+      arrowL.style.display = scrollable ? "flex" : "none";
+      arrowR.style.display = scrollable ? "flex" : "none";
+      arrowL.style.opacity = wrap.scrollLeft > 4 ? "1" : "0";
+      arrowR.style.opacity = wrap.scrollLeft < max - 4 ? "1" : "0";
+    }
+    wrap.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    update();
+  })();
 
   document.getElementById("ephBtnAjouter").addEventListener("click", () => {
     const nom = document.getElementById("ephNom").value;
