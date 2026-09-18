@@ -127,13 +127,19 @@ function afficherFacturesFiltrees() {
     const detailLignes = (f.lignes || []).map((l) =>
       `${formaterQuantiteAvecCasiers(l.quantite, l)} × ${escapeHtml(l.nom)} — ${Number(l.totalLigne || 0).toLocaleString("fr-FR")} FCFA`
     ).join("<br>");
+      const estAnnulee = f.statut === "annulee";
+      const peutAnnuler = filtrePeriodeFactureActuel === "jour" && !estAnnulee;
+      const badgeAnnulee = estAnnulee ? " (ANNULEE)" : "";
+      const boutonAnnuler = peutAnnuler
+        ? `<button onclick="window.FacturesModule.annulerFactureUI('${f.numero}','${f.id}')" style="margin-top:8px;padding:4px 10px;font-size:12px;background:#c0392b;color:#fff;border:none;border-radius:4px;cursor:pointer;">Annuler cette facture</button>`
+        : "";
     return `
-      <details class="collapsible-section" id="facture-${f.numero}">
+      <details class="collapsible-section" id="facture-${f.numero}" style="${estAnnulee ? 'opacity:0.55;' : ''}">
         <summary style="display:flex; justify-content:space-between; padding:10px 14px; cursor:pointer;">
-          <span style="font-weight:700;color:var(--text);">Facture #${f.numero || "—"} — ${dateStr}</span>
+          <span style="font-weight:700;color:var(--text);">Facture #${f.numero || "—"} — ${dateStr}${badgeAnnulee}</span>
           <strong style="color:var(--text);">${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
         </summary>
-        <div style="padding:6px 14px 12px; font-size:13px; color:var(--text);">${detailLignes || "Détail indisponible."}</div>
+        <div style="padding:6px 14px 12px; font-size:13px; color:var(--text);">${detailLignes || "Détail indisponible."}${boutonAnnuler ? "<br>" + boutonAnnuler : ""}</div>
       </details>
     `;
   }).join("");
@@ -160,4 +166,10 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-window.FacturesModule = { render, cleanup, enregistrerFacture, ouvrirFacture };
+window.FacturesModule = {
+  render, cleanup, enregistrerFacture, ouvrirFacture, annulerFacture,
+  annulerFactureUI: async (numero, docId) => {
+    const res = await annulerFacture(numero, docId);
+    if (!res.success && res.message) alert(res.message);
+  }
+};
