@@ -9,6 +9,7 @@ import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 const CLE_SESSION = "mg_inventaire_ephemere_session";
 let produitsCache = null;
+let editingId = null;
 
 function genererId() {
   return "eph_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -71,6 +72,36 @@ function formatFcfa(n) {
   return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
 }
 
+function ligneAffichage(p) {
+  return `
+    <tr data-id="${p.id}" style="border-bottom:1px solid #eee;">
+      <td style="padding:6px 4px;">${escapeHtml(p.nom)}</td>
+      <td style="padding:6px 4px;">${formaterQuantiteAvecCasiers(p.stock, p)}</td>
+      <td style="padding:6px 4px;">${formatFcfa(p.prixVente)}</td>
+      <td style="padding:6px 4px;">${formatFcfa((p.prixVente || 0) - (p.prixAchat || 0))}</td>
+      <td style="padding:6px 4px; white-space:nowrap;">
+        <button class="eph-editer" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">✏️</button>
+        <button class="eph-supprimer" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">🗑️</button>
+      </td>
+    </tr>
+  `;
+}
+
+function ligneEdition(p) {
+  return `
+    <tr data-id="${p.id}" class="eph-row-active" style="border-bottom:1px solid #eee;">
+      <td style="padding:6px 4px;"><input type="text" class="eph-edit-nom" value="${escapeHtml(p.nom)}" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-stock" value="${p.stock}" style="width:70px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixvente" value="${p.prixVente}" style="width:80px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixachat" value="${p.prixAchat}" placeholder="Prix achat" style="width:80px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px; white-space:nowrap;">
+        <button class="eph-sauver" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">✅</button>
+        <button class="eph-annuler" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">✖️</button>
+      </td>
+    </tr>
+  `;
+}
+
 export function render(container) {
   const focusNom = window._inventaireEphemereFocusNom || "";
   window._inventaireEphemereFocusNom = "";
@@ -85,7 +116,7 @@ export function render(container) {
         produit manquant sans toucher a l'inventaire reel de l'etablissement.
       </p>
       <div id="ephAjoutZone" style="background:var(--surface2,#1c1f23); border-radius:10px; padding:12px; margin-bottom:16px;">
-        <strong style="display:block; margin-bottom:8px;">➕ Ajouter / completer un produit</strong>
+        <strong style="display:block; margin-bottom:8px;">➕ Ajouter un nouveau produit</strong>
         <input type="text" id="ephNom" placeholder="Nom du produit (ex: Djino Pamplemousse)" value="${escapeHtml(focusNom)}" style="width:100%; margin-bottom:6px; padding:8px; border-radius:8px; border:1px solid #ccc;">
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <input type="number" id="ephPrixAchat" placeholder="Prix achat" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
@@ -94,30 +125,28 @@ export function render(container) {
         </div>
         <button id="ephBtnAjouter" class="inv-btn-primary" style="margin-top:8px; width:100%;">Enregistrer dans le stock de session</button>
       </div>
+      <p style="font-size:11px; color:var(--muted,#888); margin:-8px 0 8px;">Pour modifier ou supprimer un produit existant, utilise les icones ✏️ / 🗑️ sur sa ligne ci-dessous.</p>
       <table style="width:100%; border-collapse:collapse; font-size:13px;">
         <thead>
           <tr style="text-align:left; border-bottom:1px solid #ccc;">
             <th style="padding:6px 4px;">Produit</th>
             <th style="padding:6px 4px;">Stock</th>
             <th style="padding:6px 4px;">Prix vente</th>
-            <th style="padding:6px 4px;">Benefice/u.</th>
+            <th style="padding:6px 4px;" id="ephColBenefice">Benefice/u.</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="ephTbody">
-          ${produits.map((p) => `
-            <tr data-id="${p.id}" style="border-bottom:1px solid #eee;">
-              <td style="padding:6px 4px;">${escapeHtml(p.nom)}</td>
-              <td style="padding:6px 4px;">${formaterQuantiteAvecCasiers(p.stock, p)}</td>
-              <td style="padding:6px 4px;">${formatFcfa(p.prixVente)}</td>
-              <td style="padding:6px 4px;">${formatFcfa((p.prixVente || 0) - (p.prixAchat || 0))}</td>
-              <td style="padding:6px 4px;"><button class="eph-editer" data-id="${p.id}" style="border:none; background:none; cursor:pointer;">✏️</button></td>
-            </tr>
-          `).join("")}
+          ${produits.map((p) => p.id === editingId ? ligneEdition(p) : ligneAffichage(p)).join("")}
         </tbody>
       </table>
     </div>
   `;
+
+  if (produits.some((p) => p.id === editingId)) {
+    const colBenefice = document.getElementById("ephColBenefice");
+    if (colBenefice) colBenefice.textContent = "Prix achat";
+  }
 
   document.getElementById("ephBtnAjouter").addEventListener("click", () => {
     const nom = document.getElementById("ephNom").value;
@@ -126,6 +155,10 @@ export function render(container) {
     const stock = document.getElementById("ephStock").value;
     const res = ajouterOuMajProduit({ nom, prixAchat, prixVente, stock });
     if (res.success) {
+      document.getElementById("ephNom").value = "";
+      document.getElementById("ephPrixAchat").value = "";
+      document.getElementById("ephPrixVente").value = "";
+      document.getElementById("ephStock").value = "20";
       render(container);
     } else {
       alert(res.message);
@@ -134,16 +167,45 @@ export function render(container) {
 
   container.querySelectorAll(".eph-editer").forEach((btn) => {
     btn.addEventListener("click", () => {
+      editingId = btn.dataset.id;
+      render(container);
+    });
+  });
+
+  container.querySelectorAll(".eph-supprimer").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const p = produits.find((x) => x.id === btn.dataset.id);
-      if (!p) return;
-      document.querySelectorAll(".eph-row-active").forEach((tr) => tr.classList.remove("eph-row-active"));
+      const nom = p ? p.nom : "ce produit";
+      if (confirm(`Supprimer "${nom}" du stock de session ?`)) {
+        supprimerProduit(btn.dataset.id);
+        if (editingId === btn.dataset.id) editingId = null;
+        render(container);
+      }
+    });
+  });
+
+  container.querySelectorAll(".eph-sauver").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
       const trEl = btn.closest("tr");
-      if (trEl) trEl.classList.add("eph-row-active");
-      document.getElementById("ephNom").value = p.nom;
-      document.getElementById("ephPrixAchat").value = p.prixAchat;
-      document.getElementById("ephPrixVente").value = p.prixVente;
-      document.getElementById("ephStock").value = p.stock;
-      document.getElementById("ephAjoutZone").scrollIntoView({ behavior: "smooth" });
+      const nom = trEl.querySelector(".eph-edit-nom").value;
+      const stock = trEl.querySelector(".eph-edit-stock").value;
+      const prixVente = trEl.querySelector(".eph-edit-prixvente").value;
+      const prixAchat = trEl.querySelector(".eph-edit-prixachat").value;
+      const res = ajouterOuMajProduit({ id, nom, prixAchat, prixVente, stock });
+      if (res.success) {
+        editingId = null;
+        render(container);
+      } else {
+        alert(res.message);
+      }
+    });
+  });
+
+  container.querySelectorAll(".eph-annuler").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingId = null;
+      render(container);
     });
   });
 
@@ -157,6 +219,6 @@ export function render(container) {
   }
 }
 
-export function cleanup() { /* rien a nettoyer : pas d'abonnement Firestore */ }
+export function cleanup() { editingId = null; }
 
 window.InventaireEphemereModule = { render, cleanup, getTousLesProduits, ajouterOuMajProduit, supprimerProduit };
