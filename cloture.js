@@ -1,4 +1,4 @@
-import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, limit, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
+import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, orderBy, limit, serverTimestamp, onAuthStateChanged } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
 import { getTousLesProduits as getProduitsEphemeres } from "./inventaire-ephemere.js";
@@ -12,16 +12,23 @@ function calculerDebutFinJour() {
   return { debut, fin };
 }
 
-export async function clotureExisteAujourdhui(estId) {
-  const { debut, fin } = calculerDebutFinJour();
+export async function obtenirDerniereCloture(estId) {
   const q = query(
     collection(db, "establishments", estId, "clotures"),
-    where("date", ">=", debut),
-    where("date", "<", fin),
+    orderBy("date", "desc"),
     limit(1)
   );
   const snap = await getDocs(q);
-  return !snap.empty;
+  if (snap.empty) return null;
+  const docSnap = snap.docs[0];
+  return { id: docSnap.id, ...docSnap.data() };
+}
+
+export async function factureDejaCloturee(estId, dateFacture) {
+  const derniere = await obtenirDerniereCloture(estId);
+  if (!derniere || !derniere.date) return false;
+  const dateCloture = derniere.date.toDate ? derniere.date.toDate() : new Date(derniere.date);
+  return dateFacture < dateCloture;
 }
 
 function construireMarqueParNom() {
@@ -36,7 +43,11 @@ function construireMarqueParNom() {
 }
 
 async function chargerResumeJour(estId, uid) {
-  const { debut, fin } = calculerDebutFinJour();
+  const derniereCloture = await obtenirDerniereCloture(estId);
+  const debut = derniereCloture && derniereCloture.date
+    ? (derniereCloture.date.toDate ? derniereCloture.date.toDate() : new Date(derniereCloture.date))
+    : (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+  const fin = new Date();
 
   const [ventesSnap, facturesSnap, produitsSnap, produitsSession] = await Promise.all([
     getDocs(query(
@@ -403,6 +414,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!estId || !uid || !resumeCourant) return;
       if (await clotureExisteAujourdhui(estId)) {
         errorEl.textContent = "Une clôture a déjà été envoyée aujourd'hui pour cet établissement.";
+        return;
+      }
+      const facturesManuelles = collecterFacturesManuelles();
+      const totalFacturesManuelles = facturesManuelles.reduce((acc, f) => acc + f.montant, 0);
+      const totalVentes = Number(btnConfirmer.dataset.total || 0);
+      const aucuneActivite = (Number(resumeCourant.nombre) || 0) === 0 && facturesManuelles.length === 0 && totalVentes === 0;
+      if (aucuneActivite) {
+        errorEl.textContent = "Aucune activité depuis la dernière clôture — impossible de clôturer une session vide.";
         return;
       }
       btnConfirmer.disabled = true;
