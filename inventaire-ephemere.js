@@ -136,6 +136,9 @@ export function render(container) {
     btn.addEventListener("click", () => {
       const p = produits.find((x) => x.id === btn.dataset.id);
       if (!p) return;
+      document.querySelectorAll(".eph-row-active").forEach((tr) => tr.classList.remove("eph-row-active"));
+      const trEl = btn.closest("tr");
+      if (trEl) trEl.classList.add("eph-row-active");
       document.getElementById("ephNom").value = p.nom;
       document.getElementById("ephPrixAchat").value = p.prixAchat;
       document.getElementById("ephPrixVente").value = p.prixVente;

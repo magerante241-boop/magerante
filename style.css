@@ -1937,3 +1937,9 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
 .conn-indicator.offline {
   background: #e74c3c;
 }
+
+/* Stock de session : ligne en cours d'edition surlignee */
+.eph-row-active {
+  background: #d9f2df;
+  transition: background 0.3s;
+}
