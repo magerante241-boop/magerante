@@ -4,6 +4,7 @@ import {
   onSnapshot, query, orderBy, where, getDocs, serverTimestamp, writeBatch
 } from "./firebase-config.js";
 import { appState } from "./state.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 import { creerNotification } from "./notifications.js";
 
 let unsubscribe = null;
@@ -113,7 +114,7 @@ export function render(container) {
         ligne.className = "inv-ligne-compacte";
         ligne.innerHTML = `
           <span class="inv-ligne-nom">${escapeHtml(p.nom)}</span>
-          <span class="inv-ligne-stock${isLow ? " low" : ""}">${p.stock}</span>
+          <span class="inv-ligne-stock${isLow ? " low" : ""}">${formaterQuantiteAvecCasiers(p.stock, p)}</span>
         `;
         ligne.addEventListener("click", (e) => { e.stopPropagation(); openModal(p); });
         body.appendChild(ligne);
@@ -183,7 +184,7 @@ async function chargerOutilsSuivi() {
   const NB_LIGNES_VIDES = 3;
   tableEl.innerHTML = `
     <div class="inv-table-editable">
-      <div class="inv-table-header"><span>Nom</span><span>Catégorie</span><span>Achat</span><span>Vente</span><span>Stock</span></div>
+      <div class="inv-table-header"><span>Nom</span><span>Catégorie</span><span>Achat</span><span>Vente</span><span>Stock</span><span>Casier</span></div>
       ${produits.map((p) => ligneTableEditable(p)).join("")}
       ${Array.from({ length: NB_LIGNES_VIDES }).map(() => ligneTableEditable(null)).join("")}
     </div>
@@ -203,15 +204,17 @@ async function chargerOutilsSuivi() {
         const prixAchat = parseFloat(ligne.querySelector(".it-achat").value);
         const prixVente = parseFloat(ligne.querySelector(".it-vente").value);
         const stock = parseInt(ligne.querySelector(".it-stock").value, 10);
+      const casierValRaw = ligne.querySelector(".it-casier").value;
+      const casierTaille = casierValRaw ? parseInt(casierValRaw, 10) : null;
         if (!nom && !id) continue;
         if (!nom || isNaN(prixAchat) || isNaN(prixVente) || isNaN(stock)) {
           if (id) continue;
           throw new Error(`Ligne "${nom || "sans nom"}" incomplète.`);
         }
         if (id) {
-          await updateDoc(doc(db, "establishments", estId, "produits", id), { nom, categorie, prixAchat, prixVente, stock, updatedAt: serverTimestamp() });
+          await updateDoc(doc(db, "establishments", estId, "produits", id), { nom, categorie, prixAchat, prixVente, stock, casierTaille, updatedAt: serverTimestamp() });
         } else {
-          await addDoc(produitsRef(), { nom, categorie, prixAchat, prixVente, stock, stockDepart: stock, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+          await addDoc(produitsRef(), { nom, categorie, prixAchat, prixVente, stock, stockDepart: stock, casierTaille, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         }
       }
       errorEl.style.color = "var(--primary)";
@@ -234,6 +237,7 @@ function ligneTableEditable(p) {
       <input class="it-achat" type="number" inputmode="decimal" value="${p ? p.prixAchat : ""}" placeholder="0">
       <input class="it-vente" type="number" inputmode="decimal" value="${p ? p.prixVente : ""}" placeholder="0">
       <input class="it-stock" type="number" inputmode="numeric" value="${p ? p.stock : ""}" placeholder="0">
+      <input class="it-casier" type="number" inputmode="numeric" value="${p && p.casierTaille ? p.casierTaille : ""}" placeholder="auto">
     </div>
   `;
 }
