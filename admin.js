@@ -1,8 +1,8 @@
 import {
-import { formaterQuantiteAvecCasiers } from "./casiers.js";
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
   collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
 } from "./firebase-config.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 import { enregistrerConnexion } from "./connexions.js";
 
 const ADMIN_EMAIL = "magerante241@gmail.com";

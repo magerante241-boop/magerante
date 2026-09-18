@@ -1,9 +1,9 @@
 // ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
 // (deduit automatiquement le stock quand une vente est liee a un produit).
 import {
-import { formaterQuantiteAvecCasiers } from "./casiers.js";
   auth, db, doc, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, increment, runTransaction, limit
 } from "./firebase-config.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
 import { getTousLesProduits as getProduitsEphemeres, ajouterOuMajProduit as majProduitEphemere } from "./inventaire-ephemere.js";
