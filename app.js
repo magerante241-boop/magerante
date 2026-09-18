@@ -1168,11 +1168,9 @@ function majIndicateurConnexion() {
   const el = document.getElementById("connIndicator");
   if (!el) return;
   if (navigator.onLine) {
-    el.textContent = "🟢";
     el.title = "En ligne";
     el.classList.remove("offline");
   } else {
-    el.textContent = "🔴";
     el.title = "Hors ligne";
     el.classList.add("offline");
   }

@@ -1675,16 +1675,6 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .marque-cell {
   position: relative;
 }
-.conn-indicator {
-  font-size: 10px;
-  display: inline-flex;
-  align-items: center;
-  margin-left: 4px;
-  transition: opacity 0.3s;
-}
-.conn-indicator.offline {
-  filter: grayscale(1);
-}
 
 /* Chantier : barre dynamique benefice total + stock bouteilles en mode Facturier */
 .facture-bar {
@@ -1930,4 +1920,20 @@ button[data-produit="Djino Ananas"] { color: #2b1c00; }
   .ticket-produit-montant { text-align: right; }
   .ticket-total-ligne { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-top: 6px; }
   .ticket-pied { text-align: center; font-size: 10px; margin-top: 10px; color: #555; }
+}
+
+/* Badge connexion compact, positionne en coin du bouton menu */
+.conn-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ecc71;
+  border: 1.5px solid var(--surface, #fff);
+  transition: background 0.3s;
+}
+.conn-indicator.offline {
+  background: #e74c3c;
 }
