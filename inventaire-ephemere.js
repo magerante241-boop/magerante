@@ -90,10 +90,10 @@ function ligneAffichage(p) {
 function ligneEdition(p) {
   return `
     <tr data-id="${p.id}" class="eph-row-active" style="border-bottom:1px solid #eee;">
-      <td style="padding:6px 4px;"><input type="text" class="eph-edit-nom" value="${escapeHtml(p.nom)}" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
-      <td style="padding:6px 4px;"><input type="number" class="eph-edit-stock" value="${p.stock}" style="width:70px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
-      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixvente" value="${p.prixVente}" style="width:80px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
-      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixachat" value="${p.prixAchat}" placeholder="Prix achat" style="width:80px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="text" class="eph-edit-nom" value="${escapeHtml(p.nom)}" style="width:100px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-stock" value="${p.stock}" style="width:55px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixvente" value="${p.prixVente}" style="width:65px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
+      <td style="padding:6px 4px;"><input type="number" class="eph-edit-prixachat" value="${p.prixAchat}" placeholder="Achat" style="width:65px; padding:6px; border-radius:6px; border:1px solid #ccc;"></td>
       <td style="padding:6px 4px; white-space:nowrap;">
         <button class="eph-sauver" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">✅</button>
         <button class="eph-annuler" data-id="${p.id}" style="border:none; background:none; cursor:pointer; font-size:15px;">✖️</button>
@@ -126,7 +126,7 @@ export function render(container) {
         <button id="ephBtnAjouter" class="inv-btn-primary" style="margin-top:8px; width:100%;">Enregistrer dans le stock de session</button>
       </div>
       <p style="font-size:11px; color:var(--muted,#888); margin:-8px 0 8px;">Pour modifier ou supprimer un produit existant, utilise les icones ✏️ / 🗑️ sur sa ligne ci-dessous.</p>
-      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;"><table style="width:100%; min-width:520px; border-collapse:collapse; font-size:13px;">
         <thead>
           <tr style="text-align:left; border-bottom:1px solid #ccc;">
             <th style="padding:6px 4px;">Produit</th>
@@ -140,13 +140,9 @@ export function render(container) {
           ${produits.map((p) => p.id === editingId ? ligneEdition(p) : ligneAffichage(p)).join("")}
         </tbody>
       </table>
+      </div>
     </div>
   `;
-
-  if (produits.some((p) => p.id === editingId)) {
-    const colBenefice = document.getElementById("ephColBenefice");
-    if (colBenefice) colBenefice.textContent = "Prix achat";
-  }
 
   document.getElementById("ephBtnAjouter").addEventListener("click", () => {
     const nom = document.getElementById("ephNom").value;

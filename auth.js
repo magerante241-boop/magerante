@@ -601,3 +601,12 @@ if (regPhotoInputEl) {
     reader.readAsDataURL(file);
   });
 }
+
+// Garde-fou anti-flash : sur restauration bfcache (retour navigateur mobile),
+// masquer immediatement l'icone Admin avant que Firebase Auth ne revalide.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    const btn = document.getElementById("btnAdminAccess");
+    if (btn) btn.hidden = true;
+  }
+});
