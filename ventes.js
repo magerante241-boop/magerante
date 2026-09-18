@@ -1,6 +1,7 @@
 // ventes.js — Enregistrement des ventes : montant libre OU produit de l'inventaire
 // (deduit automatiquement le stock quand une vente est liee a un produit).
 import {
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
   auth, db, doc, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, increment, runTransaction, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
@@ -345,7 +346,7 @@ function afficherVentesFiltrees() {
   listEl.innerHTML = filtrees.map((v) => {
     const d = v.date && v.date.toDate ? v.date.toDate() : null;
     const dateStr = d ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
-    const libelle = v.type === "produit" ? `${v.quantite} x ${escapeHtml(v.produitNom || "Produit")}` : "Vente (montant libre)";
+    const libelle = v.type === "produit" ? `${formaterQuantiteAvecCasiers(v.quantite, { nom: v.produitNom })} x ${escapeHtml(v.produitNom || "Produit")}` : "Vente (montant libre)";
     return `
       <div class="inv-row">
         <div>

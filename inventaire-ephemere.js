@@ -5,6 +5,7 @@
 // l'etablissement). Permet d'ajouter/completer un produit manquant a la volee pour ne
 // jamais bloquer une vente ou une facture faute de produit configure.
 import { CATALOGUE_STANDARD } from "./catalogue-standard.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 const CLE_SESSION = "mg_inventaire_ephemere_session";
 let produitsCache = null;
@@ -107,7 +108,7 @@ export function render(container) {
           ${produits.map((p) => `
             <tr data-id="${p.id}" style="border-bottom:1px solid #eee;">
               <td style="padding:6px 4px;">${escapeHtml(p.nom)}</td>
-              <td style="padding:6px 4px;">${p.stock}</td>
+              <td style="padding:6px 4px;">${formaterQuantiteAvecCasiers(p.stock, p)}</td>
               <td style="padding:6px 4px;">${formatFcfa(p.prixVente)}</td>
               <td style="padding:6px 4px;">${formatFcfa((p.prixVente || 0) - (p.prixAchat || 0))}</td>
               <td style="padding:6px 4px;"><button class="eph-editer" data-id="${p.id}" style="border:none; background:none; cursor:pointer;">✏️</button></td>

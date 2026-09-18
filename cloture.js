@@ -171,7 +171,7 @@ function construireStockHtml(stockParMarque) {
     <div class="cloture-stock-groupe">
       <div class="cloture-stock-marque">${escapeHtml(marque)}</div>
       <table class="cloture-stock-table"><tbody>
-        ${produits.map((p) => `<tr><td>${escapeHtml(p.nom)}</td><td class="${p.stock === 0 ? "stock-zero" : ""}">${p.stock}</td></tr>`).join("")}
+        ${produits.map((p) => `<tr><td>${escapeHtml(p.nom)}</td><td class="${p.stock === 0 ? "stock-zero" : ""}">${formaterQuantiteAvecCasiers(p.stock, p)}</td></tr>`).join("")}
       </tbody></table>
     </div>
   `).join("");

@@ -1,4 +1,5 @@
 import {
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
   collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
 } from "./firebase-config.js";
@@ -726,7 +727,7 @@ function rendreTableauGestionProduits() {
       '<td>' + escapeHtml(p.nom || "") + '</td>' +
       '<td>' + escapeHtml(p.categorie || "") + '</td>' +
       '<td>' + (p.prixVente || 0) + ' FCFA</td>' +
-      '<td>' + (p.stock || 0) + '</td>' +
+      '<td>' + formaterQuantiteAvecCasiers(p.stock || 0, p) + '</td>' +
       '<td><button class="btn-supprimer-ligne">Suppr.</button></td>' +
       '</tr>';
   }).join("");
@@ -1072,7 +1073,7 @@ function ligneStock(stockParMarque) {
   const entrees = Object.entries(stockParMarque || {});
   if (entrees.length === 0) return "<p class=\"empty-msg\">Aucune donnée.</p>";
   return "<ul>" + entrees.map(([marque, produits]) => {
-    const detail = (produits || []).map((p) => `${escapeHtml(p.nom)} : ${p.stock}`).join(", ");
+    const detail = (produits || []).map((p) => `${escapeHtml(p.nom)} : ${formaterQuantiteAvecCasiers(p.stock, p)}`).join(", ");
     return `<li><strong>${escapeHtml(marque)}</strong> — ${detail}</li>`;
   }).join("") + "</ul>";
 }
