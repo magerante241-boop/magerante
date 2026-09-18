@@ -44,7 +44,7 @@ export async function enregistrerFacture(lignes, total) {
       numero, total, auteurId, auteurNom, date: serverTimestamp(),
       lignes: lignes.map((l) => ({
         produitId: l.produitId, nom: l.nom, prixUnitaire: l.prixUnitaire,
-        quantite: l.quantite, totalLigne: l.totalLigne, casierTaille: l.casierTaille
+        quantite: l.quantite, totalLigne: l.totalLigne, casierTaille: l.casierTaille ?? null
       }))
     });
     return { success: true, numero };

@@ -113,7 +113,7 @@ async function chargerResumeJour(estId, uid) {
     parProduit[nomProduit].benefice += benefice;
 
     if (quantite > 0 && v.type === "produit") {
-      if (!devisRenouvellement[nomProduit]) devisRenouvellement[nomProduit] = { quantite: 0, coutTotal: 0, casierTaille: casierTailleParProduit[v.produitId] };
+      if (!devisRenouvellement[nomProduit]) devisRenouvellement[nomProduit] = { quantite: 0, coutTotal: 0, casierTaille: casierTailleParProduit[v.produitId] ?? null };
       devisRenouvellement[nomProduit].quantite += quantite;
       devisRenouvellement[nomProduit].coutTotal += prixAchat * quantite;
     }
