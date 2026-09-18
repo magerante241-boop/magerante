@@ -75,6 +75,8 @@ function openEstablishmentModal() {
     nameInput.value = currentName;
   }
   establishmentView.hidden = false;
+  const npEl = document.getElementById("numpad"); if (npEl) npEl.hidden = true;
+  const abcEl = document.getElementById("abcKeyboard"); if (abcEl) abcEl.hidden = true;
   authGate.hidden = false;
 }
 function openRegisterModal() {
@@ -85,9 +87,14 @@ function openRegisterModal() {
     nomInput.value = currentName;
   }
   registerView.hidden = false;
+  const npEl2 = document.getElementById("numpad"); if (npEl2) npEl2.hidden = true;
+  const abcEl2 = document.getElementById("abcKeyboard"); if (abcEl2) abcEl2.hidden = true;
   authGate.hidden = false;
 }
 function closeModal() {
+  const npEl4 = document.getElementById("numpad");
+  const calcZoneEl = document.getElementById("calcZone");
+  if (npEl4 && calcZoneEl && !calcZoneEl.hidden) npEl4.hidden = false;
   authGate.hidden = true;
 }
 // Conservées pour un usage volontaire futur (menu latéral),
@@ -98,6 +105,8 @@ window.openRegisterModal = openRegisterModal;
 function openLoginModal() {
   hideAllViews();
   loginView.hidden = false;
+  const npEl3 = document.getElementById("numpad"); if (npEl3) npEl3.hidden = true;
+  const abcEl3 = document.getElementById("abcKeyboard"); if (abcEl3) abcEl3.hidden = true;
   authGate.hidden = false;
 }
 window.openLoginModal = openLoginModal;
