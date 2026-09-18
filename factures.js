@@ -6,6 +6,7 @@ import {
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { clotureExisteAujourdhui } from "./cloture.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 let unsubscribeFactures = null;
 let facturesCache = [];

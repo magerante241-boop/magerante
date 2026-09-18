@@ -2,6 +2,7 @@ import { auth, db, doc, getDoc, collection, getDocs, addDoc, query, where, limit
 import { appState } from "./state.js";
 import { creerNotification } from "./notifications.js";
 import { getTousLesProduits as getProduitsEphemeres } from "./inventaire-ephemere.js";
+import { formaterQuantiteAvecCasiers } from "./casiers.js";
 
 function calculerDebutFinJour() {
   const debut = new Date();
