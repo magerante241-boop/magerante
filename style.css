@@ -541,35 +541,42 @@ body{
   padding: 12px;
 }
 
-.marque-cell {
-  position: relative;
-  padding: 16px 10px;
-  border-radius: 14px;
-  text-align: center;
-  font-weight: 600;
-  color: #f4f4f4;
-  background: linear-gradient(145deg, #3a3f47, #23262b);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+.marque-cell{
+  position:relative;
+  overflow:hidden;
+  padding:7px 1px;
+  min-height:40px;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1.15;
+  text-align:center;
+  color:#f4f4f4;
+  background:linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 6px rgba(21,79,54,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  transition:transform .08s ease, box-shadow .08s ease, filter .08s ease;
 }
 
-.marque-cell:active {
-  transform: scale(0.96);
-  background: linear-gradient(145deg, var(--primary, #d4a017), #a87a0e);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
-  color: #1a1a1a;
+.marque-cell:active{
+  transform:translateY(1px) scale(0.97);
+  filter:brightness(0.9);
+  box-shadow:0 1px 3px rgba(21,79,54,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
-.marque-cell-autres {
-  background: linear-gradient(145deg, #4a4f57, #2b2e33);
-  border: 1px dashed rgba(255,255,255,0.2);
-  font-style: italic;
+.marque-cell-autres{
+  background:linear-gradient(145deg, var(--accent) 0%, #8a6a1f 100%);
+  color:#2b1c00;
+  font-style:italic;
 }
 
-.marque-cell-autres:active {
-  background: linear-gradient(145deg, var(--accent, #17b890), #0e8a6c);
-  color: #0a0a0a;
+.marque-cell-autres:active{
+  transform:translateY(1px) scale(0.97);
+  filter:brightness(0.9);
 }
 
 .marque-taille-item {
@@ -615,15 +622,7 @@ body{
   padding: 8px;
 }
 
-.marque-cell {
-  padding: 8px 3px;
-  font-size: 11px;
-  border-radius: 10px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+
 
 .numpad {
   gap: 1px;
@@ -646,11 +645,7 @@ body{
   gap: 5px;
 }
 
-.marque-cell {
-  padding: 6px 2px;
-  font-size: 10px;
-  min-height: 40px;
-}
+
 
 /* === Chantier 6 (suite) : grille 5 colonnes, menu deroulant par tuile, couleurs par marque === */
 #marqueGrid {
@@ -689,38 +684,17 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
   display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
   padding:6px;
 }
-.marque-cell{
-  position:relative; overflow:hidden;
-  background:linear-gradient(160deg,var(--surface2) 0%,#c2b191 55%,var(--primary-dark) 100%);
-  color:var(--text); border:none; border-radius:12px;
-  font-size:13px; font-weight:600; padding:10px 4px; min-height:52px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; text-align:center;
-  box-shadow:
-    0 3px 0 rgba(20,17,12,0.28),
-    0 6px 14px rgba(20,17,12,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.55);
-  transition:transform .08s ease, box-shadow .08s ease, filter .08s ease;
-}
+
 .marque-cell::after{
   content:"";
   position:absolute; top:-60%; left:-25%;
   width:55%; height:220%;
-  background:linear-gradient(120deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 65%);
+  background:linear-gradient(120deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 65%);
   transform:rotate(20deg);
   pointer-events:none;
 }
-.marque-cell:active{
-  transform:translateY(2px) scale(0.97);
-  box-shadow:
-    0 0 0 rgba(20,17,12,0.28),
-    0 1px 4px rgba(20,17,12,0.20),
-    inset 0 1px 0 rgba(255,255,255,0.3);
-  filter:brightness(0.88);
-}
-.marque-cell-autres{
-  background:linear-gradient(160deg,#e0c46a 0%,var(--accent) 55%,#7a5f1f 100%);
-  color:#2b1c00;
-}
+
+
 
 /* Sélecteur de taille (grande/petite), affiché après clic sur une marque */
 .marque-tailles[hidden]{ display:none; }
@@ -772,13 +746,7 @@ button[data-marque="Ricard"] { background: linear-gradient(145deg, #d4a017, #9a7
   padding:3px;
   position: relative;
 }
-.marque-cell{
-  font-size:clamp(8px, 2.2vw, 10px);
-  padding:clamp(1px, 0.6vh, 3px) 1px;
-  min-height:clamp(22px, 4.5vh, 32px);
-  border-radius:8px;
-  line-height:1.15;
-}
+
 .marque-taille-item{
   font-size:11px;
   padding:6px 4px;
@@ -1508,12 +1476,7 @@ select.btn-toggle-facturier {
   gap: 4px;
   padding: 4px;
 }
-.marque-cell {
-  min-height: 46px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 9px 2px;
-}
+
 
 
 /* Chantier : reduire bande blanche laterale + tuiles marques quasi bord a bord */
@@ -1525,11 +1488,7 @@ select.btn-toggle-facturier {
   gap: 3px;
   padding: 3px 0;
 }
-.marque-cell {
-  padding: 7px 1px;
-  font-size: 10.5px;
-  min-height: 40px;
-}
+
 
 
 /* Chantier : bouton Mode Facturier centre + couleur speciale */
@@ -1674,9 +1633,7 @@ select.btn-toggle-facturier:not(.btn-blinking) {
 .collapsible-section:has(#secCourbeCA) { border-left: 4px solid #d4a94a; }
 
 /* ===== Ajouts UX : badge stock bas, indicateur connexion, cloture rapide ===== */
-.marque-cell {
-  position: relative;
-}
+
 
 /* Chantier : barre dynamique benefice total + stock bouteilles en mode Facturier */
 .facture-bar {
