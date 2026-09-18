@@ -284,32 +284,38 @@ button:active {
     <div id="adminPanel" hidden>
       <button class="admin-tab-back" id="btnAdminTabBack"><span>&larr;</span> Retour a l'accueil</button>
       <div class="quick-access-grid" id="secAccueil">
+        <div class="stat-card quick-tile" data-target="secCA">
+          <span class="quick-tile-icon">💰</span><span class="quick-tile-label">Chiffre d'affaires</span>
+        </div>
         <div class="stat-card quick-tile" data-target="secVentes">
           <span class="quick-tile-icon">🧾</span><span class="quick-tile-label">Ventes</span>
+        </div>
+        <div class="stat-card quick-tile" data-target="secClotures">
+          <span class="quick-tile-icon">📋</span><span class="quick-tile-label">Clôtures</span>
         </div>
         <div class="stat-card quick-tile" data-target="secComptesAttente">
           <span class="quick-tile-icon">👥</span><span class="quick-tile-label">Comptes</span>
         </div>
+        <div class="stat-card quick-tile" data-target="secConnexions">
+          <span class="quick-tile-icon">🔐</span><span class="quick-tile-label">Connexions</span>
+        </div>
         <div class="stat-card quick-tile" data-target="secGestionProduits">
           <span class="quick-tile-icon">🛠️</span><span class="quick-tile-label">Produits</span>
         </div>
-        <div class="stat-card quick-tile" data-target="secCA">
-          <span class="quick-tile-icon">💰</span><span class="quick-tile-label">Chiffre d'affaires</span>
+        <div class="stat-card quick-tile" data-target="secInventaireGlobal">
+          <span class="quick-tile-icon">📦</span><span class="quick-tile-label">Inventaire global</span>
         </div>
-        <div class="stat-card quick-tile" data-target="secZones">
-          <span class="quick-tile-icon">📍</span><span class="quick-tile-label">Zones</span>
-        </div>
-        <div class="stat-card quick-tile" data-target="secConnexions">
-          <span class="quick-tile-icon">🔐</span><span class="quick-tile-label">Connexions</span>
+        <div class="stat-card quick-tile" data-target="secImport">
+          <span class="quick-tile-icon">🗑️</span><span class="quick-tile-label">Vider inventaire</span>
         </div>
         <div class="stat-card quick-tile" data-target="secMonEtablissement">
           <span class="quick-tile-icon">🏪</span><span class="quick-tile-label">Mon établissement</span>
         </div>
+        <div class="stat-card quick-tile" data-target="secZones">
+          <span class="quick-tile-icon">📍</span><span class="quick-tile-label">Zones</span>
+        </div>
         <div class="stat-card quick-tile" data-target="secHistorique">
           <span class="quick-tile-icon">📜</span><span class="quick-tile-label">Historique</span>
-        </div>
-        <div class="stat-card quick-tile" data-target="secClotures">
-          <span class="quick-tile-icon">🧾</span><span class="quick-tile-label">Clôtures</span>
         </div>
       </div>
       <div class="stats-grid">
@@ -589,5 +595,7 @@ button:active {
 .quick-tile[data-target="secMonEtablissement"] { background: #4a9970; }
 .quick-tile[data-target="secHistorique"] { background: #6b4a1f; }
 .quick-tile[data-target="secClotures"] { background: #7a5230; }
+.quick-tile[data-target="secInventaireGlobal"] { background: #35624f; }
+.quick-tile[data-target="secImport"] { background: #8a3a2e; }
 .quick-tile[data-target] .quick-tile-label { color: #fff; }
 </style>

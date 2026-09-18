@@ -655,11 +655,12 @@ if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(document.getElem
 if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(document.getElementById("produitsGestionTableBody").parentElement);
 if (window.ScrollArrows) window.ScrollArrows.attachScrollArrows(document.getElementById("connexionsTableBody").parentElement);
 
-// --- Tuiles stats cliquables : defilement vers la section correspondante ---
-document.querySelectorAll(".stat-card[data-target], .quick-tile[data-target]").forEach((card) => {
-  card.addEventListener("click", () => {
-    if (typeof afficherOngletAdmin === "function") afficherOngletAdmin(card.dataset.target);
-  });
+// --- Tuiles stats cliquables : delegation robuste, fonctionne quelle que soit
+// l'ordre de chargement ou d'eventuelles reconstructions du DOM ---
+document.body.addEventListener("click", (e) => {
+  const cible = e.target.closest("[data-target]");
+  if (!cible) return;
+  if (window.afficherOngletAdmin) window.afficherOngletAdmin(cible.dataset.target);
 });
 
 // --- Gestion des produits (tous etablissements) ---
@@ -811,12 +812,6 @@ function afficherOngletAdmin(idCible) {
   const scrollTarget = (activeEl && activeEl.closest(".admin-fullscreen-section")) || document.scrollingElement || document.documentElement;
   scrollTarget.scrollTo ? scrollTarget.scrollTo({ top: 0, behavior: "instant" }) : (scrollTarget.scrollTop = 0);
 }
-
-document.querySelectorAll("#adminSideMenu [data-target], #adminBottomNav [data-target]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      afficherOngletAdmin(btn.dataset.target);
-    });
-  });
 
 const btnAdminTabBack = document.getElementById("btnAdminTabBack");
 if (btnAdminTabBack) {
