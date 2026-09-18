@@ -154,9 +154,14 @@ function switchView(view) {
     viewContainer.hidden = false;
     if (facturePanelEl) facturePanelEl.hidden = true;
     if (window.FacturesModule && window.FacturesModule.render) {
-      window.FacturesModule.render(viewContainer);
+      try {
+        window.FacturesModule.render(viewContainer);
+      } catch (e) {
+        console.error("Erreur render FacturesModule:", e);
+        viewContainer.innerHTML = `<p class="placeholder-msg" style="color:#c0392b;white-space:pre-wrap;">Erreur module Factures :\n${e.message}\n\n${e.stack || ""}</p>`;
+      }
     } else {
-      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module...</p>`;
+      viewContainer.innerHTML = `<p class="placeholder-msg">Chargement du module... (FacturesModule ${window.FacturesModule ? "present sans render" : "absent"})</p>`;
     }
   } else {
     calcZone.hidden = true;
