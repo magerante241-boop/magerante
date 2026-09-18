@@ -43,6 +43,11 @@
         <button type="button" class="auth-eye-btn" id="btnToggleRegPassword">👁</button>
       </div>
       <input type="text" id="regEtablissementNom" placeholder="Nom de l'établissement" autocomplete="off">
+      <div class="auth-photo-wrap" style="margin:10px 0; text-align:center;">
+        <label for="regPhotoInput" style="display:block; margin-bottom:6px; font-size:13px; color:var(--muted);">Photo (particulier) ou logo (PME) — facultatif</label>
+        <img id="regPhotoPreview" src="" alt="" style="display:none; width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 8px; box-shadow:var(--shadow-sm);">
+        <input type="file" id="regPhotoInput" accept="image/*" style="display:block; margin:0 auto;">
+      </div>
       <input type="text" id="regLocalisation" placeholder="Localisation (quartier, ville)">
       <input type="text" id="regWhatsappEtablissement" placeholder="WhatsApp de l'établissement (ex: 24177123456)">
       <div class="auth-role-choice" style="margin:10px 0; text-align:left;">

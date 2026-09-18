@@ -298,6 +298,16 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
     const credential = EmailAuthProvider.credential(email, password);
     await linkWithCredential(auth.currentUser, credential);
 
+    let photoUrl = null;
+    const photoFileEl = document.getElementById("regPhotoInput");
+    if (photoFileEl && photoFileEl.files[0]) {
+      try {
+        photoUrl = await uploadPhotoCloudinary(photoFileEl.files[0]);
+      } catch (errPhoto) {
+        console.warn("Upload photo/logo impossible :", errPhoto);
+      }
+    }
+
     const roleChoisi = (document.querySelector('input[name="regRole"]:checked') || {}).value || "PROPRIETAIRE";
     await setDoc(doc(db, "users", uid), {
       nom, prenom, telephone, email,
@@ -316,6 +326,7 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
       gps: (gpsLat && gpsLng) ? { lat: gpsLat, lng: gpsLng } : null,
       lienGoogleMaps,
       telephone,
+      photoUrl,
       status: "en_attente",
       ownerId: uid,
       updatedAt: serverTimestamp()
@@ -550,3 +561,32 @@ onAuthStateChanged(auth, async (user) => {
   updateAccountStatusBadge();
   await ouvrirApplication(userData.establishmentId);
 });
+
+// --- Upload photo/logo optionnel vers Cloudinary (compte propriétaire) ---
+async function uploadPhotoCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "magerante_unsigned");
+  const res = await fetch("https://api.cloudinary.com/v1_1/hcluijlk/image/upload", {
+    method: "POST",
+    body: formData
+  });
+  if (!res.ok) throw new Error("Echec upload Cloudinary");
+  const data = await res.json();
+  return data.secure_url;
+}
+
+const regPhotoInputEl = document.getElementById("regPhotoInput");
+if (regPhotoInputEl) {
+  regPhotoInputEl.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById("regPhotoPreview");
+    if (!file) { preview.style.display = "none"; return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      preview.src = ev.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+}
