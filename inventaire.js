@@ -183,12 +183,33 @@ async function chargerOutilsSuivi() {
   const tableEl = document.getElementById("invTableEditable");
   const NB_LIGNES_VIDES = 3;
   tableEl.innerHTML = `
-    <div class="inv-table-editable">
-      <div class="inv-table-header"><span>Nom</span><span>Catégorie</span><span>Achat</span><span>Vente</span><span>Stock</span><span>Casier</span></div>
-      ${produits.map((p) => ligneTableEditable(p)).join("")}
-      ${Array.from({ length: NB_LIGNES_VIDES }).map(() => ligneTableEditable(null)).join("")}
+    <div class="inv-table-scroll-wrap" id="invTableScrollWrap">
+      <div class="inv-table-editable">
+        <div class="inv-table-header"><span>Nom</span><span>Catégorie</span><span>Achat</span><span>Vente</span><span>Stock</span><span>Casier</span></div>
+        ${produits.map((p) => ligneTableEditable(p)).join("")}
+        ${Array.from({ length: NB_LIGNES_VIDES }).map(() => ligneTableEditable(null)).join("")}
+      </div>
+      <div class="inv-scroll-arrow inv-scroll-arrow-left" id="invScrollArrowLeft">‹</div>
+      <div class="inv-scroll-arrow inv-scroll-arrow-right" id="invScrollArrowRight">›</div>
     </div>
   `;
+  (function initInvScrollArrows() {
+    const wrap = document.getElementById("invTableScrollWrap");
+    const arrowL = document.getElementById("invScrollArrowLeft");
+    const arrowR = document.getElementById("invScrollArrowRight");
+    if (!wrap || !arrowL || !arrowR) return;
+    function update() {
+      const max = wrap.scrollWidth - wrap.clientWidth;
+      const scrollable = max > 4;
+      arrowL.style.display = scrollable ? "flex" : "none";
+      arrowR.style.display = scrollable ? "flex" : "none";
+      arrowL.style.opacity = wrap.scrollLeft > 4 ? "1" : "0";
+      arrowR.style.opacity = wrap.scrollLeft < max - 4 ? "1" : "0";
+    }
+    wrap.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    update();
+  })();
 
   document.getElementById("invTableSaveBtn").addEventListener("click", async () => {
     const btn = document.getElementById("invTableSaveBtn");
