@@ -2,7 +2,7 @@
 // en plus des ventes individuelles déjà enregistrées par ventes.js pour
 // chaque ligne (le comptage CA/stock existant n'est pas modifié).
 import {
-  db, doc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth, limit
+  db, doc, collection, addDoc, updateDoc, onSnapshot, query, orderBy, runTransaction, serverTimestamp, auth, limit
 } from "./firebase-config.js";
 import { appState } from "./state.js";
 import { clotureExisteAujourdhui } from "./cloture.js";
@@ -48,6 +48,25 @@ export async function enregistrerFacture(lignes, total) {
       }))
     });
     return { success: true, numero };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+}
+
+async function annulerFacture(numero, docId) {
+  if (!appState.establishmentId || !docId) {
+    return { success: false, message: "Facture introuvable." };
+  }
+  const estId = appState.establishmentId;
+  try {
+    if (await clotureExisteAujourdhui(estId)) {
+      return { success: false, message: "Impossible d'annuler : la journee est deja cloturee." };
+    }
+    await updateDoc(doc(db, "establishments", estId, "factures", docId), {
+      statut: "annulee",
+      dateAnnulation: serverTimestamp(),
+    });
+    return { success: true };
   } catch (err) {
     return { success: false, message: err.message };
   }
@@ -113,8 +132,9 @@ function afficherFacturesFiltrees() {
     return f.date.toDate() >= seuil;
   });
 
-  const total = filtrees.reduce((acc, f) => acc + Number(f.total || 0), 0);
-  totalEl.textContent = `Total : ${total.toLocaleString("fr-FR")} FCFA (${filtrees.length} facture${filtrees.length > 1 ? "s" : ""})`;
+  const filtreesActives = filtrees.filter((f) => f.statut !== "annulee");
+  const total = filtreesActives.reduce((acc, f) => acc + Number(f.total || 0), 0);
+  totalEl.textContent = `Total : ${total.toLocaleString("fr-FR")} FCFA (${filtreesActives.length} facture${filtreesActives.length > 1 ? "s" : ""})`;
 
   if (filtrees.length === 0) {
     listEl.innerHTML = `<p class="inv-empty">Aucune facture pour cette période.</p>`;
