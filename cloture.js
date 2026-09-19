@@ -379,6 +379,17 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;
 
+      const totalCaisseEl = document.getElementById("clotureTotalCaisseAttendu");
+      function majTotalCaisseAttendu() {
+        if (!totalCaisseEl) return;
+        const fond = Number(inputFondDepart?.value) || 0;
+        const totalAttendu = fond + total;
+        totalCaisseEl.textContent = `Total attendu en caisse (Fond + Factures) : ${totalAttendu.toLocaleString("fr-FR")} FCFA`;
+        totalCaisseEl.hidden = false;
+      }
+      majTotalCaisseAttendu();
+      if (inputFondDepart) inputFondDepart.addEventListener("input", majTotalCaisseAttendu);
+
       if (telephoneProprietaire) {
         const texte = `Bonjour, voici mes comptes du jour (${etablissementNomCourant}) : ${nombre} vente(s), ${total.toLocaleString("fr-FR")} FCFA au total.`;
         lienWhatsapp.href = `https://wa.me/${telephoneProprietaire}?text=${encodeURIComponent(texte)}`;

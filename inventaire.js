@@ -208,6 +208,8 @@ async function chargerOutilsSuivi() {
     }
     wrap.addEventListener("scroll", update);
     window.addEventListener("resize", update);
+    arrowL.addEventListener("click", () => wrap.scrollBy({ left: -160, behavior: "smooth" }));
+    arrowR.addEventListener("click", () => wrap.scrollBy({ left: 160, behavior: "smooth" }));
     update();
   })();
 

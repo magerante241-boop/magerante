@@ -117,15 +117,17 @@
       <div class="auth-hint" id="clotureResume">Clique sur "Lancer la clôture" pour calculer le résumé du jour.</div>
       <p class="auth-error" id="clotureError"></p>
 
+      <p class="auth-hint" style="margin:10px 0 4px;">Factures papier / hors-app reçues aujourd'hui (optionnel)</p>
+      <div id="clotureFacturesManuellesListe"></div>
+      <button type="button" id="btnAjouterFactureManuelle" class="text-btn">+ Ajouter une facture manuelle</button>
+
       <label class="auth-label" for="clotureFondDepart">Fond de caisse au départ (FCFA)</label>
       <input type="number" id="clotureFondDepart" class="auth-input" placeholder="0" min="0" value="0">
 
       <label class="auth-label" for="clotureRecetteReelle">Argent compté en caisse maintenant (FCFA)</label>
       <input type="number" id="clotureRecetteReelle" class="auth-input" placeholder="0" min="0" value="0">
 
-      <p class="auth-hint" style="margin:10px 0 4px;">Factures papier / hors-app reçues aujourd'hui (optionnel)</p>
-      <div id="clotureFacturesManuellesListe"></div>
-      <button type="button" id="btnAjouterFactureManuelle" class="text-btn">+ Ajouter une facture manuelle</button>
+      <div class="cloture-total-caisse" id="clotureTotalCaisseAttendu" hidden></div>
 
       <label class="auth-label" for="clotureCommentaire">Commentaire (optionnel)</label>
       <textarea id="clotureCommentaire" class="auth-input" rows="3" placeholder="Remarques, anomalies, précisions..."></textarea>
