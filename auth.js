@@ -394,6 +394,8 @@ function updateAccountStatusBadge() {
   }
   const menuDashboard = document.getElementById("menuDashboard");
   if (menuDashboard) menuDashboard.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
+  const menuAbonnement = document.getElementById("menuAbonnement");
+  if (menuAbonnement) menuAbonnement.hidden = !(window.AuthState.accountType === "enregistre" && window.AuthState.validated);
   const estConnecte = window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite";
 
   const menuRename = document.getElementById("menuRenameEstablishment");
