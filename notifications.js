@@ -29,11 +29,7 @@ function chargerPrefsTypes() {
 }
 
 function typeActif(type) {
-  const prefs = chargerPrefsTypes();
-  if (Object.prototype.hasOwnProperty.call(prefs, type)) return prefs[type];
-  // Par defaut, seul le type "info" (messages generaux admin/pub) est actif.
-  // Les autres types doivent etre actives manuellement par l'utilisateur.
-  return type === "info";
+  return chargerPrefsTypes()[type] !== false;
 }
 
 function unFiltreEstActif() {
