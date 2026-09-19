@@ -158,7 +158,6 @@ export function initNotifications() {
     notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
     renderPanel();
     updateBadge();
-    alert("SNAPSHOT " + new Date().toLocaleTimeString() + " nonLus=" + notifsCache.filter(n => !n.lu).length + " pending=" + snap.metadata.hasPendingWrites);
     resolverAuteurs();
     if (!premierChargement) {
       snap.docChanges().forEach(c => { if (c.type === "added") notifierSysteme({ id: c.doc.id, ...c.doc.data() }); });
@@ -199,26 +198,22 @@ async function resolverAuteurs() {
 
 export async function marquerToutLu() {
   const nonLus = notifsCache.filter(n => !n.lu);
-  if (nonLus.length === 0) { alert("Rien a marquer (0 non lues)"); return; }
+  if (nonLus.length === 0) return;
   try {
     const batch = writeBatch(db);
     nonLus.forEach(n => batch.update(doc(db, "establishments", appState.establishmentId, "notifications", n.id), { lu: true }));
     await batch.commit();
-    alert("OK: " + nonLus.length + " notif(s) marquees lues");
   } catch (err) {
-    alert("ERREUR: " + err.message);
     console.warn("Marquage tout lu echoue :", err.message, nonLus.map(n => n.id));
   }
 }
 
 export async function marquerUneLu(id) {
   const notif = notifsCache.find(n => n.id === id);
-  if (!notif || notif.lu) { alert("Deja lue ou introuvable: " + id); return; }
+  if (!notif || notif.lu) return;
   try {
     await updateDoc(doc(db, "establishments", appState.establishmentId, "notifications", id), { lu: true });
-    alert("OK marquee lue: " + id);
   } catch (err) {
-    alert("ERREUR marquerUneLu: " + err.message);
     console.warn("Marquage notification lue echoue :", err.message);
   }
 }
