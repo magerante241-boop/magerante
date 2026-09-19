@@ -529,7 +529,7 @@ onAuthStateChanged(auth, async (user) => {
       await ouvrirApplication(user.uid);
       updateAccountStatusBadge();
       try {
-        await genererProduitsDemo();
+        // Auto-génération désactivée pour visiteurs anonymes : stock de session local suffit (inventaire-ephemere.js)
       } catch (errDemo) {
         console.warn("Génération auto des produits démo impossible :", errDemo);
       }
