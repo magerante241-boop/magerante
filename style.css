@@ -1961,3 +1961,14 @@ body.mode-facturier-actif .facture-lignes {
 .inv-scroll-arrow-right { right:4px; animation:invArrowPulseR 1.3s ease-in-out infinite; }
 @keyframes invArrowPulseL { 0%,100%{transform:translateY(-50%) translateX(0);} 50%{transform:translateY(-50%) translateX(-4px);} }
 @keyframes invArrowPulseR { 0%,100%{transform:translateY(-50%) translateX(0);} 50%{transform:translateY(-50%) translateX(4px);} }
+
+/* ===== Fiche cloture figee (comptes anonymes) ===== */
+.cloture-fiche-figee{
+  margin-top:12px; padding:14px; border-radius:10px;
+  background:#f0f7f0; border:2px solid #2e7d32;
+}
+.cloture-fiche-figee-titre{ font-weight:700; margin-bottom:8px; color:#1b5e20; }
+.cloture-fiche-figee-avertissement{
+  margin-top:10px; padding:8px; border-radius:6px;
+  background:#fff3e0; color:#e65100; font-size:13px;
+}

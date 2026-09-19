@@ -379,6 +379,44 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;
 
+      const estAnonyme = window.AuthState && window.AuthState.accountType === "anonyme";
+      const btnEnregistrerAnonyme = document.getElementById("btnEnregistrerClotureAnonyme");
+      const ficheFigeeEl = document.getElementById("clotureFicheFigee");
+      if (btnEnregistrerAnonyme) {
+        btnEnregistrerAnonyme.hidden = !estAnonyme;
+        btnEnregistrerAnonyme.disabled = false;
+        btnEnregistrerAnonyme.textContent = "🔒 Enregistrer la clôture";
+      }
+      if (ficheFigeeEl) ficheFigeeEl.hidden = true;
+      if (estAnonyme && btnEnregistrerAnonyme) {
+        btnEnregistrerAnonyme.onclick = () => {
+          const fond = Number(inputFondDepart?.value) || 0;
+          const recette = Number(inputRecetteReelle?.value) || 0;
+          const commentaireVal = inputCommentaire ? inputCommentaire.value : "";
+          if (inputCommentaire) inputCommentaire.setAttribute("readonly", "readonly");
+          if (inputFondDepart) inputFondDepart.setAttribute("readonly", "readonly");
+          if (inputRecetteReelle) inputRecetteReelle.setAttribute("readonly", "readonly");
+          btnEnregistrerAnonyme.disabled = true;
+          btnEnregistrerAnonyme.textContent = "✅ Clôture enregistrée (session)";
+          if (ficheFigeeEl) {
+            ficheFigeeEl.hidden = false;
+            ficheFigeeEl.innerHTML = `
+              <div class="cloture-fiche-figee-titre">📋 Fiche de clôture — ${new Date().toLocaleString("fr-FR")}</div>
+              <div>Chiffre d'affaires : <strong>${total.toLocaleString("fr-FR")} FCFA</strong></div>
+              <div>Bénéfice : <strong>${totalBenefice.toLocaleString("fr-FR")} FCFA</strong></div>
+              <div>${nombre} vente(s) · ${facturesJour.length} facture(s) numérique(s)</div>
+              <div>Fond de caisse au départ : ${fond.toLocaleString("fr-FR")} FCFA</div>
+              <div>Argent compté en caisse : ${recette.toLocaleString("fr-FR")} FCFA</div>
+              ${commentaireVal ? `<div>Commentaire : ${escapeHtml(commentaireVal)}</div>` : ""}
+              <div class="cloture-fiche-figee-avertissement">
+                ⚠️ Cette fiche est temporaire et liée à votre session visiteur. Elle disparaîtra si vous vous déconnectez.
+                <strong>Inscrivez-vous</strong> pour conserver l'historique de vos ventes, factures et clôtures.
+              </div>
+            `;
+          }
+        };
+      }
+
       const totalCaisseEl = document.getElementById("clotureTotalCaisseAttendu");
       function majTotalCaisseAttendu() {
         if (!totalCaisseEl) return;
