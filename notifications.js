@@ -158,6 +158,7 @@ export function initNotifications() {
     notifsCache = snap.docs.slice(0, 30).map(d => ({ id: d.id, ...d.data() }));
     renderPanel();
     updateBadge();
+    console.warn("SNAPSHOT FIRE", new Date().toLocaleTimeString(), "nonLus=", notifsCache.filter(n => !n.lu).length, "pending=", snap.metadata.hasPendingWrites);
     resolverAuteurs();
     if (!premierChargement) {
       snap.docChanges().forEach(c => { if (c.type === "added") notifierSysteme({ id: c.doc.id, ...c.doc.data() }); });
