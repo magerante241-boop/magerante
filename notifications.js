@@ -212,10 +212,12 @@ export async function marquerToutLu() {
 
 export async function marquerUneLu(id) {
   const notif = notifsCache.find(n => n.id === id);
-  if (!notif || notif.lu) return;
+  if (!notif || notif.lu) { alert("Deja lue ou introuvable: " + id); return; }
   try {
     await updateDoc(doc(db, "establishments", appState.establishmentId, "notifications", id), { lu: true });
+    alert("OK marquee lue: " + id);
   } catch (err) {
+    alert("ERREUR marquerUneLu: " + err.message);
     console.warn("Marquage notification lue echoue :", err.message);
   }
 }
