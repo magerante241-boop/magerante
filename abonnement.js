@@ -121,8 +121,17 @@ async function rafraichirContenuAbonnement() {
 
 function initAbonnement() {
   const btnMenu = document.getElementById("menuAbonnement");
-  if (btnMenu) btnMenu.addEventListener("click", ouvrirModaleAbonnement);
+  if (btnMenu && !btnMenu._abonnementBound) {
+    btnMenu.addEventListener("click", ouvrirModaleAbonnement);
+    btnMenu._abonnementBound = true;
+  } else if (!btnMenu) {
+    setTimeout(initAbonnement, 300);
+  }
 }
-window.addEventListener("DOMContentLoaded", () => setTimeout(initAbonnement, 800));
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => setTimeout(initAbonnement, 300));
+} else {
+  setTimeout(initAbonnement, 300);
+}
 
 export { ouvrirModaleAbonnement };
