@@ -2005,3 +2005,6 @@ body.mode-facturier-actif .facture-lignes {
 .badge-alerte{ background:#fff3e0; color:#e65100; }
 .badge-urgent{ background:#ffebee; color:#c62828; }
 .badge-refuse{ background:#ffebee; color:#c62828; }
+
+.modal-overlay[hidden]{ display:none !important; }
+.modal-close{ font-size:24px; padding:8px 12px; top:4px; right:4px; line-height:1; }
