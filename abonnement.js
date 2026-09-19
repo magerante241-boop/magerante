@@ -53,9 +53,15 @@ async function demanderAbonnement(planKey) {
   }, { merge: true });
   const estSnap = await getDoc(doc(db, "establishments", estId));
   const nomEtab = estSnap.data()?.name || "établissement";
-  const texte = "Demande d'abonnement MAGERANTE\nEtablissement : " + nomEtab +
+  const userSnap = await getDoc(doc(db, "users", estId));
+  const ud = userSnap.data() || {};
+  const nomComplet = ((ud.nom || "") + " " + (ud.prenom || "")).trim() || "Proprietaire";
+  const texte = "Demande d'abonnement MAGERANTE\n" + nomComplet +
+    "\nEtablissement : " + nomEtab +
+    "\nTelephone : " + (ud.telephone || estSnap.data()?.telephone || "") +
     "\nPlan : " + plan.label + " (" + plan.montant + " FCFA)" +
-    "\n\nAccepter ou refuser depuis le panneau admin.";
+    "\n\nAccepter ou refuser depuis le panneau admin :" +
+    "\nhttps://magerante241-boop.github.io/magerante/admin.html";
   window.open("https://wa.me/" + ADMIN_PHONE + "?text=" + encodeURIComponent(texte), "_blank");
   rendreEtatAbonnement({ statut: "demande", plan: planKey });
 }
