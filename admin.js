@@ -1152,12 +1152,16 @@ function afficherDetailCloture(c) {
 const PLANS_DUREE = { mensuel: 30, trimestriel: 90, annuel: 365 };
 const PLANS_LABEL = { mensuel: "Mensuel", trimestriel: "Trimestriel", annuel: "Annuel" };
 
+let unsubAbonnements = null;
+let abonnementsRun = 0;
 function chargerAbonnements() {
   const zone = document.getElementById("abonnementsList");
   if (!zone) return;
-  onSnapshot(
+  if (unsubAbonnements) unsubAbonnements();
+  unsubAbonnements = onSnapshot(
     collection(db, "establishments"),
     async (snap) => {
+      const monRun = ++abonnementsRun;
       const lignes = snap.docs.filter((d) => {
         const ab = d.data().abonnement;
         return ab && ab.statut && ab.statut !== "aucun";
@@ -1166,7 +1170,7 @@ function chargerAbonnements() {
         zone.innerHTML = "<p class='empty-msg'>Aucune demande ou abonnement en cours.</p>";
         return;
       }
-      zone.innerHTML = "";
+      const frag = document.createDocumentFragment();
       for (const docSnap of lignes) {
         const est = docSnap.data();
         const estId = docSnap.id;
@@ -1232,8 +1236,11 @@ function chargerAbonnements() {
           });
         }
 
-        zone.appendChild(card);
+        frag.appendChild(card);
       }
+      if (monRun !== abonnementsRun) return;
+      zone.innerHTML = "";
+      zone.appendChild(frag);
     },
     (err) => {
       zone.innerHTML = "<p style='color:#b00020; word-break:break-all;'>Erreur de chargement : " + err.message + "</p>";
