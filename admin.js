@@ -1179,7 +1179,7 @@ function chargerAbonnements() {
         try {
           const uSnap = await getDoc(doc(db, "users", estId));
           const ud = uSnap.data() || {};
-          nomProprio = ((ud.nom || "") + " " + (ud.prenom || "")).trim();
+          nomProprio = ((ud.nom || "") + " " + (ud.prenom || "")).trim() || ud.displayName || ud.name || ud.email || ud.telephone || "";
         } catch (e) {}
 
         const card = document.createElement("div");
@@ -1205,7 +1205,7 @@ function chargerAbonnements() {
         }
 
         card.innerHTML =
-          "<strong>" + (nomProprio || "Proprietaire") + "</strong>" +
+          "<strong>" + (nomProprio || "Compte sans nom") + "</strong>" +
           "<div class='meta'>Etablissement : " + (est.name || "") + "</div>" +
           "<div class='meta'>Plan : " + (PLANS_LABEL[ab.plan] || ab.plan) + " (" + (ab.montant || "") + " FCFA)</div>" +
           "<div class='abonnement-actions'>" + corpsAction + "</div>";

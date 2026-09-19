@@ -55,7 +55,7 @@ async function demanderAbonnement(planKey) {
   const nomEtab = estSnap.data()?.name || "établissement";
   const userSnap = await getDoc(doc(db, "users", estId));
   const ud = userSnap.data() || {};
-  const nomComplet = ((ud.nom || "") + " " + (ud.prenom || "")).trim() || "Proprietaire";
+  const nomComplet = ((ud.nom || "") + " " + (ud.prenom || "")).trim() || ud.displayName || ud.name || ud.email || ud.telephone || "Compte sans nom";
   const texte = "Demande d'abonnement MAGERANTE\n" + nomComplet +
     "\nEtablissement : " + nomEtab +
     "\nTelephone : " + (ud.telephone || estSnap.data()?.telephone || "") +
