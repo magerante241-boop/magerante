@@ -1,6 +1,25 @@
 import {
-  auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
-  collection, collectionGroup, query, where, orderBy, limit, onSnapshot, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, writeBatch
+  auth,
+  db,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  sendPasswordResetEmail,
+  collection,
+  collectionGroup,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  deleteDoc,
+  serverTimestamp,
+  writeBatch,
+  getDoc
 } from "./firebase-config.js";
 import { formaterQuantiteAvecCasiers } from "./casiers.js";
 import { enregistrerConnexion } from "./connexions.js";
@@ -115,6 +134,7 @@ onAuthStateChanged(auth, (user) => {
     adminError.textContent = "";
     chargerDashboard();
     chargerComptesEnAttente();
+    chargerAbonnements();
     chargerFinanceEtRapports();
     chargerHistoriqueGlobal();
     chargerClotures();
@@ -769,7 +789,7 @@ document.getElementById("produitsGestionTableBody").addEventListener("click", as
   if (overlay) overlay.addEventListener("click", fermerMenu);
   if (btnRetourApp) btnRetourApp.addEventListener("click", () => { window.location.href = "index.html"; });
 
-  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secComptesAttente","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique","secClotures","secInventaireGlobal"];
+  const TOUTES_SECTIONS_ADMIN = ["secAccueil","secMonEtablissement","secComptesAttente","secAbonnements","secCA","secZones","secImport","secGestionProduits","secVentes","secConnexions","secHistorique","secClotures","secInventaireGlobal"];
 
 function majHauteurHeader() {
   const h = document.querySelector("header");
@@ -1126,4 +1146,98 @@ function afficherDetailCloture(c) {
   });
 
   zone.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+
+const PLANS_DUREE = { mensuel: 30, trimestriel: 90, annuel: 365 };
+const PLANS_LABEL = { mensuel: "Mensuel", trimestriel: "Trimestriel", annuel: "Annuel" };
+
+function chargerAbonnements() {
+  const zone = document.getElementById("abonnementsList");
+  if (!zone) return;
+  onSnapshot(
+    collection(db, "establishments"),
+    async (snap) => {
+      const lignes = snap.docs.filter((d) => {
+        const ab = d.data().abonnement;
+        return ab && ab.statut && ab.statut !== "aucun";
+      });
+      if (lignes.length === 0) {
+        zone.innerHTML = "<p class='empty-msg'>Aucune demande ou abonnement en cours.</p>";
+        return;
+      }
+      zone.innerHTML = "";
+      for (const docSnap of lignes) {
+        const est = docSnap.data();
+        const estId = docSnap.id;
+        const ab = est.abonnement;
+        let nomProprio = "";
+        try {
+          const uSnap = await getDoc(doc(db, "users", estId));
+          const ud = uSnap.data() || {};
+          nomProprio = ((ud.nom || "") + " " + (ud.prenom || "")).trim();
+        } catch (e) {}
+
+        const card = document.createElement("div");
+        card.className = "compte-card";
+        let corpsAction = "";
+
+        if (ab.statut === "demande") {
+          corpsAction =
+            "<span class='abonnement-badge badge-demande'>⏳ Demande</span>" +
+            "<button class='btn-valider' data-uid='" + estId + "' data-action='accepter'>Accepter</button>" +
+            "<button class='btn-refuser' data-uid='" + estId + "' data-action='refuser'>Refuser</button>";
+        } else if (ab.statut === "accepte_attente_paiement") {
+          corpsAction =
+            "<span class='abonnement-badge badge-attente'>💰 En attente de paiement</span>" +
+            "<button class='btn-valider' data-uid='" + estId + "' data-action='confirmer'>Confirmer le paiement</button>";
+        } else if (ab.statut === "actif") {
+          const dateFin = ab.dateFin && ab.dateFin.toDate ? ab.dateFin.toDate() : (ab.dateFin ? new Date(ab.dateFin) : null);
+          const jours = dateFin ? Math.ceil((dateFin - new Date()) / 86400000) : null;
+          const classe = jours !== null && jours <= 2 ? "badge-urgent" : (jours !== null && jours <= 7 ? "badge-alerte" : "badge-actif");
+          corpsAction = "<span class='abonnement-badge " + classe + "'>🟢 Actif — " + (jours !== null ? jours + "j restants" : "") + "</span>";
+        } else if (ab.statut === "refuse") {
+          corpsAction = "<span class='abonnement-badge badge-refuse'>❌ Refuse</span>";
+        }
+
+        card.innerHTML =
+          "<strong>" + (nomProprio || "Proprietaire") + "</strong>" +
+          "<div class='meta'>Etablissement : " + (est.name || "") + "</div>" +
+          "<div class='meta'>Plan : " + (PLANS_LABEL[ab.plan] || ab.plan) + " (" + (ab.montant || "") + " FCFA)</div>" +
+          "<div class='abonnement-actions'>" + corpsAction + "</div>";
+
+        const btnValider = card.querySelector("[data-action='accepter'], [data-action='confirmer']");
+        if (btnValider) {
+          btnValider.addEventListener("click", async (e) => {
+            const action = e.target.getAttribute("data-action");
+            if (action === "accepter") {
+              await updateDoc(doc(db, "establishments", estId), { "abonnement.statut": "accepte_attente_paiement" });
+            } else if (action === "confirmer") {
+              const dureeJours = PLANS_DUREE[ab.plan] || 30;
+              const dateDebut = new Date();
+              const dateFin = new Date(Date.now() + dureeJours * 86400000);
+              await updateDoc(doc(db, "establishments", estId), {
+                "abonnement.statut": "actif",
+                "abonnement.dateDebut": dateDebut,
+                "abonnement.dateFin": dateFin
+              });
+            }
+          });
+        }
+        const btnRefuser = card.querySelector("[data-action='refuser']");
+        if (btnRefuser) {
+          btnRefuser.addEventListener("click", async () => {
+            if (!confirm("Refuser cette demande d'abonnement ?")) return;
+            await updateDoc(doc(db, "establishments", estId), { "abonnement.statut": "refuse" });
+          });
+        }
+
+        zone.appendChild(card);
+      }
+    },
+    (err) => {
+      zone.innerHTML = "<p style='color:#b00020; word-break:break-all;'>Erreur de chargement : " + err.message + "</p>";
+      console.error("Erreur onSnapshot abonnements:", err);
+    }
+  );
 }

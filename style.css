@@ -1995,3 +1995,13 @@ body.mode-facturier-actif .facture-lignes {
 .abonnement-urgent{ color:#c62828; font-weight:700; }
 .abonnement-refuse{ color:#c62828; margin-top:8px; }
 .abonnement-note{ font-size:13px; color:#555; }
+
+/* ===== Abonnements (admin) ===== */
+.abonnement-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.abonnement-badge{ padding:4px 10px; border-radius:20px; font-size:13px; font-weight:700; }
+.badge-demande{ background:#fff3e0; color:#e65100; }
+.badge-attente{ background:#e3f2fd; color:#1565c0; }
+.badge-actif{ background:#e8f5e9; color:#2e7d32; }
+.badge-alerte{ background:#fff3e0; color:#e65100; }
+.badge-urgent{ background:#ffebee; color:#c62828; }
+.badge-refuse{ background:#ffebee; color:#c62828; }
