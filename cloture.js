@@ -324,20 +324,10 @@ document.addEventListener("DOMContentLoaded", () => {
     window.print();
   }
 
-  menuBtn.addEventListener("click", async () => {
-    const sideMenu = document.getElementById("sideMenu");
-    if (sideMenu) sideMenu.hidden = true;
-    errorEl.textContent = "";
-    lienWhatsapp.hidden = true;
-    btnConfirmer.disabled = false;
-    btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
-    btnConfirmer.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
+  const btnLancerCloture = document.getElementById("btnLancerCloture");
+
+  async function lancerCalculCloture() {
     resumeEl.textContent = "Chargement du résumé...";
-    if (inputFondDepart) inputFondDepart.value = "0";
-    if (inputRecetteReelle) inputRecetteReelle.value = "0";
-    if (inputCommentaire) inputCommentaire.value = "";
-    viderFacturesManuelles();
-    clotureGate.hidden = false;
 
     const estId = appState.establishmentId;
     const uid = auth.currentUser?.uid;
@@ -398,6 +388,24 @@ document.addEventListener("DOMContentLoaded", () => {
       resumeEl.textContent = "Erreur lors du chargement du résumé.";
       console.warn("Erreur resume cloture :", e);
     }
+  }
+
+  if (btnLancerCloture) btnLancerCloture.addEventListener("click", lancerCalculCloture);
+
+  menuBtn.addEventListener("click", () => {
+    const sideMenu = document.getElementById("sideMenu");
+    if (sideMenu) sideMenu.hidden = true;
+    errorEl.textContent = "";
+    lienWhatsapp.hidden = true;
+    btnConfirmer.disabled = false;
+    btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
+    btnConfirmer.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
+    resumeEl.textContent = 'Clique sur "Lancer la clôture" pour calculer le résumé du jour.';
+    if (inputFondDepart) inputFondDepart.value = "0";
+    if (inputRecetteReelle) inputRecetteReelle.value = "0";
+    if (inputCommentaire) inputCommentaire.value = "";
+    viderFacturesManuelles();
+    clotureGate.hidden = false;
   });
 
   if (btnClose) btnClose.addEventListener("click", () => { clotureGate.hidden = true; });
