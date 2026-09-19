@@ -10,7 +10,7 @@ async function main() {
   console.log(`Comptes Gérant (gerant_logins) : ${gerants.size}`);
   gerants.forEach((d) => {
     const g = d.data();
-    console.log(`  - tel: ${d.id} | établissement: ${g.establishmentId} | nom: ${g.nom || "?"}`);
+    console.log(`  - tel: ${d.id} | établissement: ${g.estId} | nom: ${g.nom || "?"}`);
   });
 }
 
