@@ -1086,6 +1086,7 @@ window.showToast = function (message, duration = 2200) {
   border-radius:8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;
   display:flex;align-items:center;justify-content:center;line-height:1;
 }
+.notif-badge[hidden]{display:none;}
 #btnNotifications{position:relative;}
 
 /* ===== Panneau notifications ===== */
