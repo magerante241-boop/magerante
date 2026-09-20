@@ -106,6 +106,7 @@ async function traiterInvitationDepuisUrl() {
       window.AuthState = window.AuthState || {};
       window.AuthState.ready = true;
       window.AuthState.role = "GERANT";
+      window.AuthState.nomGerant = nomGerant;
       window.AuthState.accountType = "invite";
       window.AuthState.validated = true;
 
@@ -238,6 +239,7 @@ async function connecterGerantParCode(telephone, code) {
   window.AuthState = window.AuthState || {};
   window.AuthState.ready = true;
   window.AuthState.role = "GERANT";
+  window.AuthState.nomGerant = nomGerant;
   window.AuthState.accountType = "invite";
   window.AuthState.validated = true;
 
