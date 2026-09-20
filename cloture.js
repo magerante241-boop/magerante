@@ -13,14 +13,18 @@ function calculerDebutFinJour() {
 }
 
 export async function obtenirDerniereCloture(estId) {
-  const q = query(
-    collection(db, "establishments", estId, "clotures"),
-    orderBy("date", "desc"),
-    limit(1)
-  );
+  const uid = auth.currentUser ? auth.currentUser.uid : null;
+  const estGerant = !!uid && uid !== estId;
+  const q = estGerant
+    ? query(collection(db, "establishments", estId, "clotures"), where("gerantUid", "==", uid))
+    : query(collection(db, "establishments", estId, "clotures"), orderBy("date", "desc"), limit(1));
   const snap = await getDocs(q);
   if (snap.empty) return null;
-  const docSnap = snap.docs[0];
+  let docSnap = snap.docs[0];
+  if (estGerant) {
+    const ms = (d) => { const t = d.data().date; return t && t.toDate ? t.toDate().getTime() : (t ? new Date(t).getTime() : 0); };
+    docSnap = snap.docs.reduce((a, b) => (ms(b) > ms(a) ? b : a));
+  }
   return { id: docSnap.id, ...docSnap.data() };
 }
 

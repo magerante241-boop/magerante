@@ -155,6 +155,7 @@ export function initNotifications() {
     unsubscribeNotifs();
     unsubscribeNotifs = null;
     notifsCache = [];
+    nomAuteurCache.clear();
     premierChargement = true;
     renderPanel();
     updateBadge();

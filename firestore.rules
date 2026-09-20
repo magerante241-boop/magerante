@@ -99,7 +99,7 @@ service cloud.firestore {
       }
 
       match /clotures/{clotureId} {
-        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+        allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || (estGerantDe(estId) && resource.data.gerantUid == request.auth.uid));
         allow create: if isSignedIn() && ((estGerantDe(estId) && request.resource.data.gerantUid == request.auth.uid) || request.auth.uid == estId);
         allow update, delete: if false;
       }
