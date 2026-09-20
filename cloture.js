@@ -329,6 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let clotureCle = null;
+  let clotureEnvoyee = false;
   function reinitialiserCloture() {
     resumeCourant = null;
     resumeEl.innerHTML = "";
@@ -353,6 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnLancerCloture = document.getElementById("btnLancerCloture");
 
   async function lancerCalculCloture() {
+    if (clotureEnvoyee) { reinitialiserCloture(); clotureEnvoyee = false; }
     resumeEl.textContent = "Chargement du résumé...";
 
     const estId = appState.establishmentId;
@@ -404,6 +406,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       btnConfirmer.dataset.total = total;
       btnConfirmer.dataset.nombre = nombre;
+      btnConfirmer.disabled = false;
+      btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Enregistrer ma journée" : "Envoyer mes comptes au propriétaire";
+      if (typeof errorEl !== "undefined" && errorEl) errorEl.textContent = "";
 
       const estAnonyme = window.AuthState && window.AuthState.accountType === "anonyme";
       const btnEnregistrerAnonyme = document.getElementById("btnEnregistrerClotureAnonyme");
@@ -577,13 +582,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const estId = appState.establishmentId;
       const uid = auth.currentUser?.uid;
       if (!estId || !uid || !resumeCourant) return;
-      const _derniereClotureCheck = await obtenirDerniereCloture(estId);
-      const _clotureAujourdhuiCheck = _derniereClotureCheck && _derniereClotureCheck.date &&
-        (_derniereClotureCheck.date.toDate ? _derniereClotureCheck.date.toDate() : new Date(_derniereClotureCheck.date)).toDateString() === new Date().toDateString();
-      if (_clotureAujourdhuiCheck) {
-        errorEl.textContent = "Une clôture a déjà été envoyée aujourd'hui pour cet établissement.";
-        return;
-      }
       const facturesManuelles = collecterFacturesManuelles();
       const totalFacturesManuelles = facturesManuelles.reduce((acc, f) => acc + f.montant, 0);
       const totalVentes = Number(btnConfirmer.dataset.total || 0);
@@ -636,6 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
         btnConfirmer.textContent = (window.AuthState && window.AuthState.role === "GERANT_PROPRIETAIRE") ? "Journée enregistrée ✅" : "Comptes envoyés ✅";
+        clotureEnvoyee = true;
       } catch (e) {
         errorEl.textContent = "Erreur lors de l'envoi : " + (e.code || e.message);
         btnConfirmer.disabled = false;
