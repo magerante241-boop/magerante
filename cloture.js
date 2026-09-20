@@ -456,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lienWhatsapp.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite") && window.AuthState.role !== "GERANT_PROPRIETAIRE");
       }
     } catch (e) {
-      resumeEl.textContent = "Erreur lors du chargement du résumé.";
+      resumeEl.textContent = "Erreur lors du chargement du résumé (" + (e && (e.code || e.message) || "inconnue") + ").";
       console.warn("Erreur resume cloture :", e);
     }
   }
