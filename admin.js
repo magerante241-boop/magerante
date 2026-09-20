@@ -1194,7 +1194,8 @@ function chargerAbonnements() {
         } else if (ab.statut === "accepte_attente_paiement") {
           corpsAction =
             "<span class='abonnement-badge badge-attente'>💰 En attente de paiement</span>" +
-            "<button class='btn-valider' data-uid='" + estId + "' data-action='confirmer'>Confirmer le paiement</button>";
+            "<button class='btn-valider' data-uid='" + estId + "' data-action='confirmer'>Confirmer le paiement</button>" +
+            "<button class='btn-refuser' data-uid='" + estId + "' data-action='annuler'>Annuler</button>";
         } else if (ab.statut === "actif") {
           const dateFin = ab.dateFin && ab.dateFin.toDate ? ab.dateFin.toDate() : (ab.dateFin ? new Date(ab.dateFin) : null);
           const jours = dateFin ? Math.ceil((dateFin - new Date()) / 86400000) : null;
@@ -1233,6 +1234,14 @@ function chargerAbonnements() {
           btnRefuser.addEventListener("click", async () => {
             if (!confirm("Refuser cette demande d'abonnement ?")) return;
             await updateDoc(doc(db, "establishments", estId), { "abonnement.statut": "refuse" });
+          });
+        }
+
+        const btnAnnuler = card.querySelector("[data-action='annuler']");
+        if (btnAnnuler) {
+          btnAnnuler.addEventListener("click", async () => {
+            if (!confirm("Annuler cette demande (paiement non reçu) ?")) return;
+            await updateDoc(doc(db, "establishments", estId), { "abonnement.statut": "aucun" });
           });
         }
 
