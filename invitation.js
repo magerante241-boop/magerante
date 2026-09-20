@@ -252,6 +252,7 @@ async function connecterGerantParCode(telephone, code) {
     titre: "Connexion gérant",
     message: `${nomGerant} vient de se connecter.`
   });
+  if (window.reinitialiserCloture) window.reinitialiserCloture();
   afficherEcranBienvenue(nomGerant, nomEtablissement);
   return { success: true, estId, nomGerant };
 }

@@ -324,6 +324,28 @@ document.addEventListener("DOMContentLoaded", () => {
     window.print();
   }
 
+  let clotureCle = null;
+  function reinitialiserCloture() {
+    resumeCourant = null;
+    resumeEl.innerHTML = "";
+    if (inputFondDepart) { inputFondDepart.value = ""; inputFondDepart.removeAttribute("readonly"); }
+    if (inputRecetteReelle) { inputRecetteReelle.value = ""; inputRecetteReelle.removeAttribute("readonly"); }
+    if (inputCommentaire) { inputCommentaire.value = ""; inputCommentaire.removeAttribute("readonly"); }
+    const totEl = document.getElementById("clotureTotalCaisseAttendu");
+    if (totEl) { totEl.textContent = ""; totEl.hidden = true; }
+    const ficheEl = document.getElementById("clotureFicheFigee");
+    if (ficheEl) { ficheEl.hidden = true; ficheEl.innerHTML = ""; }
+    const btnAnon = document.getElementById("btnEnregistrerClotureAnonyme");
+    if (btnAnon) { btnAnon.hidden = true; btnAnon.disabled = false; btnAnon.textContent = "🔒 Enregistrer la clôture"; }
+    viderFacturesManuelles();
+  }
+  function verifierCleCloture() {
+    const cle = (appState.establishmentId || "") + "|" + (auth.currentUser ? auth.currentUser.uid : "") + "|" + ((window.AuthState && window.AuthState.role) || "");
+    if (clotureCle !== null && cle !== clotureCle) reinitialiserCloture();
+    clotureCle = cle;
+  }
+  window.reinitialiserCloture = () => { reinitialiserCloture(); clotureCle = null; };
+
   const btnLancerCloture = document.getElementById("btnLancerCloture");
 
   async function lancerCalculCloture() {
@@ -442,6 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnLancerCloture) btnLancerCloture.addEventListener("click", lancerCalculCloture);
 
   menuBtn.addEventListener("click", () => {
+    verifierCleCloture();
     const sideMenu = document.getElementById("sideMenu");
     if (sideMenu) sideMenu.hidden = true;
     errorEl.textContent = "";
