@@ -590,6 +590,10 @@ document.addEventListener("DOMContentLoaded", () => {
         errorEl.textContent = "Aucune activité depuis la dernière clôture — impossible de clôturer une session vide.";
         return;
       }
+      if (!inputRecetteReelle || String(inputRecetteReelle.value).trim() === "") {
+        errorEl.textContent = "Saisis l'argent compté en caisse avant d'envoyer (mets 0 si la caisse est vide).";
+        return;
+      }
       btnConfirmer.disabled = true;
       btnConfirmer.textContent = "Envoi...";
       const nomGerantCl = (window.AuthState && window.AuthState.nomGerant) || "Un gérant";
