@@ -26,7 +26,10 @@ service cloud.firestore {
     match /establishments/{estId} {
       allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
       allow list: if isAdmin();
-      allow create: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (request.auth.uid == estId && !request.resource.data.keys().hasAny(["abonnement"]))
+      );
       allow update: if isSignedIn() && (
         isAdmin() ||
         (request.auth.uid == estId && (
