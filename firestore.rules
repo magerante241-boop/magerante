@@ -27,7 +27,17 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
       allow list: if isAdmin();
       allow create: if isSignedIn() && (request.auth.uid == estId || isAdmin());
-      allow update: if isSignedIn() && (request.auth.uid == estId || isAdmin());
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (request.auth.uid == estId && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(["abonnement"]) ||
+          (
+            request.resource.data.abonnement.statut == "demande" &&
+            request.resource.data.abonnement.get("dateFin", null) == resource.data.get("abonnement", {}).get("dateFin", null) &&
+            request.resource.data.abonnement.get("dateDebut", null) == resource.data.get("abonnement", {}).get("dateDebut", null)
+          )
+        ))
+      );
       allow delete: if isSignedIn() && isAdmin();
 
       match /produits/{prodId} {
