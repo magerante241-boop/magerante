@@ -5,6 +5,7 @@ import {
 import { appState } from "./state.js";
 
 let unsubscribeNotifs = null;
+let notifsCle = null;
 let notifsCache = [];
 let premierChargement = true;
 const nomAuteurCache = new Map();
@@ -147,7 +148,18 @@ async function nettoyerVieillesNotifications() {
 }
 
 export function initNotifications() {
-  if (!appState.establishmentId || unsubscribeNotifs) return;
+  if (!appState.establishmentId) return;
+  const cleNotifs = appState.establishmentId + "|" + (auth.currentUser ? auth.currentUser.uid : "");
+  if (unsubscribeNotifs && cleNotifs === notifsCle) return;
+  if (unsubscribeNotifs) {
+    unsubscribeNotifs();
+    unsubscribeNotifs = null;
+    notifsCache = [];
+    premierChargement = true;
+    renderPanel();
+    updateBadge();
+  }
+  notifsCle = cleNotifs;
   const uid = auth.currentUser ? auth.currentUser.uid : null;
   const estProprietaire = !!uid && uid === appState.establishmentId;
   if (estProprietaire) nettoyerVieillesNotifications();

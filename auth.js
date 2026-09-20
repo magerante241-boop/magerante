@@ -477,8 +477,13 @@ async function creerEtablissementParDefaut(uid) {
   }, { merge: true });
 }
 
+let derniereUid = null;
 // --- Connexion anonyme automatique, invisible pour l'utilisateur ---
 onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    if (derniereUid && derniereUid !== user.uid) { location.reload(); return; }
+    derniereUid = user.uid;
+  }
   const navPlusBtn = document.querySelector('.nav-btn[data-view="plus"]');
   if (navPlusBtn) navPlusBtn.hidden = user?.email !== ADMIN_EMAIL;
   if (menuImportProduitsBtn) menuImportProduitsBtn.hidden = user?.email !== ADMIN_EMAIL;

@@ -11,3 +11,4 @@ nettoyage-doublons.js
 .env*
 reparer_gerants_invite.js
 patch_*.py
+*.bak*
