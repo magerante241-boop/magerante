@@ -2,7 +2,7 @@ import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/
 import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { db, auth } from "./firebase-config.js";
 import { appState } from "./state.js";
-import { creerNotification } from "./notifications.js";
+import { creerNotification, initNotifications } from "./notifications.js";
 
 function genererToken() {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -122,6 +122,8 @@ async function traiterInvitationDepuisUrl() {
         titre: "Nouveau gérant activé",
         message: `${nomGerant} a rejoint l'établissement via un lien d'invitation.`
       });
+      if (window.reinitialiserCloture) window.reinitialiserCloture();
+      initNotifications();
       afficherEcranBienvenue(nomGerant, nomEtablissement);
       resolve({ estId, nomGerant, uid: user.uid });
     });
@@ -253,6 +255,7 @@ async function connecterGerantParCode(telephone, code) {
     message: `${nomGerant} vient de se connecter.`
   });
   if (window.reinitialiserCloture) window.reinitialiserCloture();
+  initNotifications();
   afficherEcranBienvenue(nomGerant, nomEtablissement);
   return { success: true, estId, nomGerant };
 }
