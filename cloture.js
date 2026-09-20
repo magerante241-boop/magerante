@@ -457,6 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (telephoneProprietaire) {
         const texte = `Bonjour, voici mes comptes du jour (${etablissementNomCourant}) : ${nombre} vente(s), ${total.toLocaleString("fr-FR")} FCFA au total.`;
         lienWhatsapp.href = `https://wa.me/${telephoneProprietaire}?text=${encodeURIComponent(texte)}`;
+        lienWhatsapp.dataset.tel = String(telephoneProprietaire);
         lienWhatsapp.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite") && window.AuthState.role !== "GERANT_PROPRIETAIRE");
       }
     } catch (e) {
@@ -466,6 +467,86 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (btnLancerCloture) btnLancerCloture.addEventListener("click", lancerCalculCloture);
+
+  const STOCK_BAS_SEUIL = 5;
+  const MAX_LIGNES_WA = 10;
+  const fmtFcfa = (n) => Number(n || 0).toLocaleString("fr-FR");
+
+  function construireMessageCloture() {
+    const r = resumeCourant;
+    if (!r) return "";
+    const fm = collecterFacturesManuelles();
+    const totalFm = fm.reduce((a, f) => a + f.montant, 0);
+    const fond = Number(inputFondDepart?.value || 0);
+    const compteSaisi = !!inputRecetteReelle && String(inputRecetteReelle.value).trim() !== "";
+    const compte = Number(inputRecetteReelle?.value || 0);
+    const theorique = fond + Number(r.total || 0) + totalFm;
+    const ecart = compte - theorique;
+    const gerant = (window.AuthState && window.AuthState.nomGerant) || "Gérant";
+    const commentaire = (inputCommentaire?.value || "").trim();
+
+    const l = [];
+    l.push("📋 CLÔTURE - " + (etablissementNomCourant || "Établissement"));
+    l.push("Gérant : " + gerant);
+    l.push(new Date().toLocaleString("fr-FR"));
+    l.push("");
+    l.push("💰 Chiffre d'affaires : " + fmtFcfa(r.total) + " FCFA");
+    l.push("📈 Bénéfice : " + fmtFcfa(r.totalBenefice) + " FCFA");
+    l.push("🧾 " + r.nombre + " vente(s) · " + r.facturesJour.length + " facture(s)");
+    if (fm.length) l.push("📄 " + fm.length + " facture(s) manuelle(s) : " + fmtFcfa(totalFm) + " FCFA");
+
+    const marques = Object.entries(r.parMarque || {}).sort((a, b) => b[1] - a[1]).slice(0, MAX_LIGNES_WA);
+    if (marques.length) {
+      l.push("");
+      l.push("🏷️ Par marque");
+      marques.forEach(([m, mt]) => {
+        const b = r.parMarqueBenefice && r.parMarqueBenefice[m];
+        l.push("• " + m + " : " + fmtFcfa(mt) + " FCFA" + (b != null ? " (+" + fmtFcfa(b) + ")" : ""));
+      });
+    }
+
+    l.push("");
+    l.push("💵 Caisse");
+    l.push("• Fond de départ : " + fmtFcfa(fond) + " FCFA");
+    l.push("• Attendu : " + fmtFcfa(theorique) + " FCFA");
+    if (compteSaisi) {
+      l.push("• Compté : " + fmtFcfa(compte) + " FCFA");
+      l.push((ecart !== 0 ? "⚠️ " : "✅ ") + "Écart : " + (ecart > 0 ? "+" : "") + fmtFcfa(ecart) + " FCFA");
+    } else {
+      l.push("• Compté : non saisi");
+    }
+
+    const devis = Object.entries(r.devisRenouvellement || {}).slice(0, MAX_LIGNES_WA);
+    if (devis.length) {
+      l.push("");
+      l.push("🔄 À racheter (devis : " + fmtFcfa(r.totalDevisRenouvellement) + " FCFA)");
+      devis.forEach(([nom, d]) => l.push("• " + nom + " x" + d.quantite));
+    }
+
+    const bas = [];
+    Object.values(r.stockParMarque || {}).forEach((arr) => arr.forEach((p) => {
+      if (Number(p.stock) <= STOCK_BAS_SEUIL) bas.push(p.nom + " : " + p.stock + " u.");
+    }));
+    l.push("");
+    l.push("⚠️ Stock bas (≤ " + STOCK_BAS_SEUIL + " u.)");
+    if (bas.length) {
+      bas.slice(0, MAX_LIGNES_WA).forEach((t) => l.push("• " + t));
+      if (bas.length > MAX_LIGNES_WA) l.push("• … et " + (bas.length - MAX_LIGNES_WA) + " autre(s)");
+    } else {
+      l.push("• Aucun");
+    }
+
+    if (commentaire) { l.push(""); l.push("💬 " + commentaire); }
+    return l.join("\n");
+  }
+
+  if (lienWhatsapp) {
+    lienWhatsapp.addEventListener("click", () => {
+      const tel = lienWhatsapp.dataset.tel;
+      if (!tel || !resumeCourant) return;
+      lienWhatsapp.href = "https://wa.me/" + tel + "?text=" + encodeURIComponent(construireMessageCloture());
+    });
+  }
 
   menuBtn.addEventListener("click", () => {
     verifierCleCloture();
