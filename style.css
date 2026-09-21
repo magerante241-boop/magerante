@@ -2008,3 +2008,7 @@ body.mode-facturier-actif .facture-lignes {
 
 .modal-overlay[hidden]{ display:none !important; }
 .modal-close{ font-size:24px; padding:8px 12px; top:4px; right:4px; line-height:1; }
+
+/* Boutons abonnements (admin) */
+.abonnement-actions .btn-valider{ background:#2e7d32; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:700; }
+.abonnement-actions .btn-refuser{ background:#c62828; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:700; }
