@@ -556,7 +556,7 @@ onAuthStateChanged(auth, async (user) => {
     location.reload();
     return;
   }
-  const accountTypeReel = user.isAnonymous ? "anonyme" : "enregistre";
+  const accountTypeReel = user.isAnonymous ? (userData.role === "GERANT" ? "invite" : "anonyme") : "enregistre";
   window.AuthState.accountType = accountTypeReel;
   if (userData.accountType !== accountTypeReel) {
     setDoc(doc(db, "users", user.uid), { accountType: accountTypeReel }, { merge: true }).catch((err) => {
