@@ -2043,3 +2043,32 @@ body.mode-facturier-actif .facture-lignes {
   text-align:center;
 }
 /* === FIN TUILES-TEXTE === */
+
+/* === MODE-BTN-COMPACT : bouton Mode Facturier ajusté à son texte === */
+#btnToggleFacturier.btn-toggle-facturier{
+  width:auto !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  align-self:center !important;
+  margin:6px auto !important;
+  padding:8px 18px !important;
+  text-align:center !important;
+  text-align-last:center !important;
+}
+/* === FIN MODE-BTN-COMPACT === */
+
+/* === BOUTEILLES-MODE : bouteilles animées de chaque côté du bouton Mode Facturier === */
+.mode-row{--bt-h:44px;display:flex;align-items:center;justify-content:center;min-height:46px;width:100%}
+.mode-row #btnToggleFacturier.btn-toggle-facturier{flex:none !important;width:auto !important;margin:6px 0 !important}
+.bt-side{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.bt{height:var(--bt-h);width:calc(var(--bt-h)*0.4);overflow:visible;transform-origin:50% 95%;display:block}
+.bt-l{animation:btSway 1.7s ease-in-out infinite alternate}
+.bt-r{animation:btHop 1.25s ease-in-out infinite}
+@keyframes btSway{0%{transform:translateX(-5px) rotate(-20deg)}100%{transform:translateX(5px) rotate(20deg)}}
+@keyframes btHop{0%,100%{transform:translateY(0) rotate(-11deg)}25%{transform:translateY(-6px) rotate(0deg)}50%{transform:translateY(0) rotate(11deg)}75%{transform:translateY(-4px) rotate(0deg)}}
+.bt-bul{animation:btRise 1.25s ease-out infinite;opacity:0}
+.bt-bul.b2{animation-delay:.4s}
+.bt-bul.b3{animation-delay:.8s}
+@keyframes btRise{0%{transform:translateY(0);opacity:0}25%{opacity:.95}100%{transform:translateY(-12px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.bt-l,.bt-r,.bt-bul{animation:none}}
+/* === FIN BOUTEILLES-MODE === */
