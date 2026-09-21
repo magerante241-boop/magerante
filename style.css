@@ -2077,3 +2077,8 @@ body.mode-facturier-actif .facture-lignes {
 .facture-fleche{flex:none;opacity:.75}
 details[open] > summary .facture-fleche{transform:rotate(180deg)}
 /* === FIN FACTURE-FLECHE === */
+
+/* === LOGO-RETOUR : logo d'en-tête cliquable, retour à Facture === */
+.app-logo{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease}
+.app-logo:active{transform:scale(.92)}
+/* === FIN LOGO-RETOUR === */

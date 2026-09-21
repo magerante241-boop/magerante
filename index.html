@@ -174,7 +174,7 @@
   <!-- EN-TÊTE -->
   <header class="app-header">
     <div class="header-left">
-      <img src="logo.png" alt="MAGERANTE" class="app-logo" onerror="this.style.display='none'">
+      <img src="logo.png" alt="MAGERANTE" class="app-logo" role="button" tabindex="0" aria-label="Retour à la page Facture" onerror="this.style.display='none'">
       <div class="header-info">
         <span class="etablissement-nom" id="etablissementNom">MAGERANTE</span>
         <span class="gerant-nom" id="gerantNomHeader" hidden></span>
@@ -403,6 +403,20 @@
   }
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){fixer();return;}
   document.addEventListener('pointerdown',fixer,{once:true,capture:true});
+})();
+</script>
+<script>
+(function(){
+  function retourFacture(){
+    var b=document.querySelector('.nav-btn[data-view="calc"]');
+    if(b)b.click();
+  }
+  document.addEventListener('click',function(e){
+    if(e.target.closest&&e.target.closest('.app-logo'))retourFacture();
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('app-logo')){e.preventDefault();retourFacture();}
+  });
 })();
 </script>
 </body>
