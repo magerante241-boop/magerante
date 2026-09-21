@@ -425,6 +425,7 @@
   var CLE='magerante_guide_vu';
   var force=/[?&]guide=1(&|$)/.test(location.search);
   try{if(!force&&localStorage.getItem(CLE))return;}catch(e){}
+  document.body.classList.add('gd-actif');
   var ETAPES=[
     {cle:'inventaire',n:1,msg:'Commence par définir ton stock de départ dans Inventaire'},
     {cle:'facture',n:2,msg:'Ensuite seulement, facture tes clients ici, avec ton vrai stock'},
@@ -473,6 +474,7 @@
     document.removeEventListener('pointerdown',stop,true);
     window.removeEventListener('resize',place);
     try{localStorage.setItem(CLE,'1');}catch(e){}
+    document.body.classList.remove('gd-actif');
     scrim.classList.add('gd-out');cap.classList.add('gd-out');
     items.forEach(function(it){it.num.classList.add('gd-out');it.ic.classList.remove('gd-icon-anim');});
     setTimeout(function(){
@@ -481,7 +483,7 @@
   }
   function start(){
     var t=trouver();
-    if(t.length<4){if(++essais<6)setTimeout(start,1000);return;}
+    if(t.length<4){if(++essais<6)setTimeout(start,1000);else document.body.classList.remove('gd-actif');return;}
     scrim=document.createElement('div');scrim.className='gd-scrim';
     cap=document.createElement('div');cap.className='gd-cap';
     bub=document.createElement('div');bub.className='gd-bub';

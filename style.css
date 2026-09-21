@@ -2098,3 +2098,7 @@ details[open] > summary .facture-fleche{transform:rotate(180deg)}
 @keyframes gdRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
 @media (prefers-reduced-motion:reduce){.gd-num,.gd-icon-anim,.gd-num.cur::after{animation:none}.gd-num{opacity:1}.gd-icon-anim{opacity:0}}
 /* === FIN GUIDE-CHIFFRES === */
+
+/* === GUIDE-INSTALL : bouton Installer masqué pendant le guide === */
+body.gd-actif #install-fab{display:none !important}
+/* === FIN GUIDE-INSTALL === */
