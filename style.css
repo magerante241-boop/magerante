@@ -2012,3 +2012,34 @@ body.mode-facturier-actif .facture-lignes {
 /* Boutons abonnements (admin) */
 .abonnement-actions .btn-valider{ background:#2e7d32; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:700; }
 .abonnement-actions .btn-refuser{ background:#c62828; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:700; }
+
+/* === TUILES-COMPACT : tuiles réduites (~20%), zone blanche remontée, clavier agrandi vers le haut === */
+#marqueGrid{
+  min-height:108px !important;
+}
+.marque-cell{
+  min-height:32px !important;
+  padding:1px 1px !important;
+  font-size:9px !important;
+  line-height:1.1 !important;
+  border-radius:8px !important;
+}
+#numpad button{
+  min-height:30px !important;
+}
+/* === FIN TUILES-COMPACT === */
+
+/* === TUILES-TEXTE : police harmonisée, coupures propres === */
+.marque-cell{
+  font-size:8.5px !important;
+  font-weight:600 !important;
+  line-height:1.15 !important;
+  letter-spacing:-0.1px !important;
+  padding:1px 3px !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:manual !important;
+  text-wrap:balance;
+  text-align:center;
+}
+/* === FIN TUILES-TEXTE === */
