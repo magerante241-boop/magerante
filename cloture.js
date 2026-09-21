@@ -43,6 +43,8 @@ function construireMarqueParNom() {
     if (petite) marqueParNom[petite] = marque;
     if (grande) marqueParNom[grande] = marque;
   });
+  const noms = (window.PRODUITS_UNIQUES_DJINO || ["Djino Pamplemousse", "Djino Cocktail", "Djino Ananas", "Djino Tonic"]);
+  noms.forEach((n) => { if (!marqueParNom[n]) marqueParNom[n] = "Djino"; });
   return marqueParNom;
 }
 
@@ -564,7 +566,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnConfirmer.hidden = !(window.AuthState && (window.AuthState.accountType === "enregistre" || window.AuthState.accountType === "invite"));
     resumeEl.textContent = 'Clique sur "Lancer la clôture" pour calculer le résumé du jour.';
     if (inputFondDepart) inputFondDepart.value = "0";
-    if (inputRecetteReelle) inputRecetteReelle.value = "0";
     if (inputCommentaire) inputCommentaire.value = "";
     viderFacturesManuelles();
     clotureGate.hidden = false;
