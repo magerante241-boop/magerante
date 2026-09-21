@@ -45,7 +45,10 @@ service cloud.firestore {
 
       match /produits/{prodId} {
         allow read: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
-        allow write: if isSignedIn() && (request.auth.uid == estId || isAdmin() || estGerantDe(estId));
+        allow write: if isSignedIn() && (
+          request.auth.uid == estId || isAdmin() ||
+          (estGerantDe(estId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock','updatedAt']))
+        );
       }
 
       match /gerants/{gerantUid} {
