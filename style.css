@@ -2072,3 +2072,8 @@ body.mode-facturier-actif .facture-lignes {
 @keyframes btRise{0%{transform:translateY(0);opacity:0}25%{opacity:.95}100%{transform:translateY(-12px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.bt-l,.bt-r,.bt-bul{animation:none}}
 /* === FIN BOUTEILLES-MODE === */
+
+/* === FACTURE-FLECHE : flèche dépliable sur les lignes de l'historique === */
+.facture-fleche{flex:none;opacity:.75}
+details[open] > summary .facture-fleche{transform:rotate(180deg)}
+/* === FIN FACTURE-FLECHE === */

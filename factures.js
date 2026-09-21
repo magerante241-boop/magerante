@@ -160,7 +160,7 @@ function afficherFacturesFiltrees() {
       <details class="collapsible-section" id="facture-${f.numero}" style="${estAnnulee ? 'opacity:0.55;' : ''}">
         <summary style="display:flex; justify-content:space-between; padding:10px 14px; cursor:pointer;">
           <span style="font-weight:700;color:var(--text);">Facture #${f.numero || "—"} — ${dateStr}${badgeAnnulee}</span>
-          <strong style="color:var(--text);">${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong>
+          <span style="display:inline-flex;align-items:center;gap:6px;flex:none;"><strong style="color:var(--text);">${Number(f.total || 0).toLocaleString("fr-FR")} FCFA</strong><svg class="facture-fleche" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </summary>
         <div style="padding:6px 14px 12px; font-size:13px; color:var(--text);">${detailLignes || "Détail indisponible."}${boutonAnnuler ? "<br>" + boutonAnnuler : ""}</div>
       </details>
