@@ -115,16 +115,6 @@ export function render(container) {
         par defaut a chaque nouvelle connexion. Il permet d'ajouter ou d'ajuster un
         produit manquant sans toucher a l'inventaire reel de l'etablissement.
       </p>
-      <div id="ephAjoutZone" style="background:var(--surface2,#1c1f23); border-radius:10px; padding:12px; margin-bottom:16px;">
-        <strong style="display:block; margin-bottom:8px;">➕ Ajouter un nouveau produit</strong>
-        <input type="text" id="ephNom" placeholder="Nom du produit (ex: Djino Pamplemousse)" value="${escapeHtml(focusNom)}" style="width:100%; margin-bottom:6px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <input type="number" id="ephPrixAchat" placeholder="Prix achat" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-          <input type="number" id="ephPrixVente" placeholder="Prix vente" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-          <input type="number" id="ephStock" placeholder="Quantite" value="20" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-        </div>
-        <button id="ephBtnAjouter" class="inv-btn-primary" style="margin-top:8px; width:100%;">Enregistrer dans le stock de session</button>
-      </div>
       <p style="font-size:11px; color:var(--muted,#888); margin:-8px 0 8px;">Pour modifier ou supprimer un produit existant, utilise les icones ✏️ / 🗑️ sur sa ligne ci-dessous.</p>
       <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;"><table style="width:100%; min-width:520px; border-collapse:collapse; font-size:13px;">
         <thead>
@@ -142,6 +132,16 @@ export function render(container) {
       </table>
       <div class="inv-scroll-arrow inv-scroll-arrow-left" id="ephScrollArrowLeft">‹</div>
       <div class="inv-scroll-arrow inv-scroll-arrow-right" id="ephScrollArrowRight">›</div>
+      </div>
+      <div id="ephAjoutZone" style="background:var(--surface2,#1c1f23); border-radius:10px; padding:12px; margin-bottom:16px;">
+        <strong style="display:block; margin-bottom:8px;">➕ Ajouter un nouveau produit</strong>
+        <input type="text" id="ephNom" placeholder="Nom du produit (ex: Djino Pamplemousse)" value="${escapeHtml(focusNom)}" style="width:100%; margin-bottom:6px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <input type="number" id="ephPrixAchat" placeholder="Prix achat" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+          <input type="number" id="ephPrixVente" placeholder="Prix vente" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+          <input type="number" id="ephStock" placeholder="Quantite" value="20" style="flex:1; min-width:90px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+        </div>
+        <button id="ephBtnAjouter" class="inv-btn-primary" style="margin-top:8px; width:100%;">Enregistrer dans le stock de session</button>
       </div>
     </div>
   `;
