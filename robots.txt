@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://magerante241-boop.github.io/magerante/sitemap.xml
